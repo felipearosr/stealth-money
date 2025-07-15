@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
@@ -25,15 +26,30 @@ import type {
 export interface TransferManagerInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "deposit"
       | "owner"
+      | "release"
       | "renounceOwnership"
       | "token"
       | "transferOwnership"
   ): FunctionFragment;
 
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "FundsDeposited"
+      | "FundsReleased"
+      | "OwnershipTransferred"
+  ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "deposit",
+    values: [BigNumberish, BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "release",
+    values: [AddressLike, BigNumberish, BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
@@ -44,7 +60,9 @@ export interface TransferManagerInterface extends Interface {
     values: [AddressLike]
   ): string;
 
+  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "release", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
@@ -54,6 +72,50 @@ export interface TransferManagerInterface extends Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+}
+
+export namespace FundsDepositedEvent {
+  export type InputTuple = [
+    user: AddressLike,
+    amount: BigNumberish,
+    transactionId: BytesLike
+  ];
+  export type OutputTuple = [
+    user: string,
+    amount: bigint,
+    transactionId: string
+  ];
+  export interface OutputObject {
+    user: string;
+    amount: bigint;
+    transactionId: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace FundsReleasedEvent {
+  export type InputTuple = [
+    recipient: AddressLike,
+    amount: BigNumberish,
+    transactionId: BytesLike
+  ];
+  export type OutputTuple = [
+    recipient: string,
+    amount: bigint,
+    transactionId: string
+  ];
+  export interface OutputObject {
+    recipient: string;
+    amount: bigint;
+    transactionId: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace OwnershipTransferredEvent {
@@ -112,7 +174,19 @@ export interface TransferManager extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  deposit: TypedContractMethod<
+    [amount: BigNumberish, transactionId: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
   owner: TypedContractMethod<[], [string], "view">;
+
+  release: TypedContractMethod<
+    [recipient: AddressLike, amount: BigNumberish, transactionId: BytesLike],
+    [void],
+    "nonpayable"
+  >;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -129,8 +203,22 @@ export interface TransferManager extends BaseContract {
   ): T;
 
   getFunction(
+    nameOrSignature: "deposit"
+  ): TypedContractMethod<
+    [amount: BigNumberish, transactionId: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "release"
+  ): TypedContractMethod<
+    [recipient: AddressLike, amount: BigNumberish, transactionId: BytesLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -142,6 +230,20 @@ export interface TransferManager extends BaseContract {
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
 
   getEvent(
+    key: "FundsDeposited"
+  ): TypedContractEvent<
+    FundsDepositedEvent.InputTuple,
+    FundsDepositedEvent.OutputTuple,
+    FundsDepositedEvent.OutputObject
+  >;
+  getEvent(
+    key: "FundsReleased"
+  ): TypedContractEvent<
+    FundsReleasedEvent.InputTuple,
+    FundsReleasedEvent.OutputTuple,
+    FundsReleasedEvent.OutputObject
+  >;
+  getEvent(
     key: "OwnershipTransferred"
   ): TypedContractEvent<
     OwnershipTransferredEvent.InputTuple,
@@ -150,6 +252,28 @@ export interface TransferManager extends BaseContract {
   >;
 
   filters: {
+    "FundsDeposited(address,uint256,bytes32)": TypedContractEvent<
+      FundsDepositedEvent.InputTuple,
+      FundsDepositedEvent.OutputTuple,
+      FundsDepositedEvent.OutputObject
+    >;
+    FundsDeposited: TypedContractEvent<
+      FundsDepositedEvent.InputTuple,
+      FundsDepositedEvent.OutputTuple,
+      FundsDepositedEvent.OutputObject
+    >;
+
+    "FundsReleased(address,uint256,bytes32)": TypedContractEvent<
+      FundsReleasedEvent.InputTuple,
+      FundsReleasedEvent.OutputTuple,
+      FundsReleasedEvent.OutputObject
+    >;
+    FundsReleased: TypedContractEvent<
+      FundsReleasedEvent.InputTuple,
+      FundsReleasedEvent.OutputTuple,
+      FundsReleasedEvent.OutputObject
+    >;
+
     "OwnershipTransferred(address,address)": TypedContractEvent<
       OwnershipTransferredEvent.InputTuple,
       OwnershipTransferredEvent.OutputTuple,
