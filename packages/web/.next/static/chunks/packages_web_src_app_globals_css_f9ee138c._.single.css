@@ -46,6 +46,8 @@
 
 @layer theme {
   :root, :host {
+    --color-red-50: oklch(97.1% .013 17.38);
+    --color-red-600: oklch(57.7% .245 27.325);
     --color-emerald-100: oklch(95% .052 163.051);
     --color-emerald-500: oklch(69.6% .17 162.48);
     --color-emerald-600: oklch(59.6% .145 163.225);
@@ -705,6 +707,10 @@
     background-color: var(--primary);
   }
 
+  .bg-red-50 {
+    background-color: var(--color-red-50);
+  }
+
   .bg-secondary {
     background-color: var(--secondary);
   }
@@ -719,6 +725,10 @@
 
   .p-1 {
     padding: calc(var(--spacing) * 1);
+  }
+
+  .p-2 {
+    padding: calc(var(--spacing) * 2);
   }
 
   .p-3 {
@@ -904,6 +914,10 @@
 
   .text-primary-foreground {
     color: var(--primary-foreground);
+  }
+
+  .text-red-600 {
+    color: var(--color-red-600);
   }
 
   .text-secondary-foreground {
