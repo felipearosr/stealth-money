@@ -2,9 +2,11 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { FxService } from '../services/fx.service';
+import { DatabaseService } from '../services/database.service';
 
 const router = Router();
 const fxService = new FxService();
+const dbService = new DatabaseService();
 
 // Zod schema for validation
 const createTransferSchema = z.object({
@@ -42,6 +44,40 @@ router.get('/exchange-rate/:from/:to', async (req: Request, res: Response) => {
     }
 });
 
+// Get transaction by ID
+router.get('/transfers/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const transaction = await dbService.getTransaction(id);
+        
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+        
+        res.json(transaction);
+    } catch (error) {
+        console.error('Get transaction error:', error);
+        res.status(500).json({
+            message: 'Could not fetch transaction',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+// Get all transactions
+router.get('/transfers', async (req: Request, res: Response) => {
+    try {
+        const transactions = await dbService.getAllTransactions();
+        res.json(transactions);
+    } catch (error) {
+        console.error('Get transactions error:', error);
+        res.status(500).json({
+            message: 'Could not fetch transactions',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
 router.post('/transfers', async (req: Request, res: Response) => {
     try {
         const validatedData = createTransferSchema.parse(req.body);
@@ -51,22 +87,31 @@ router.post('/transfers', async (req: Request, res: Response) => {
 
         // Fetch exchange rate using FxService
         const exchangeRate = await fxService.getRate(sourceCurrency, destCurrency);
-        const convertedAmount = amount * exchangeRate;
+        const recipientAmount = amount * exchangeRate;
 
-        // Placeholder for business logic
-        const transactionId = `txn_${Date.now()}`;
-
-        console.log(`Exchange rate ${sourceCurrency} to ${destCurrency}: ${exchangeRate}`);
-        console.log(`${amount} ${sourceCurrency} = ${convertedAmount.toFixed(2)} ${destCurrency}`);
-
-        res.status(201).json({
-            message: 'Transfer initiated',
-            transactionId,
-            rate: exchangeRate,
-            sourceAmount: amount,
-            recipientAmount: parseFloat(convertedAmount.toFixed(2)),
+        // Create transaction record in database
+        const newTransaction = await dbService.createTransaction({
+            amount,
             sourceCurrency,
             destCurrency,
+            exchangeRate,
+            recipientAmount: parseFloat(recipientAmount.toFixed(2)),
+        });
+
+        console.log(`Exchange rate ${sourceCurrency} to ${destCurrency}: ${exchangeRate}`);
+        console.log(`${amount} ${sourceCurrency} = ${recipientAmount.toFixed(2)} ${destCurrency}`);
+        console.log(`Transaction created with ID: ${newTransaction.id}`);
+
+        res.status(201).json({
+            message: 'Transaction record created',
+            transactionId: newTransaction.id,
+            rate: exchangeRate,
+            sourceAmount: amount,
+            recipientAmount: parseFloat(recipientAmount.toFixed(2)),
+            sourceCurrency,
+            destCurrency,
+            status: newTransaction.status,
+            createdAt: newTransaction.createdAt,
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
