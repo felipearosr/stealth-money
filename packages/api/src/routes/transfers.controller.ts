@@ -62,11 +62,11 @@ router.post('/transfers', async (req: Request, res: Response) => {
         res.status(201).json({
             message: 'Transfer initiated',
             transactionId,
-            data: {
-                ...validatedData,
-                exchangeRate,
-                convertedAmount: parseFloat(convertedAmount.toFixed(2)),
-            },
+            rate: exchangeRate,
+            sourceAmount: amount,
+            recipientAmount: parseFloat(convertedAmount.toFixed(2)),
+            sourceCurrency,
+            destCurrency,
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
