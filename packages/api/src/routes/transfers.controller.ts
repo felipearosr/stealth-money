@@ -101,16 +101,20 @@ router.get('/payments/:paymentIntentId', async (req: Request, res: Response) => 
 
 // Test endpoint to check exchange rates
 router.get('/exchange-rate/:from/:to', async (req: Request, res: Response) => {
+    console.log(`📊 Exchange rate request: ${req.params.from} -> ${req.params.to}`);
     try {
         const { from, to } = req.params;
 
         if (!from || !to || from.length !== 3 || to.length !== 3) {
+            console.log(`❌ Invalid currency codes: from=${from}, to=${to}`);
             return res.status(400).json({
                 message: 'Invalid currency codes. Both must be 3 characters.'
             });
         }
 
+        console.log(`🔄 Fetching rate for ${from.toUpperCase()} -> ${to.toUpperCase()}`);
         const rate = await fxService.getRate(from.toUpperCase(), to.toUpperCase());
+        console.log(`✅ Rate fetched successfully: ${rate}`);
 
         res.json({
             from: from.toUpperCase(),
@@ -119,7 +123,7 @@ router.get('/exchange-rate/:from/:to', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         });
     } catch (error) {
-        console.error('Exchange rate error:', error);
+        console.error('❌ Exchange rate error:', error);
         res.status(500).json({
             message: 'Could not fetch exchange rate',
             error: error instanceof Error ? error.message : 'Unknown error'
