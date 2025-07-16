@@ -10,7 +10,7 @@ import transferRoutes from './routes/transfers.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = parseInt(process.env.PORT || '8080', 10);
 console.log(`🔧 Environment PORT: ${process.env.PORT}`);
 console.log(`🔧 Using PORT: ${PORT}`);
 
