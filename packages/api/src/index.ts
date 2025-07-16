@@ -10,10 +10,23 @@ import transferRoutes from './routes/transfers.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '4000', 10);
+const PORT = parseInt(process.env.PORT || '3000', 10);
+console.log(`🔧 Environment PORT: ${process.env.PORT}`);
+console.log(`🔧 Using PORT: ${PORT}`);
 
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 app.use(express.json()); // Enable JSON body parsing
+
+// Root endpoint
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({ 
+    message: 'Stealth Money API',
+    version: '1.0.0',
+    status: 'running',
+    port: PORT,
+    timestamp: new Date().toISOString()
+  });
+});
 
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'API is healthy' });
