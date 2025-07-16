@@ -347,7 +347,7 @@ export function TransferCalculator() {
         <Card className="w-full bg-black text-green-400 font-mono">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-green-400 text-sm">Stealth Money Terminal</CardTitle>
+              <CardTitle className="text-green-400 text-sm">Stealth Money Terminal - Usando Contratos Reales, Stripe en modo test</CardTitle>
               <div className="flex space-x-2">
                 <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                 <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
