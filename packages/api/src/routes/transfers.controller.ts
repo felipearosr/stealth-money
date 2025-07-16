@@ -2,13 +2,13 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { FxService } from '../services/fx.service';
-import { DatabaseService } from '../services/database.service';
+import { SimpleDatabaseService } from '../services/database-simple.service';
 import { BlockchainService } from '../services/blockchain.service';
 import { PaymentService } from '../services/payment.service';
 
 const router = Router();
 const fxService = new FxService();
-const dbService = new DatabaseService();
+const dbService = new SimpleDatabaseService();
 const blockchainService = new BlockchainService();
 const paymentService = new PaymentService();
 

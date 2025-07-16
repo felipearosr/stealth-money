@@ -1,10 +1,13 @@
 // src/index.ts
+import dotenv from 'dotenv';
+
+// Load environment variables FIRST
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import transferRoutes from './routes/transfers.controller';
-
-dotenv.config();
+import { SimpleDatabaseService } from './services/database-simple.service';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -19,6 +22,30 @@ app.get('/health', (req: Request, res: Response) => {
 // Wire up the transfer routes with /api prefix
 app.use('/api', transferRoutes);
 
-app.listen(PORT, () => {
-  console.log(`API server running on http://localhost:${PORT}`);
-});
+// Initialize database and start server
+async function startServer() {
+  const dbService = new SimpleDatabaseService();
+  
+  // Test database connection and initialize tables
+  console.log('🔌 Testing database connection...');
+  const connected = await dbService.testConnection();
+  
+  if (connected) {
+    console.log('📊 Initializing database tables...');
+    const initialized = await dbService.initialize();
+    
+    if (initialized) {
+      console.log('✅ Database ready!');
+    } else {
+      console.log('⚠️  Database initialization failed, but continuing...');
+    }
+  } else {
+    console.log('⚠️  Database connection failed, but continuing...');
+  }
+
+  app.listen(PORT, () => {
+    console.log(`🚀 API server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer().catch(console.error);
