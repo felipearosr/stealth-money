@@ -19,6 +19,40 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'API is healthy' });
 });
 
+// Simple test endpoint
+app.get('/test', (req: Request, res: Response) => {
+  res.status(200).json({ 
+    message: 'Test endpoint working',
+    timestamp: new Date().toISOString(),
+    env: {
+      hasExchangeRateKey: !!process.env.EXCHANGERATE_API_KEY,
+      nodeEnv: process.env.NODE_ENV
+    }
+  });
+});
+
+// Direct exchange rate test
+app.get('/test-rate', async (req: Request, res: Response) => {
+  try {
+    const { FxService } = await import('./services/fx.service');
+    const fxService = new FxService();
+    const rate = await fxService.getRate('USD', 'EUR');
+    res.json({ 
+      success: true,
+      rate,
+      from: 'USD',
+      to: 'EUR',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Direct rate test error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Wire up the transfer routes with /api prefix
 app.use('/api', transferRoutes);
 
