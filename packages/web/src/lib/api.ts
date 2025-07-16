@@ -22,9 +22,13 @@ export async function getQuote(source: string, dest: string, amount: number) {
 }
 
 export async function getExchangeRate(from: string, to: string) {
+  console.log('🔧 All env vars:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')));
+  console.log('🔧 Raw env var:', process.env.NEXT_PUBLIC_API_URL);
+  
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   
-  console.log('🔧 API_URL:', API_URL);
+  console.log('🔧 Final API_URL:', API_URL);
+  console.log('🔧 API_URL type:', typeof API_URL);
   console.log('🔧 Making request to:', `${API_URL}/api/exchange-rate/${from}/${to}`);
   
   const res = await fetch(`${API_URL}/api/exchange-rate/${from}/${to}`);
