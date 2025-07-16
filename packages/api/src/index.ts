@@ -16,8 +16,8 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'API is healthy' });
 });
 
-// Wire up the transfer routes with /v1 prefix
-app.use('/v1', transferRoutes);
+// Wire up the transfer routes with /api prefix
+app.use('/api', transferRoutes);
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);

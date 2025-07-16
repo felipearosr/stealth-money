@@ -1,46 +1,69 @@
-// src/test-fx.ts
-// Test script to demonstrate FxService functionality
+// Simple test script to verify API functionality
+// Run with: npx ts-node src/test-fx.ts
 
-import { MockFxService } from './services/fx.service.mock';
+import { FxService } from './services/fx.service';
+import { DatabaseService } from './services/database.service';
 
-async function testFxService() {
-  const fxService = new MockFxService();
+async function testAPI() {
+  console.log('🧪 Testing Stealth Money API...\n');
 
-  console.log('🧪 Testing FxService...\n');
-
+  // Test 1: Exchange Rate Service
+  console.log('1️⃣ Testing Exchange Rate Service');
   try {
-    // Test various currency pairs
-    const testPairs = [
-      ['USD', 'EUR'],
-      ['EUR', 'USD'],
-      ['USD', 'GBP'],
-      ['GBP', 'JPY'],
-      ['USD', 'USD'], // Same currency
-    ];
-
-    for (const [from, to] of testPairs) {
-      const rate = await fxService.getRate(from, to);
-      console.log(`${from} → ${to}: ${rate}`);
-      
-      // Example conversion
-      const amount = 100;
-      const converted = amount * rate;
-      console.log(`  ${amount} ${from} = ${converted.toFixed(2)} ${to}\n`);
-    }
-
-    // Test error case
-    console.log('Testing unsupported currency pair...');
-    try {
-      await fxService.getRate('USD', 'XYZ');
-    } catch (error) {
-      console.log(`❌ Expected error: ${error.message}\n`);
-    }
-
-    console.log('✅ All tests completed successfully!');
-
+    const fxService = new FxService();
+    const rate = await fxService.getRate('USD', 'EUR');
+    console.log(`✅ USD to EUR rate: ${rate}`);
   } catch (error) {
-    console.error('❌ Test failed:', error);
+    console.log(`❌ Exchange rate test failed: ${error}`);
   }
+
+  // Test 2: Database Service
+  console.log('\n2️⃣ Testing Database Service');
+  try {
+    const dbService = new DatabaseService();
+    
+    // Create a test transaction
+    const testTransaction = await dbService.createTransaction({
+      amount: 100,
+      sourceCurrency: 'USD',
+      destCurrency: 'EUR',
+      exchangeRate: 0.85,
+      recipientAmount: 85
+    });
+    
+    console.log(`✅ Test transaction created: ${testTransaction.id}`);
+    
+    // Update the transaction status
+    await dbService.updateTransactionStatus(testTransaction.id, 'COMPLETED', {
+      paymentId: 'test_payment_123'
+    });
+    
+    console.log(`✅ Transaction status updated to COMPLETED`);
+    
+    // Retrieve the transaction
+    const retrieved = await dbService.getTransaction(testTransaction.id);
+    console.log(`✅ Transaction retrieved: Status = ${retrieved?.status}`);
+    
+  } catch (error) {
+    console.log(`❌ Database test failed: ${error}`);
+  }
+
+  // Test 3: API Endpoints
+  console.log('\n3️⃣ Testing API Endpoints');
+  try {
+    const response = await fetch('http://localhost:4000/api/exchange-rate/USD/EUR');
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`✅ API endpoint working: ${data.from} to ${data.to} = ${data.rate}`);
+    } else {
+      console.log(`❌ API endpoint failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.log(`❌ API endpoint test failed: ${error}`);
+    console.log('💡 Make sure the API server is running: npm run dev');
+  }
+
+  console.log('\n🎉 Test complete! Check results above.');
 }
 
-testFxService();
+testAPI().catch(console.error);
