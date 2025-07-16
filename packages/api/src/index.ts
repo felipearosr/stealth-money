@@ -10,7 +10,7 @@ import transferRoutes from './routes/transfers.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = parseInt(process.env.PORT || '4000', 10);
 
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 app.use(express.json()); // Enable JSON body parsing
