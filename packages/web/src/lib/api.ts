@@ -24,11 +24,19 @@ export async function getQuote(source: string, dest: string, amount: number) {
 export async function getExchangeRate(from: string, to: string) {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
   
+  console.log('🔧 API_URL:', API_URL);
+  console.log('🔧 Making request to:', `${API_URL}/api/exchange-rate/${from}/${to}`);
+  
   const res = await fetch(`${API_URL}/api/exchange-rate/${from}/${to}`);
+
+  console.log('🔧 Response status:', res.status);
+  console.log('🔧 Response ok:', res.ok);
 
   if (!res.ok) {
     throw new Error('Failed to fetch exchange rate');
   }
 
-  return res.json();
+  const data = await res.json();
+  console.log('🔧 Response data:', data);
+  return data;
 }
