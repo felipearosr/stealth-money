@@ -21,7 +21,15 @@ const addLog = (
 
 // Demo simulation function for presentation with terminal logs
 const simulatePaymentAndBlockchainFlow = async (
-  transferData: any,
+  transferData: {
+    transactionId: string;
+    sourceAmount: number;
+    destCurrency: string;
+    recipientAmount: number;
+    clientSecret: string;
+    rate: number;
+    status: string;
+  },
   setTerminalLogs: React.Dispatch<React.SetStateAction<Array<{timestamp: string, message: string, type: 'info' | 'success' | 'warning' | 'error'}>>>
 ) => {
   const steps = [
@@ -30,7 +38,7 @@ const simulatePaymentAndBlockchainFlow = async (
       messages: [
         `🏦 TRANSFER INITIATED`,
         `Transaction ID: ${transferData.transactionId}`,
-        `Amount: ${transferData.sourceAmount} ${transferData.sourceCurrency} → ${transferData.recipientAmount} ${transferData.destCurrency}`,
+        `Amount: ${transferData.sourceAmount} USD → ${transferData.recipientAmount} ${transferData.destCurrency}`,
         `Status: ${transferData.status}`,
         `Exchange Rate: ${transferData.rate}`,
         ``

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -39,7 +39,7 @@ export default function StealthMoneyLanding() {
     return exchangeRates[key as keyof typeof exchangeRates] || 1
   }
 
-  const calculateAmount = (amount: string, isFromSend: boolean) => {
+  const calculateAmount = useCallback((amount: string, isFromSend: boolean) => {
     if (!amount || isNaN(Number.parseFloat(amount))) return ""
 
     const rate = getExchangeRate(
@@ -49,7 +49,7 @@ export default function StealthMoneyLanding() {
 
     const result = Number.parseFloat(amount) * rate
     return result.toFixed(2)
-  }
+  }, [sendCurrency, receiveCurrency])
 
   useEffect(() => {
     if (lockedField === "send" && sendAmount) {
@@ -57,7 +57,7 @@ export default function StealthMoneyLanding() {
     } else if (lockedField === "receive" && receiveAmount) {
       setSendAmount(calculateAmount(receiveAmount, false))
     }
-  }, [sendAmount, receiveAmount, sendCurrency, receiveCurrency, lockedField])
+  }, [sendAmount, receiveAmount, lockedField, calculateAmount])
 
   const handleSendAmountChange = (value: string) => {
     setSendAmount(value)
@@ -281,7 +281,7 @@ export default function StealthMoneyLanding() {
                 <Globe className="h-8 w-8 text-emerald-600" />
               </div>
               <h3 className="text-xl font-semibold text-slate-800 mb-2">Add Recipient</h3>
-              <p className="text-gray-600">Provide recipient details and choose how they'll receive the money.</p>
+              <p className="text-gray-600">Provide recipient details and choose how they&apos;ll receive the money.</p>
             </div>
             <div className="text-center">
               <div className="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">

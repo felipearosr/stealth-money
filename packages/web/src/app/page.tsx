@@ -2,7 +2,7 @@
 import { TransferCalculator } from "@/components/features/TransferCalculator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star } from "lucide-react";
 
 export default function Home() {
   return (
@@ -206,6 +206,93 @@ export default function Home() {
                 Funds are released via blockchain and delivered to your recipient instantly.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+              Trusted by Thousands
+            </h2>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="flex space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              <span className="text-gray-600">4.9/5 from 2,847 reviews</span>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-gray-600">
+                  &quot;Fastest money transfer I&apos;ve ever used. My family in Brazil received the money in under a minute!&quot;
+                </p>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">MR</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Maria Rodriguez</div>
+                    <div className="text-sm text-gray-600">Small Business Owner</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-gray-600">
+                  &quot;The transparency is amazing. I can see exactly where my money is at every step of the process.&quot;
+                </p>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">JC</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">James Chen</div>
+                    <div className="text-sm text-gray-600">Software Engineer</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-gray-600">
+                  &quot;Finally, a money transfer service that doesn&apos;t have hidden fees. What you see is what you pay.&quot;
+                </p>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">SP</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Sarah Patel</div>
+                    <div className="text-sm text-gray-600">Freelancer</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
