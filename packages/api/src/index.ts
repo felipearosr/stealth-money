@@ -56,30 +56,48 @@ app.get('/test-rate', async (req: Request, res: Response) => {
 // Wire up the transfer routes with /api prefix
 app.use('/api', transferRoutes);
 
+// Add error handling middleware
+app.use((err: any, req: Request, res: Response, next: any) => {
+  console.error('❌ Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
+
 // Initialize database and start server
 async function startServer() {
-  const dbService = new SimpleDatabaseService();
-  
-  // Test database connection and initialize tables
-  console.log('🔌 Testing database connection...');
-  const connected = await dbService.testConnection();
-  
-  if (connected) {
-    console.log('📊 Initializing database tables...');
-    const initialized = await dbService.initialize();
+  try {
+    const dbService = new SimpleDatabaseService();
     
-    if (initialized) {
-      console.log('✅ Database ready!');
+    // Test database connection and initialize tables
+    console.log('🔌 Testing database connection...');
+    const connected = await dbService.testConnection();
+    
+    if (connected) {
+      console.log('📊 Initializing database tables...');
+      const initialized = await dbService.initialize();
+      
+      if (initialized) {
+        console.log('✅ Database ready!');
+      } else {
+        console.log('⚠️  Database initialization failed, but continuing...');
+      }
     } else {
-      console.log('⚠️  Database initialization failed, but continuing...');
+      console.log('⚠️  Database connection failed, but continuing...');
     }
-  } else {
-    console.log('⚠️  Database connection failed, but continuing...');
-  }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
-  });
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
+      console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
+      console.log(`🧪 Test endpoint: http://0.0.0.0:${PORT}/test`);
+    });
+
+    server.on('error', (error) => {
+      console.error('❌ Server error:', error);
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
 }
 
-startServer().catch(console.error);
+startServer();
