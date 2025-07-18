@@ -217,6 +217,68 @@ router.get('/transfers/:id', async (req: Request, res: Response) => {
     }
 });
 
+// Update transaction with recipient information
+router.put('/transfers/:id/recipient', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { recipientName, recipientEmail, recipientPhone, payoutMethod, payoutDetails } = req.body;
+
+        // Validate required fields
+        if (!recipientName || !recipientEmail || !recipientPhone || !payoutMethod) {
+            return res.status(400).json({ 
+                message: 'Missing required recipient information',
+                required: ['recipientName', 'recipientEmail', 'recipientPhone', 'payoutMethod']
+            });
+        }
+
+        // Get the existing transaction
+        const existingTransaction = await dbService.getTransaction(id);
+        if (!existingTransaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+
+        // Update the transaction with recipient information
+        const updatedTransaction = await dbService.updateTransactionRecipient(id, {
+            recipientName,
+            recipientEmail,
+            recipientPhone,
+            payoutMethod,
+            payoutDetails
+        });
+
+        // Create Stripe Payment Intent if not already created
+        let clientSecret = null;
+        if (!existingTransaction.stripePaymentIntentId) {
+            const amountInCents = Math.round(existingTransaction.amount * 100);
+            const paymentResult = await paymentService.createPaymentIntent(
+                amountInCents,
+                existingTransaction.sourceCurrency,
+                id
+            );
+            clientSecret = paymentResult.clientSecret;
+
+            // Update transaction with payment intent ID
+            await dbService.updateTransactionStatus(id, 'PENDING_PAYMENT', { 
+                paymentId: paymentResult.paymentIntentId 
+            });
+        }
+
+        res.json({
+            success: true,
+            transaction: updatedTransaction,
+            clientSecret,
+            message: 'Recipient information updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Update recipient error:', error);
+        res.status(500).json({
+            message: 'Could not update recipient information',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
 // Get all transactions
 router.get('/transfers', async (req: Request, res: Response) => {
     try {

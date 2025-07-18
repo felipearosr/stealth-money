@@ -162,7 +162,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
       return;
     }
 
-    // Legacy flow: directly create transfer (for backward compatibility)
+    // Create initial transfer without recipient information
     setIsLoading(true);
 
     try {
@@ -176,7 +176,6 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
           amount: parseFloat(amountToSend),
           sourceCurrency,
           destCurrency,
-          rate,
         }),
       });
 
@@ -186,8 +185,8 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
 
       const transferData = await response.json();
       
-      // Redirect to payment page with transaction data
-      router.push(`/pay/${transferData.transactionId}?clientSecret=${transferData.clientSecret}`);
+      // Redirect to recipient page to collect recipient information
+      router.push(`/recipient/${transferData.transactionId}`);
       
     } catch (err) {
       setError('Failed to create transfer. Please try again.');

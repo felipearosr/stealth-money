@@ -10,6 +10,11 @@ export class DatabaseService {
     destCurrency: string;
     exchangeRate: number;
     recipientAmount: number;
+    recipientName?: string;
+    recipientEmail?: string;
+    recipientPhone?: string;
+    payoutMethod?: string;
+    payoutDetails?: any;
   }): Promise<Transaction> {
     return prisma.transaction.create({ data });
   }

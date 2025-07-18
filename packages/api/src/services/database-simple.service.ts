@@ -204,11 +204,88 @@ export class SimpleDatabaseService {
         status,
         stripe_payment_intent_id as "stripePaymentIntentId",
         blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
         created_at as "createdAt",
         updated_at as "updatedAt"
     `;
 
     const values = [status, details.paymentId, details.txHash, id];
+    const result = await this.pool.query(query, values);
+    return result.rows[0];
+  }
+
+  async updateTransactionRecipient(
+    id: string,
+    recipientData: {
+      recipientName: string;
+      recipientEmail: string;
+      recipientPhone: string;
+      payoutMethod: string;
+      payoutDetails?: any;
+    }
+  ): Promise<Transaction> {
+    if (!this.isConfigured || !this.pool) {
+      // Return mock updated transaction
+      return {
+        id,
+        amount: 100,
+        sourceCurrency: 'USD',
+        destCurrency: 'EUR',
+        exchangeRate: 0.85,
+        recipientAmount: 85,
+        status: 'PENDING',
+        recipientName: recipientData.recipientName,
+        recipientEmail: recipientData.recipientEmail,
+        recipientPhone: recipientData.recipientPhone,
+        payoutMethod: recipientData.payoutMethod,
+        payoutDetails: recipientData.payoutDetails,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
+
+    const query = `
+      UPDATE transactions 
+      SET 
+        recipient_name = $1,
+        recipient_email = $2,
+        recipient_phone = $3,
+        payout_method = $4,
+        payout_details = $5,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $6
+      RETURNING 
+        id,
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+    `;
+
+    const values = [
+      recipientData.recipientName,
+      recipientData.recipientEmail,
+      recipientData.recipientPhone,
+      recipientData.payoutMethod,
+      recipientData.payoutDetails ? JSON.stringify(recipientData.payoutDetails) : null,
+      id
+    ];
+
     const result = await this.pool.query(query, values);
     return result.rows[0];
   }

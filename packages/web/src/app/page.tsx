@@ -2,31 +2,11 @@
 
 import { useState } from "react";
 import { TransferCalculator } from "@/components/features/TransferCalculator";
-import { RecipientForm } from "@/components/features/RecipientForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star } from "lucide-react";
 
-interface TransferData {
-  amount: number;
-  sourceCurrency: string;
-  destCurrency: string;
-  rate: number;
-  recipientAmount: number;
-}
-
 export default function Home() {
-  const [currentStep, setCurrentStep] = useState<'calculator' | 'recipient'>('calculator');
-  const [transferData, setTransferData] = useState<TransferData | null>(null);
-
-  const handleCalculatorContinue = (data: TransferData) => {
-    setTransferData(data);
-    setCurrentStep('recipient');
-  };
-
-  const handleRecipientBack = () => {
-    setCurrentStep('calculator');
-  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
@@ -121,21 +101,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Content - Multi-Step Form */}
+          {/* Right Content - Transfer Calculator */}
           <div className="lg:pl-8">
             <div className="relative">
               {/* Background decoration */}
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl"></div>
               <div className="relative">
-                {currentStep === 'calculator' && (
-                  <TransferCalculator onContinue={handleCalculatorContinue} />
-                )}
-                {currentStep === 'recipient' && transferData && (
-                  <RecipientForm 
-                    transferData={transferData}
-                    onBack={handleRecipientBack}
-                  />
-                )}
+                <TransferCalculator />
               </div>
             </div>
           </div>
@@ -202,16 +174,16 @@ export default function Home() {
               How It Works
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Simple, secure, and transparent money transfers in three easy steps
+              Simple, secure, and transparent money transfers in four easy steps
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-6">
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl font-bold text-white">1</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900">Enter Details</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Enter Amount</h3>
               <p className="text-gray-600">
                 Enter the amount and select currencies. Get real-time exchange rates instantly.
               </p>
@@ -221,6 +193,16 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl font-bold text-white">2</span>
               </div>
+              <h3 className="text-xl font-semibold text-gray-900">Recipient Details</h3>
+              <p className="text-gray-600">
+                Add recipient information and choose how they should receive the money.
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-white">3</span>
+              </div>
               <h3 className="text-xl font-semibold text-gray-900">Secure Payment</h3>
               <p className="text-gray-600">
                 Pay securely with your card. Your payment is protected by bank-level security.
@@ -228,8 +210,8 @@ export default function Home() {
             </div>
 
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-white">3</span>
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-600 to-red-600 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-2xl font-bold text-white">4</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900">Money Delivered</h3>
               <p className="text-gray-600">

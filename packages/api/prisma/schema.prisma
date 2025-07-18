@@ -24,6 +24,14 @@ model Transaction {
   status                String   @default("PENDING") // e.g., PENDING, PROCESSING, COMPLETED, FAILED
   stripePaymentIntentId String?  @unique // To link with Stripe
   blockchainTxHash      String?  @unique // To link with the on-chain tx
+  
+  // Recipient Information
+  recipientName         String?
+  recipientEmail        String?
+  recipientPhone        String?
+  payoutMethod          String?
+  payoutDetails         Json?
+  
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
