@@ -12,20 +12,20 @@
   - Create authentication pages using Clerk components
   - _Requirements: 1.1, 1.2, 2.1, 2.2_
 
-- [ ] 3. Implement authentication pages
+- [x] 3. Implement authentication pages
 - [x] 3.1 Create sign-in page with Clerk component
   - Build sign-in page at /auth/sign-in
   - Integrate Clerk SignIn component
   - Configure post-authentication redirects
   - _Requirements: 2.1, 2.2, 2.4_
 
-- [-] 3.2 Create sign-up page with Clerk component
+- [x] 3.2 Create sign-up page with Clerk component
   - Build sign-up page at /auth/sign-up
   - Integrate Clerk SignUp component
   - Handle new user onboarding flow
   - _Requirements: 1.1, 1.2, 1.4_
 
-- [ ] 4. Add user navigation and session management
+- [-] 4. Add user navigation and session management
   - Integrate UserButton component in main navigation
   - Add sign-in/sign-up buttons for unauthenticated users
   - Implement proper sign-out functionality

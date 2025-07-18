@@ -3,6 +3,7 @@
 import { TransferCalculator } from "@/components/features/TransferCalculator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Navigation } from "@/components/ui/navigation";
 import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star } from "lucide-react";
 
 export default function Home() {
@@ -20,20 +21,7 @@ export default function Home() {
                 Stealth Money
               </h1>
             </div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Features
-              </a>
-              <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                How It Works
-              </a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Pricing
-              </a>
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                Get Started
-              </Button>
-            </nav>
+            <Navigation />
           </div>
         </div>
       </header>
