@@ -6,14 +6,14 @@
   - Configure environment variables for Clerk integration
   - _Requirements: 1.1, 2.1_
 
-- [-] 2. Configure Clerk in Next.js frontend
+- [x] 2. Configure Clerk in Next.js frontend
   - Set up ClerkProvider in app layout
   - Configure Clerk middleware for route protection
   - Create authentication pages using Clerk components
   - _Requirements: 1.1, 1.2, 2.1, 2.2_
 
 - [ ] 3. Implement authentication pages
-- [ ] 3.1 Create sign-in page with Clerk component
+- [-] 3.1 Create sign-in page with Clerk component
   - Build sign-in page at /auth/sign-in
   - Integrate Clerk SignIn component
   - Configure post-authentication redirects
