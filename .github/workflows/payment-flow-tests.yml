@@ -58,12 +58,15 @@ jobs:
         NODE_ENV=test
         PORT=4000
         DATABASE_URL=postgresql://postgres:postgres@localhost:5432/stealth_money_test
+        DIRECT_URL=postgresql://postgres:postgres@localhost:5432/stealth_money_test
         EXCHANGERATE_API_KEY=\${TEST_EXCHANGE_KEY:-test_key_placeholder}
         STRIPE_SECRET_KEY=\${TEST_STRIPE_SECRET:-sk_test_placeholder}
         STRIPE_PUBLISHABLE_KEY=\${TEST_STRIPE_PUBLIC:-pk_test_placeholder}
         STRIPE_WEBHOOK_SECRET=\${TEST_STRIPE_WEBHOOK:-whsec_placeholder}
-        SERVER_WALLET_PRIVATE_KEY=test_private_key
-        NODE_PROVIDER_URL=test_rpc_url
+        BLOCKCHAIN_MODE=mock
+        BLOCKCHAIN_NETWORK=test
+        SERVER_WALLET_PRIVATE_KEY=0xa102eb786264342a5223767a74665fefd419c19ed481144c2c7b0434cb36757f
+        NODE_PROVIDER_URL=https://test.infura.io/v3/test_project_id
         TRANSFER_MANAGER_CONTRACT_ADDRESS=0x742d35Cc6634C0532925a3b8D4C9db96590b5c8e
         EOF
 
@@ -81,15 +84,20 @@ jobs:
       run: |
         PGPASSWORD=postgres psql -h localhost -U postgres -d stealth_money_test -c "
         CREATE TABLE IF NOT EXISTS transactions (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
           amount DECIMAL(10,2) NOT NULL,
           source_currency VARCHAR(3) NOT NULL,
           dest_currency VARCHAR(3) NOT NULL,
           exchange_rate DECIMAL(10,6) NOT NULL,
           recipient_amount DECIMAL(10,2) NOT NULL,
           status VARCHAR(50) DEFAULT 'PENDING',
-          stripe_payment_intent_id VARCHAR(255),
-          blockchain_tx_hash VARCHAR(255),
+          stripe_payment_intent_id VARCHAR(255) UNIQUE,
+          blockchain_tx_hash VARCHAR(255) UNIQUE,
+          recipient_name VARCHAR(255),
+          recipient_email VARCHAR(255),
+          recipient_phone VARCHAR(50),
+          payout_method VARCHAR(50),
+          payout_details JSONB,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );"
@@ -114,6 +122,17 @@ jobs:
         curl -f http://localhost:4000/health
         curl -f http://localhost:4000/api/orchestrator/health
         curl -f http://localhost:4000/api/stripe/config
+
+    - name: Test blockchain integration
+      run: |
+        cd packages/api
+        npm run test:blockchain:health
+        npm run test:blockchain:balance
+
+    - name: Test complete blockchain flow
+      run: |
+        cd packages/api
+        npm run test:blockchain:release
 
   test-frontend:
     runs-on: ubuntu-latest
