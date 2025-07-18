@@ -52,11 +52,27 @@ dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const transfers_controller_1 = __importDefault(require("./routes/transfers.controller"));
+const webhooks_controller_1 = __importDefault(require("./routes/webhooks.controller"));
 const database_simple_service_1 = require("./services/database-simple.service");
 const app = (0, express_1.default)();
 const PORT = parseInt(process.env.PORT || '4000', 10);
+console.log(`🔧 Environment PORT: ${process.env.PORT}`);
+console.log(`🔧 Using PORT: ${PORT}`);
 app.use((0, cors_1.default)()); // Enable Cross-Origin Resource Sharing
-app.use(express_1.default.json()); // Enable JSON body parsing
+// CRITICAL: Raw body parsing for Stripe webhooks MUST come before express.json()
+// Stripe requires the raw, unparsed body for signature verification
+app.use('/api/webhooks/stripe', express_1.default.raw({ type: 'application/json' }));
+app.use(express_1.default.json()); // Enable JSON body parsing for all other routes
+// Root endpoint
+app.get('/', (req, res) => {
+    res.status(200).json({
+        message: 'Stealth Money API',
+        version: '1.0.0',
+        status: 'running',
+        port: PORT,
+        timestamp: new Date().toISOString()
+    });
+});
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'API is healthy' });
 });
@@ -93,31 +109,62 @@ app.get('/test-rate', (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
 }));
+// Debug environment variables
+app.get('/debug-env', (req, res) => {
+    var _a, _b;
+    res.json({
+        port: process.env.PORT,
+        hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
+        hasStripePublishable: !!process.env.STRIPE_PUBLISHABLE_KEY,
+        stripeSecretPrefix: (_a = process.env.STRIPE_SECRET_KEY) === null || _a === void 0 ? void 0 : _a.substring(0, 10),
+        stripePublishablePrefix: (_b = process.env.STRIPE_PUBLISHABLE_KEY) === null || _b === void 0 ? void 0 : _b.substring(0, 10),
+        nodeEnv: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+    });
+});
 // Wire up the transfer routes with /api prefix
 app.use('/api', transfers_controller_1.default);
+// Wire up the webhook routes with /api prefix
+app.use('/api/webhooks', webhooks_controller_1.default);
+// Add error handling middleware
+app.use((err, req, res, next) => {
+    console.error('❌ Unhandled error:', err);
+    res.status(500).json({ error: 'Internal server error', message: err.message });
+});
 // Initialize database and start server
 function startServer() {
     return __awaiter(this, void 0, void 0, function* () {
-        const dbService = new database_simple_service_1.SimpleDatabaseService();
-        // Test database connection and initialize tables
-        console.log('🔌 Testing database connection...');
-        const connected = yield dbService.testConnection();
-        if (connected) {
-            console.log('📊 Initializing database tables...');
-            const initialized = yield dbService.initialize();
-            if (initialized) {
-                console.log('✅ Database ready!');
+        try {
+            const dbService = new database_simple_service_1.SimpleDatabaseService();
+            // Test database connection and initialize tables
+            console.log('🔌 Testing database connection...');
+            const connected = yield dbService.testConnection();
+            if (connected) {
+                console.log('📊 Initializing database tables...');
+                const initialized = yield dbService.initialize();
+                if (initialized) {
+                    console.log('✅ Database ready!');
+                }
+                else {
+                    console.log('⚠️  Database initialization failed, but continuing...');
+                }
             }
             else {
-                console.log('⚠️  Database initialization failed, but continuing...');
+                console.log('⚠️  Database connection failed, but continuing...');
             }
+            const server = app.listen(PORT, '0.0.0.0', () => {
+                console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
+                console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
+                console.log(`🧪 Test endpoint: http://0.0.0.0:${PORT}/test`);
+            });
+            server.on('error', (error) => {
+                console.error('❌ Server error:', error);
+            });
         }
-        else {
-            console.log('⚠️  Database connection failed, but continuing...');
+        catch (error) {
+            console.error('❌ Failed to start server:', error);
+            process.exit(1);
         }
-        app.listen(PORT, '0.0.0.0', () => {
-            console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
-        });
     });
 }
-startServer().catch(console.error);
+startServer();

@@ -20,6 +20,11 @@ interface TransferData {
   status: string;
   stripePaymentIntentId: string | null;
   blockchainTxHash: string | null;
+  recipientName?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  payoutMethod?: string;
+  payoutDetails?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,7 +72,7 @@ const getStatusTimeline = (currentStatus: string) => {
 };
 
 const getStatusInfo = (status: string) => {
-  const statusMap: { [key: string]: { color: string; icon: any; message: string } } = {
+  const statusMap: { [key: string]: { color: string; icon: React.ComponentType<{ className?: string }>; message: string } } = {
     'PENDING_PAYMENT': {
       color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
       icon: Clock,
@@ -200,7 +205,7 @@ export default function TransferStatusPage() {
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-gray-600">
-              We couldn't find a transfer with ID: {transactionId}
+              We couldn&apos;t find a transfer with ID: {transactionId}
             </p>
             <Button onClick={() => window.location.href = '/'}>
               Start New Transfer
@@ -305,6 +310,37 @@ export default function TransferStatusPage() {
                 ))}
               </div>
             </div>
+
+            {/* Recipient Information */}
+            {transfer.recipientName && (
+              <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                <h3 className="font-semibold text-blue-800">Recipient Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-blue-600">Name:</span>
+                    <span className="font-medium">{transfer.recipientName}</span>
+                  </div>
+                  {transfer.recipientEmail && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-600">Email:</span>
+                      <span className="font-medium">{transfer.recipientEmail}</span>
+                    </div>
+                  )}
+                  {transfer.recipientPhone && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-600">Phone:</span>
+                      <span className="font-medium">{transfer.recipientPhone}</span>
+                    </div>
+                  )}
+                  {transfer.payoutMethod && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-600">Payout Method:</span>
+                      <span className="font-medium capitalize">{transfer.payoutMethod.replace('_', ' ')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="bg-gray-50 p-4 rounded-lg space-y-3">
               <h3 className="font-semibold">Transaction Details</h3>

@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -26,7 +59,19 @@ const createTransferSchema = zod_1.z.object({
     amount: zod_1.z.number().positive(),
     sourceCurrency: zod_1.z.string().length(3),
     destCurrency: zod_1.z.string().length(3),
-    // Future fields: recipientDetails, etc.
+    // Recipient information (optional for now to maintain backward compatibility)
+    recipientName: zod_1.z.string().min(1).optional(),
+    recipientEmail: zod_1.z.string().email().optional(),
+    recipientPhone: zod_1.z.string().min(1).optional(),
+    payoutMethod: zod_1.z.enum(['bank_account', 'mobile_wallet', 'cash_pickup', 'debit_card']).optional(),
+    payoutDetails: zod_1.z.object({
+        bankName: zod_1.z.string().optional(),
+        accountNumber: zod_1.z.string().optional(),
+        routingNumber: zod_1.z.string().optional(),
+        walletProvider: zod_1.z.string().optional(),
+        walletNumber: zod_1.z.string().optional(),
+        pickupLocation: zod_1.z.string().optional(),
+    }).optional(),
 });
 // Test endpoint to check blockchain connection and wallet balance
 router.get('/blockchain/health', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -75,6 +120,50 @@ router.get('/stripe/config', (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({
             message: 'Could not fetch Stripe configuration',
             error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+}));
+// Health check for orchestrator service
+router.get('/orchestrator/health', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { OrchestratorService } = yield Promise.resolve().then(() => __importStar(require('../services/orchestrator.service')));
+        const orchestratorService = new OrchestratorService();
+        const health = yield orchestratorService.healthCheck();
+        res.json(Object.assign(Object.assign({}, health), { timestamp: new Date().toISOString() }));
+    }
+    catch (error) {
+        console.error('Orchestrator health check error:', error);
+        res.status(500).json({
+            message: 'Orchestrator health check failed',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+}));
+// Test endpoint to directly trigger orchestrator workflow
+router.post('/test-orchestrator', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { transactionId } = req.body;
+        if (!transactionId) {
+            return res.status(400).json({ error: 'transactionId is required' });
+        }
+        console.log(`🧪 Test orchestrator triggered for transaction: ${transactionId}`);
+        const { OrchestratorService } = yield Promise.resolve().then(() => __importStar(require('../services/orchestrator.service')));
+        const orchestratorService = new OrchestratorService();
+        // Trigger the main orchestration workflow
+        yield orchestratorService.handleSuccessfulPayment(transactionId);
+        res.json({
+            success: true,
+            message: 'Orchestrator workflow completed successfully',
+            transactionId: transactionId,
+            timestamp: new Date().toISOString()
+        });
+    }
+    catch (error) {
+        console.error('Test orchestrator error:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            transactionId: req.body.transactionId
         });
     }
 }));
@@ -165,17 +254,22 @@ router.post('/transfers', (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         const validatedData = createTransferSchema.parse(req.body);
         console.log('Transfer request validated:', validatedData);
-        const { amount, sourceCurrency, destCurrency } = validatedData;
+        const { amount, sourceCurrency, destCurrency, recipientName, recipientEmail, recipientPhone, payoutMethod, payoutDetails } = validatedData;
         // Fetch exchange rate using FxService
         const exchangeRate = yield fxService.getRate(sourceCurrency, destCurrency);
         const recipientAmount = amount * exchangeRate;
-        // Create transaction record in database
+        // Create transaction record in database with recipient information
         const newTransaction = yield dbService.createTransaction({
             amount,
             sourceCurrency,
             destCurrency,
             exchangeRate,
             recipientAmount: parseFloat(recipientAmount.toFixed(2)),
+            recipientName,
+            recipientEmail,
+            recipientPhone,
+            payoutMethod,
+            payoutDetails,
         });
         // Create Stripe Payment Intent
         // Stripe requires the amount in cents, so we multiply by 100
@@ -213,54 +307,6 @@ router.post('/transfers', (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
     }
 }));
-// Stripe webhook endpoint (requires raw body parser)
-// Note: This endpoint needs express.raw() middleware for proper signature verification
-router.post('/webhooks/stripe', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const sig = req.headers['stripe-signature'];
-        if (!sig) {
-            return res.status(400).json({ message: 'Missing stripe-signature header' });
-        }
-        // Note: req.body should be raw buffer for signature verification
-        // You'll need to configure express.raw() middleware for this route
-        const event = paymentService.verifyWebhookSignature(req.body, sig);
-        console.log('Received Stripe webhook:', event.type);
-        switch (event.type) {
-            case 'payment_intent.succeeded':
-                const paymentIntent = event.data.object;
-                const transactionId = paymentIntent.metadata.internalTransactionId;
-                if (transactionId) {
-                    // Update database status to PAID
-                    yield dbService.updateTransactionStatus(transactionId, 'PAID', {
-                        paymentId: paymentIntent.id
-                    });
-                    console.log(`Payment succeeded for transaction: ${transactionId}`);
-                    // TODO: Trigger blockchain release here
-                    // const transaction = await dbService.getTransaction(transactionId);
-                    // await blockchainService.releaseFunds(recipientAddress, amount, transactionId);
-                }
-                break;
-            case 'payment_intent.payment_failed':
-                const failedPayment = event.data.object;
-                const failedTransactionId = failedPayment.metadata.internalTransactionId;
-                if (failedTransactionId) {
-                    yield dbService.updateTransactionStatus(failedTransactionId, 'FAILED', {
-                        paymentId: failedPayment.id
-                    });
-                    console.log(`Payment failed for transaction: ${failedTransactionId}`);
-                }
-                break;
-            default:
-                console.log(`Unhandled event type: ${event.type}`);
-        }
-        res.json({ received: true });
-    }
-    catch (error) {
-        console.error('Stripe webhook error:', error);
-        res.status(400).json({
-            message: 'Webhook error',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
-    }
-}));
+// Note: Stripe webhook handling has been moved to /routes/webhooks.controller.ts
+// This provides better separation of concerns and proper raw body parsing
 exports.default = router;

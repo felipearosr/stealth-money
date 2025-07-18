@@ -17,7 +17,19 @@ const createTransferSchema = z.object({
     amount: z.number().positive(),
     sourceCurrency: z.string().length(3),
     destCurrency: z.string().length(3),
-    // Future fields: recipientDetails, etc.
+    // Recipient information (optional for now to maintain backward compatibility)
+    recipientName: z.string().min(1).optional(),
+    recipientEmail: z.string().email().optional(),
+    recipientPhone: z.string().min(1).optional(),
+    payoutMethod: z.enum(['bank_account', 'mobile_wallet', 'cash_pickup', 'debit_card']).optional(),
+    payoutDetails: z.object({
+        bankName: z.string().optional(),
+        accountNumber: z.string().optional(),
+        routingNumber: z.string().optional(),
+        walletProvider: z.string().optional(),
+        walletNumber: z.string().optional(),
+        pickupLocation: z.string().optional(),
+    }).optional(),
 });
 
 // Test endpoint to check blockchain connection and wallet balance
@@ -224,19 +236,33 @@ router.post('/transfers', async (req: Request, res: Response) => {
         const validatedData = createTransferSchema.parse(req.body);
         console.log('Transfer request validated:', validatedData);
 
-        const { amount, sourceCurrency, destCurrency } = validatedData;
+        const { 
+            amount, 
+            sourceCurrency, 
+            destCurrency,
+            recipientName,
+            recipientEmail,
+            recipientPhone,
+            payoutMethod,
+            payoutDetails
+        } = validatedData;
 
         // Fetch exchange rate using FxService
         const exchangeRate = await fxService.getRate(sourceCurrency, destCurrency);
         const recipientAmount = amount * exchangeRate;
 
-        // Create transaction record in database
+        // Create transaction record in database with recipient information
         const newTransaction = await dbService.createTransaction({
             amount,
             sourceCurrency,
             destCurrency,
             exchangeRate,
             recipientAmount: parseFloat(recipientAmount.toFixed(2)),
+            recipientName,
+            recipientEmail,
+            recipientPhone,
+            payoutMethod,
+            payoutDetails,
         });
 
         // Create Stripe Payment Intent

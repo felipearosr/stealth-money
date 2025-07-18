@@ -11,6 +11,12 @@ interface Transaction {
   status: string;
   stripePaymentIntentId?: string;
   blockchainTxHash?: string;
+  // Recipient Information
+  recipientName?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  payoutMethod?: string;
+  payoutDetails?: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +74,14 @@ export class SimpleDatabaseService {
           status VARCHAR(50) DEFAULT 'PENDING',
           stripe_payment_intent_id VARCHAR(255) UNIQUE,
           blockchain_tx_hash VARCHAR(255) UNIQUE,
+          
+          -- Recipient Information
+          recipient_name VARCHAR(255),
+          recipient_email VARCHAR(255),
+          recipient_phone VARCHAR(50),
+          payout_method VARCHAR(50),
+          payout_details JSONB,
+          
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -87,6 +101,11 @@ export class SimpleDatabaseService {
     destCurrency: string;
     exchangeRate: number;
     recipientAmount: number;
+    recipientName?: string;
+    recipientEmail?: string;
+    recipientPhone?: string;
+    payoutMethod?: string;
+    payoutDetails?: any;
   }): Promise<Transaction> {
     if (!this.isConfigured || !this.pool) {
       // Return mock transaction for testing
@@ -104,8 +123,11 @@ export class SimpleDatabaseService {
     }
 
     const query = `
-      INSERT INTO transactions (amount, source_currency, dest_currency, exchange_rate, recipient_amount)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO transactions (
+        amount, source_currency, dest_currency, exchange_rate, recipient_amount,
+        recipient_name, recipient_email, recipient_phone, payout_method, payout_details
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING 
         id,
         amount,
@@ -116,6 +138,11 @@ export class SimpleDatabaseService {
         status,
         stripe_payment_intent_id as "stripePaymentIntentId",
         blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
         created_at as "createdAt",
         updated_at as "updatedAt"
     `;
@@ -125,7 +152,12 @@ export class SimpleDatabaseService {
       data.sourceCurrency,
       data.destCurrency,
       data.exchangeRate,
-      data.recipientAmount
+      data.recipientAmount,
+      data.recipientName || null,
+      data.recipientEmail || null,
+      data.recipientPhone || null,
+      data.payoutMethod || null,
+      data.payoutDetails ? JSON.stringify(data.payoutDetails) : null
     ];
 
     const result = await this.pool.query(query, values);
@@ -211,6 +243,11 @@ export class SimpleDatabaseService {
         status,
         stripe_payment_intent_id as "stripePaymentIntentId",
         blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
         created_at as "createdAt",
         updated_at as "updatedAt"
       FROM transactions 

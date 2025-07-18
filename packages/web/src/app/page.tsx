@@ -1,10 +1,32 @@
-// src/app/page.tsx
+"use client";
+
+import { useState } from "react";
 import { TransferCalculator } from "@/components/features/TransferCalculator";
+import { RecipientForm } from "@/components/features/RecipientForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star } from "lucide-react";
 
+interface TransferData {
+  amount: number;
+  sourceCurrency: string;
+  destCurrency: string;
+  rate: number;
+  recipientAmount: number;
+}
+
 export default function Home() {
+  const [currentStep, setCurrentStep] = useState<'calculator' | 'recipient'>('calculator');
+  const [transferData, setTransferData] = useState<TransferData | null>(null);
+
+  const handleCalculatorContinue = (data: TransferData) => {
+    setTransferData(data);
+    setCurrentStep('recipient');
+  };
+
+  const handleRecipientBack = () => {
+    setCurrentStep('calculator');
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
@@ -99,13 +121,21 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Content - Calculator */}
+          {/* Right Content - Multi-Step Form */}
           <div className="lg:pl-8">
             <div className="relative">
               {/* Background decoration */}
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl"></div>
               <div className="relative">
-                <TransferCalculator />
+                {currentStep === 'calculator' && (
+                  <TransferCalculator onContinue={handleCalculatorContinue} />
+                )}
+                {currentStep === 'recipient' && transferData && (
+                  <RecipientForm 
+                    transferData={transferData}
+                    onBack={handleRecipientBack}
+                  />
+                )}
               </div>
             </div>
           </div>

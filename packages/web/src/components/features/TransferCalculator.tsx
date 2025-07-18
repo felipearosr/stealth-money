@@ -26,7 +26,17 @@ const transferSchema = z.object({
   destCurrency: z.string().min(1, "Destination currency is required"),
 });
 
-export function TransferCalculator() {
+interface TransferCalculatorProps {
+  onContinue?: (data: {
+    amount: number;
+    sourceCurrency: string;
+    destCurrency: string;
+    rate: number;
+    recipientAmount: number;
+  }) => void;
+}
+
+export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
   const router = useRouter();
   
   // Form state
@@ -125,7 +135,7 @@ export function TransferCalculator() {
     } catch (err) {
       if (err instanceof z.ZodError) {
         const errors: Record<string, string> = {};
-        err.errors.forEach((error) => {
+        err.issues.forEach((error) => {
           if (error.path[0]) {
             errors[error.path[0] as string] = error.message;
           }
@@ -140,6 +150,19 @@ export function TransferCalculator() {
       return;
     }
 
+    // If onContinue prop is provided, use the multi-step flow
+    if (onContinue) {
+      onContinue({
+        amount: parseFloat(amountToSend),
+        sourceCurrency,
+        destCurrency,
+        rate,
+        recipientAmount: parseFloat(amountToReceive),
+      });
+      return;
+    }
+
+    // Legacy flow: directly create transfer (for backward compatibility)
     setIsLoading(true);
 
     try {

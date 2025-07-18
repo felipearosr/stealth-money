@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
 import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -15,7 +15,7 @@ interface PaymentFormProps {
 export function PaymentForm({ transactionId, amount, currency }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
-  const router = useRouter();
+
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

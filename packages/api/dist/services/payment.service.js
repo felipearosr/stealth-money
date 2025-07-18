@@ -21,6 +21,8 @@ class PaymentService {
         this.isConfigured = false;
         const secretKey = process.env.STRIPE_SECRET_KEY;
         console.log('🔍 Stripe Secret Key check:', secretKey ? `${secretKey.substring(0, 15)}...` : 'undefined');
+        console.log('🔍 Secret Key starts with sk_:', secretKey === null || secretKey === void 0 ? void 0 : secretKey.startsWith('sk_'));
+        console.log('🔍 Secret Key length:', secretKey === null || secretKey === void 0 ? void 0 : secretKey.length);
         if (!secretKey || secretKey === 'sk_test_...' || secretKey.length < 20) {
             console.log('⚠️  Stripe not configured - payment features disabled');
             this.isConfigured = false;
