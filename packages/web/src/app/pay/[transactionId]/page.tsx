@@ -2,13 +2,16 @@
 
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, CreditCard, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { PaymentForm } from "@/components/features/PaymentForm";
 
 interface TransferData {
   transactionId: string;
-  amount: number;
+  sourceAmount: number;
   sourceCurrency: string;
   destCurrency: string;
   recipientAmount: number;
@@ -16,6 +19,9 @@ interface TransferData {
   status: string;
   clientSecret: string;
 }
+
+// Initialize Stripe
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function PaymentPage() {
   const params = useParams();
@@ -26,7 +32,6 @@ export default function PaymentPage() {
   const [transferData, setTransferData] = useState<TransferData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
 
   useEffect(() => {
     const fetchTransferData = async () => {
@@ -52,34 +57,7 @@ export default function PaymentPage() {
     fetchTransferData();
   }, [transactionId]);
 
-  const handlePayment = async () => {
-    if (!transferData || !clientSecret) return;
-
-    setPaymentStatus('processing');
-
-    try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real implementation, you would integrate with Stripe here
-      // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-      // const result = await stripe.confirmCardPayment(clientSecret, {
-      //   payment_method: {
-      //     card: cardElement,
-      //     billing_details: {
-      //       name: 'Customer Name',
-      //     },
-      //   }
-      // });
-
-      setPaymentStatus('completed');
-    } catch (err) {
-      setPaymentStatus('failed');
-      setError('Payment failed. Please try again.');
-      console.error('Payment error:', err);
-    }
-  };
-
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
@@ -93,12 +71,19 @@ export default function PaymentPage() {
     );
   }
 
+  // Error state
   if (error && !transferData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
-          <CardContent className="text-center p-8">
-            <div className="text-red-600 mb-4">{error}</div>
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+            </div>
+            <CardTitle className="text-red-600">Error Loading Payment</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-gray-600">{error}</p>
             <Button onClick={() => window.location.href = '/'}>
               Return Home
             </Button>
@@ -108,34 +93,21 @@ export default function PaymentPage() {
     );
   }
 
-  if (paymentStatus === 'completed') {
+  // Missing client secret
+  if (!clientSecret) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-8 w-8 text-yellow-600" />
             </div>
-            <CardTitle className="text-green-600">Payment Successful!</CardTitle>
+            <CardTitle className="text-yellow-600">Invalid Payment Link</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <p>Your transfer has been initiated successfully.</p>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span>Transaction ID:</span>
-                <span className="font-mono text-sm">{transactionId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Amount Sent:</span>
-                <span>{transferData?.amount} {transferData?.sourceCurrency}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Recipient Gets:</span>
-                <span>{transferData?.recipientAmount} {transferData?.destCurrency}</span>
-              </div>
-            </div>
-            <Button onClick={() => window.location.href = '/'} className="w-full">
-              Send Another Transfer
+            <p className="text-gray-600">This payment link is invalid or has expired.</p>
+            <Button onClick={() => window.location.href = '/'}>
+              Start New Transfer
             </Button>
           </CardContent>
         </Card>
@@ -143,11 +115,31 @@ export default function PaymentPage() {
     );
   }
 
+  // Stripe Elements options
+  const options = {
+    clientSecret,
+    appearance: {
+      theme: 'stripe' as const,
+      variables: {
+        colorPrimary: '#2563eb',
+        colorBackground: '#ffffff',
+        colorText: '#1f2937',
+        colorDanger: '#dc2626',
+        fontFamily: 'system-ui, sans-serif',
+        spacingUnit: '4px',
+        borderRadius: '8px',
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Complete Your Payment</CardTitle>
+          <p className="text-sm text-gray-600">
+            You are sending <span className="font-semibold">${transferData?.sourceAmount}</span> to your recipient
+          </p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Transfer Summary */}
@@ -155,7 +147,7 @@ export default function PaymentPage() {
             <h3 className="font-semibold mb-2">Transfer Summary</h3>
             <div className="flex justify-between text-sm">
               <span>You Send:</span>
-              <span>{transferData?.amount} {transferData?.sourceCurrency}</span>
+              <span>{transferData?.sourceAmount} {transferData?.sourceCurrency}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>They Receive:</span>
@@ -167,48 +159,22 @@ export default function PaymentPage() {
             </div>
             <div className="flex justify-between text-sm">
               <span>Fee (2.9%):</span>
-              <span>{((transferData?.amount || 0) * 0.029).toFixed(2)} {transferData?.sourceCurrency}</span>
+              <span>{((transferData?.sourceAmount || 0) * 0.029).toFixed(2)} {transferData?.sourceCurrency}</span>
             </div>
             <div className="border-t pt-2 flex justify-between font-semibold">
               <span>Total to Pay:</span>
-              <span>{((transferData?.amount || 0) * 1.029).toFixed(2)} {transferData?.sourceCurrency}</span>
+              <span>{((transferData?.sourceAmount || 0) * 1.029).toFixed(2)} {transferData?.sourceCurrency}</span>
             </div>
           </div>
 
-          {/* Payment Method */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Payment Method</h3>
-            <div className="border rounded-lg p-4 bg-white">
-              <div className="flex items-center space-x-3">
-                <CreditCard className="h-6 w-6 text-gray-400" />
-                <div>
-                  <div className="font-medium">Credit/Debit Card</div>
-                  <div className="text-sm text-gray-500">Visa, Mastercard, American Express</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-              {error}
-            </div>
-          )}
-
-          <Button 
-            onClick={handlePayment}
-            disabled={paymentStatus === 'processing'}
-            className="w-full"
-          >
-            {paymentStatus === 'processing' ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing Payment...
-              </>
-            ) : (
-              `Pay ${((transferData?.amount || 0) * 1.029).toFixed(2)} ${transferData?.sourceCurrency}`
-            )}
-          </Button>
+          {/* Stripe Payment Form */}
+          <Elements stripe={stripePromise} options={options}>
+            <PaymentForm 
+              transactionId={transactionId}
+              amount={((transferData?.sourceAmount || 0) * 1.029).toFixed(2)}
+              currency={transferData?.sourceCurrency || 'USD'}
+            />
+          </Elements>
 
           <p className="text-xs text-gray-500 text-center">
             Your payment is secured with bank-level encryption. 

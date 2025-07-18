@@ -10,7 +10,7 @@ import transferRoutes from './routes/transfers.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '8080', 10);
+const PORT = parseInt(process.env.PORT || '4000', 10);
 console.log(`🔧 Environment PORT: ${process.env.PORT}`);
 console.log(`🔧 Using PORT: ${PORT}`);
 
@@ -64,6 +64,19 @@ app.get('/test-rate', async (req: Request, res: Response) => {
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
+});
+
+// Debug environment variables
+app.get('/debug-env', (req: Request, res: Response) => {
+  res.json({
+    port: process.env.PORT,
+    hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
+    hasStripePublishable: !!process.env.STRIPE_PUBLISHABLE_KEY,
+    stripeSecretPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10),
+    stripePublishablePrefix: process.env.STRIPE_PUBLISHABLE_KEY?.substring(0, 10),
+    nodeEnv: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Wire up the transfer routes with /api prefix
