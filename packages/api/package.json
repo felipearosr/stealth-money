@@ -7,7 +7,15 @@
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:blockchain": "node test-blockchain.js",
+    "test:blockchain:health": "node test-blockchain.js health",
+    "test:blockchain:balance": "node test-blockchain.js balance",
+    "test:blockchain:release": "node test-blockchain.js release",
+    "blockchain:setup": "node setup-blockchain.js",
+    "blockchain:mock": "node setup-blockchain.js mock",
+    "blockchain:real": "node setup-blockchain.js real",
+    "blockchain:status": "node setup-blockchain.js status"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +40,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.13",
+    "node-fetch": "^2.7.0",
     "ts-node-dev": "^2.0.0"
   }
 }

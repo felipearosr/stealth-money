@@ -100,6 +100,9 @@ export class OrchestratorService {
     private async executeBlockchainRelease(transaction: any): Promise<{
         success: boolean;
         transactionHash?: string;
+        blockNumber?: number;
+        gasUsed?: string;
+        confirmations?: number;
         error?: string;
     }> {
         try {
@@ -111,17 +114,65 @@ export class OrchestratorService {
                     error: 'Blockchain service unavailable - requires manual processing'
                 };
             }
+
+            console.log(`🔗 Blockchain mode: ${healthCheck.mode}`);
             
-            // Simulate blockchain release for testing
-            const blockchainTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-            console.log(`✅ Blockchain transaction successful: ${blockchainTxHash}`);
+            // For now, we'll use a placeholder recipient address
+            // In a real implementation, this would come from the recipient information
+            const recipientAddress = transaction.recipientWalletAddress || '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'; // Placeholder
+            
+            // Convert amount to proper units (assuming USDC with 6 decimals)
+            const amountInTokenUnits = Math.floor(transaction.recipientAmount * 1000000); // Convert to 6 decimal places
+            
+            console.log(`💸 Releasing ${transaction.recipientAmount} tokens to ${recipientAddress}`);
+            
+            // Call the blockchain service to release funds
+            const releaseResult = await this.blockchainService.releaseFunds(
+                recipientAddress,
+                amountInTokenUnits.toString(),
+                transaction.id
+            );
+            
+            console.log(`✅ Blockchain release initiated: ${releaseResult.txHash}`);
+            
+            // Wait for blockchain confirmation
+            console.log('⏳ Waiting for blockchain confirmation...');
+            const requiredConfirmations = this.blockchainService.isRealMode() ? 1 : 0;
+            
+            if (requiredConfirmations > 0) {
+                const confirmed = await this.blockchainService.waitForConfirmations(
+                    releaseResult.txHash, 
+                    requiredConfirmations
+                );
+                
+                if (!confirmed) {
+                    return {
+                        success: false,
+                        transactionHash: releaseResult.txHash,
+                        error: 'Transaction failed to get required confirmations'
+                    };
+                }
+            }
+            
+            // Get final transaction details
+            const txDetails = await this.blockchainService.getTransactionDetails(releaseResult.txHash);
+            
+            console.log(`🎉 Blockchain transaction confirmed!`);
+            console.log(`   Hash: ${releaseResult.txHash}`);
+            console.log(`   Block: ${releaseResult.blockNumber}`);
+            console.log(`   Gas Used: ${releaseResult.gasUsed}`);
+            console.log(`   Confirmations: ${txDetails?.confirmations || 0}`);
             
             return {
                 success: true,
-                transactionHash: blockchainTxHash
+                transactionHash: releaseResult.txHash,
+                blockNumber: releaseResult.blockNumber,
+                gasUsed: releaseResult.gasUsed,
+                confirmations: txDetails?.confirmations || 0
             };
             
         } catch (error) {
+            console.error('❌ Blockchain release failed:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown blockchain error'
