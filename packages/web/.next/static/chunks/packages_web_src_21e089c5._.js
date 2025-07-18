@@ -210,6 +210,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/swr/dist/index/index.mjs [app-client] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$stripe$2f$stripe$2d$js$2f$lib$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_context__.i("[project]/node_modules/@stripe/stripe-js/lib/index.mjs [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$stripe$2f$stripe$2d$js$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@stripe/stripe-js/dist/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/packages/web/src/components/ui/card.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/packages/web/src/components/ui/button.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-check-big.js [app-client] (ecmascript) <export default as CheckCircle>");
@@ -226,14 +228,14 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-// Fetcher function for SWR
+;
+const stripePromise = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$stripe$2f$stripe$2d$js$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["loadStripe"])(("TURBOPACK compile-time value", "pk_test_51RlJ5nCGmh60X4m8qsrnQimLT3EtLlSmBkFIK7LEJA8nfHlrW9dennXCp7Ab8lQmwzKG5fStlBb6AxAHKAGEU0Ck00hK2n5P3z"));
 const fetcher = (url)=>fetch(url).then((res)=>{
         if (!res.ok) {
             throw new Error('Failed to fetch transaction');
         }
         return res.json();
     });
-// Status timeline configuration
 const getStatusTimeline = (currentStatus)=>{
     const steps = [
         {
@@ -281,7 +283,6 @@ const getStatusTimeline = (currentStatus)=>{
             active: step.statuses.includes(currentStatus) && !steps.find((s)=>s.statuses.includes(currentStatus) && steps.indexOf(s) > steps.indexOf(step))
         }));
 };
-// Get status display info
 const getStatusInfo = (status)=>{
     const statusMap = {
         'PENDING_PAYMENT': {
@@ -313,11 +314,6 @@ const getStatusInfo = (status)=>{
             color: 'text-red-600 bg-red-50 border-red-200',
             icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"],
             message: 'Transfer failed - manual intervention required'
-        },
-        'CANCELED': {
-            color: 'text-gray-600 bg-gray-50 border-gray-200',
-            icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"],
-            message: 'Transfer was canceled'
         }
     };
     return statusMap[status] || {
@@ -329,9 +325,57 @@ const getStatusInfo = (status)=>{
 function TransferStatusPage() {
     _s();
     const params = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useParams"])();
+    const searchParams = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"])();
     const transactionId = params.transactionId;
     const [isManualRefresh, setIsManualRefresh] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
-    // Use SWR for data fetching with polling every 5 seconds
+    const [paymentStatus, setPaymentStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('completed');
+    const paymentIntent = searchParams.get('payment_intent');
+    const paymentIntentClientSecret = searchParams.get('payment_intent_client_secret');
+    const redirectStatus = searchParams.get('redirect_status');
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "TransferStatusPage.useEffect": ()=>{
+            const confirmStripePayment = {
+                "TransferStatusPage.useEffect.confirmStripePayment": async ()=>{
+                    if (!paymentIntent || !paymentIntentClientSecret || !redirectStatus) {
+                        return;
+                    }
+                    console.log('🔄 Handling Stripe redirect:', {
+                        paymentIntent,
+                        redirectStatus
+                    });
+                    setPaymentStatus('checking');
+                    try {
+                        const stripe = await stripePromise;
+                        if (!stripe) {
+                            throw new Error('Stripe not loaded');
+                        }
+                        const { paymentIntent: retrievedPaymentIntent, error } = await stripe.retrievePaymentIntent(paymentIntentClientSecret);
+                        if (error) {
+                            console.error('❌ Error retrieving payment intent:', error);
+                            setPaymentStatus('failed');
+                            return;
+                        }
+                        if (retrievedPaymentIntent.status === 'succeeded') {
+                            console.log('✅ Payment confirmed by Stripe');
+                            setPaymentStatus('confirmed');
+                        } else {
+                            console.log('❌ Payment failed or was canceled');
+                            setPaymentStatus('failed');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error confirming payment:', error);
+                        setPaymentStatus('failed');
+                    }
+                }
+            }["TransferStatusPage.useEffect.confirmStripePayment"];
+            confirmStripePayment();
+        }
+    }["TransferStatusPage.useEffect"], [
+        paymentIntent,
+        paymentIntentClientSecret,
+        redirectStatus,
+        transactionId
+    ]);
     const { data: transfer, error, isLoading, mutate } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"])(transactionId ? `${("TURBOPACK compile-time value", "http://localhost:4000") || 'http://localhost:4000'}/api/transfers/${transactionId}` : null, fetcher, {
         refreshInterval: 5000,
         revalidateOnFocus: true,
@@ -354,30 +398,30 @@ function TransferStatusPage() {
                             className: "h-8 w-8 animate-spin mr-3"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                            lineNumber: 142,
+                            lineNumber: 183,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             children: "Loading transfer details..."
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                            lineNumber: 143,
+                            lineNumber: 184,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                    lineNumber: 141,
+                    lineNumber: 182,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                lineNumber: 140,
+                lineNumber: 181,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-            lineNumber: 139,
+            lineNumber: 180,
             columnNumber: 7
         }, this);
     }
@@ -396,12 +440,12 @@ function TransferStatusPage() {
                                     className: "h-8 w-8 text-red-600"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                    lineNumber: 156,
+                                    lineNumber: 197,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                lineNumber: 155,
+                                lineNumber: 196,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardTitle"], {
@@ -409,13 +453,13 @@ function TransferStatusPage() {
                                 children: "Transfer Not Found"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                lineNumber: 158,
+                                lineNumber: 199,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                        lineNumber: 154,
+                        lineNumber: 195,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -429,7 +473,7 @@ function TransferStatusPage() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                lineNumber: 161,
+                                lineNumber: 202,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -437,24 +481,24 @@ function TransferStatusPage() {
                                 children: "Start New Transfer"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                lineNumber: 164,
+                                lineNumber: 205,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                        lineNumber: 160,
+                        lineNumber: 201,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                lineNumber: 153,
+                lineNumber: 194,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-            lineNumber: 152,
+            lineNumber: 193,
             columnNumber: 7
         }, this);
     }
@@ -474,7 +518,7 @@ function TransferStatusPage() {
                             children: "Transfer Status"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                            lineNumber: 182,
+                            lineNumber: 222,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -482,14 +526,61 @@ function TransferStatusPage() {
                             children: "Track your money transfer in real-time"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                            lineNumber: 183,
+                            lineNumber: 223,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                    lineNumber: 181,
+                    lineNumber: 221,
                     columnNumber: 9
+                }, this),
+                paymentStatus === 'confirmed' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
+                    className: "border-green-200 bg-green-50",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
+                        className: "flex items-center p-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                className: "h-5 w-5 text-green-600 mr-3"
+                            }, void 0, false, {
+                                fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                                lineNumber: 229,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "font-medium text-green-800",
+                                        children: "Payment Confirmed!"
+                                    }, void 0, false, {
+                                        fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                                        lineNumber: 231,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "text-sm text-green-600",
+                                        children: "Your payment was successful. Processing your transfer..."
+                                    }, void 0, false, {
+                                        fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                                        lineNumber: 232,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                                lineNumber: 230,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                        lineNumber: 228,
+                        columnNumber: 13
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                    lineNumber: 227,
+                    columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
                     className: "w-full",
@@ -512,7 +603,7 @@ function TransferStatusPage() {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                        lineNumber: 190,
+                                        lineNumber: 241,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -525,25 +616,25 @@ function TransferStatusPage() {
                                                 className: `h-4 w-4 mr-2 ${isManualRefresh ? 'animate-spin' : ''}`
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                lineNumber: 199,
+                                                lineNumber: 250,
                                                 columnNumber: 17
                                             }, this),
                                             "Refresh"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                        lineNumber: 193,
+                                        lineNumber: 244,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                lineNumber: 189,
+                                lineNumber: 240,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                            lineNumber: 188,
+                            lineNumber: 239,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -556,7 +647,7 @@ function TransferStatusPage() {
                                             className: "h-6 w-6 mr-3"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 207,
+                                            lineNumber: 257,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -566,7 +657,7 @@ function TransferStatusPage() {
                                                     children: transfer.status.replace(/_/g, ' ')
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 209,
+                                                    lineNumber: 259,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -574,19 +665,19 @@ function TransferStatusPage() {
                                                     children: statusInfo.message
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 210,
+                                                    lineNumber: 260,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 208,
+                                            lineNumber: 258,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                    lineNumber: 206,
+                                    lineNumber: 256,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -597,7 +688,7 @@ function TransferStatusPage() {
                                             children: "Progress Timeline"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 216,
+                                            lineNumber: 265,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -614,37 +705,37 @@ function TransferStatusPage() {
                                                                         className: "h-4 w-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                                        lineNumber: 230,
+                                                                        lineNumber: 278,
                                                                         columnNumber: 27
                                                                     }, this) : step.active ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__["RefreshCw"], {
                                                                         className: "h-4 w-4 animate-spin"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                                        lineNumber: 232,
+                                                                        lineNumber: 280,
                                                                         columnNumber: 27
                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
                                                                         className: "h-4 w-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                                        lineNumber: 234,
+                                                                        lineNumber: 282,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                                    lineNumber: 222,
+                                                                    lineNumber: 270,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 index < timeline.length - 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: `w-0.5 h-8 mt-2 ${step.completed ? 'bg-green-500' : 'bg-gray-200'}`
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                                    lineNumber: 238,
+                                                                    lineNumber: 286,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 221,
+                                                            lineNumber: 269,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -655,7 +746,7 @@ function TransferStatusPage() {
                                                                     children: step.title
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                                    lineNumber: 246,
+                                                                    lineNumber: 293,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -663,30 +754,30 @@ function TransferStatusPage() {
                                                                     children: step.description
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                                    lineNumber: 251,
+                                                                    lineNumber: 298,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 245,
+                                                            lineNumber: 292,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, step.id, true, {
                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 219,
+                                                    lineNumber: 268,
                                                     columnNumber: 19
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 217,
+                                            lineNumber: 266,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                    lineNumber: 215,
+                                    lineNumber: 264,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -697,7 +788,7 @@ function TransferStatusPage() {
                                             children: "Transaction Details"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 264,
+                                            lineNumber: 310,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -711,7 +802,7 @@ function TransferStatusPage() {
                                                             children: "Transaction ID:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 267,
+                                                            lineNumber: 313,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -719,13 +810,13 @@ function TransferStatusPage() {
                                                             children: transfer.id
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 268,
+                                                            lineNumber: 314,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 266,
+                                                    lineNumber: 312,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -736,7 +827,7 @@ function TransferStatusPage() {
                                                             children: "Exchange Rate:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 271,
+                                                            lineNumber: 317,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -750,13 +841,13 @@ function TransferStatusPage() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 272,
+                                                            lineNumber: 318,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 270,
+                                                    lineNumber: 316,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -767,20 +858,20 @@ function TransferStatusPage() {
                                                             children: "Created:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 275,
+                                                            lineNumber: 321,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: new Date(transfer.createdAt).toLocaleString()
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 276,
+                                                            lineNumber: 322,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 274,
+                                                    lineNumber: 320,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -791,82 +882,32 @@ function TransferStatusPage() {
                                                             children: "Last Updated:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 279,
+                                                            lineNumber: 325,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: new Date(transfer.updatedAt).toLocaleString()
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 280,
+                                                            lineNumber: 326,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 278,
+                                                    lineNumber: 324,
                                                     columnNumber: 17
-                                                }, this),
-                                                transfer.stripePaymentIntentId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "flex justify-between",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: "text-gray-600",
-                                                            children: "Payment ID:"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 284,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: "font-mono text-xs",
-                                                            children: transfer.stripePaymentIntentId
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 285,
-                                                            columnNumber: 21
-                                                        }, this)
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 283,
-                                                    columnNumber: 19
-                                                }, this),
-                                                transfer.blockchainTxHash && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "flex justify-between",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: "text-gray-600",
-                                                            children: "Blockchain TX:"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 290,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: "font-mono text-xs",
-                                                            children: transfer.blockchainTxHash
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                            lineNumber: 291,
-                                                            columnNumber: 21
-                                                        }, this)
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 289,
-                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 265,
+                                            lineNumber: 311,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                    lineNumber: 263,
+                                    lineNumber: 309,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -876,89 +917,69 @@ function TransferStatusPage() {
                                             className: "h-4 w-4 inline mr-1"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 299,
+                                            lineNumber: 332,
                                             columnNumber: 15
                                         }, this),
                                         "Updates automatically every 5 seconds"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                    lineNumber: 298,
+                                    lineNumber: 331,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "flex flex-col sm:flex-row gap-3 pt-4",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                                            onClick: ()=>window.location.href = '/',
-                                            className: "flex-1",
-                                            children: [
-                                                "Send Another Transfer",
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__["ArrowRight"], {
-                                                    className: "ml-2 h-4 w-4"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                                    lineNumber: 307,
-                                                    columnNumber: 17
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 305,
-                                            columnNumber: 15
-                                        }, this),
-                                        (transfer.status === 'COMPLETED' || transfer.status === 'FUNDS_SENT_TO_PARTNER') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                                            variant: "outline",
-                                            onClick: ()=>window.print(),
-                                            className: "flex-1",
-                                            children: "Print Receipt"
-                                        }, void 0, false, {
-                                            fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 310,
-                                            columnNumber: 17
-                                        }, this),
-                                        transfer.status === 'FAILED' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                                            variant: "outline",
-                                            className: "flex-1",
-                                            children: "Contact Support"
-                                        }, void 0, false, {
-                                            fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                            lineNumber: 315,
-                                            columnNumber: 17
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                        onClick: ()=>window.location.href = '/',
+                                        className: "flex-1",
+                                        children: [
+                                            "Send Another Transfer",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__["ArrowRight"], {
+                                                className: "ml-2 h-4 w-4"
+                                            }, void 0, false, {
+                                                fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                                                lineNumber: 339,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
+                                        lineNumber: 337,
+                                        columnNumber: 15
+                                    }, this)
+                                }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                                    lineNumber: 304,
+                                    lineNumber: 336,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                            lineNumber: 204,
+                            lineNumber: 255,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-                    lineNumber: 187,
+                    lineNumber: 238,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-            lineNumber: 179,
+            lineNumber: 220,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/packages/web/src/app/status/[transactionId]/page.tsx",
-        lineNumber: 178,
+        lineNumber: 219,
         columnNumber: 5
     }, this);
 }
-_s(TransferStatusPage, "3mlvhjqtKM9Jc3kOfIpVNSxbjms=", false, function() {
+_s(TransferStatusPage, "FpL9eWHAHNbL19+mbNsXwUUJ1L4=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useParams"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$swr$2f$dist$2f$index$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["default"]
     ];
 });

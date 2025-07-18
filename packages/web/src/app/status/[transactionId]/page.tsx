@@ -1,11 +1,14 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import useSWR from "swr";
+import { loadStripe } from "@stripe/stripe-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface TransferData {
   id: string;
@@ -21,7 +24,6 @@ interface TransferData {
   updatedAt: string;
 }
 
-// Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then((res) => {
   if (!res.ok) {
     throw new Error('Failed to fetch transaction');
@@ -29,7 +31,6 @@ const fetcher = (url: string) => fetch(url).then((res) => {
   return res.json();
 });
 
-// Status timeline configuration
 const getStatusTimeline = (currentStatus: string) => {
   const steps = [
     {
@@ -65,7 +66,6 @@ const getStatusTimeline = (currentStatus: string) => {
   }));
 };
 
-// Get status display info
 const getStatusInfo = (status: string) => {
   const statusMap: { [key: string]: { color: string; icon: any; message: string } } = {
     'PENDING_PAYMENT': {
@@ -97,11 +97,6 @@ const getStatusInfo = (status: string) => {
       color: 'text-red-600 bg-red-50 border-red-200',
       icon: AlertCircle,
       message: 'Transfer failed - manual intervention required'
-    },
-    'CANCELED': {
-      color: 'text-gray-600 bg-gray-50 border-gray-200',
-      icon: AlertCircle,
-      message: 'Transfer was canceled'
     }
   };
 
@@ -114,15 +109,61 @@ const getStatusInfo = (status: string) => {
 
 export default function TransferStatusPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const transactionId = params.transactionId as string;
   const [isManualRefresh, setIsManualRefresh] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'checking' | 'confirmed' | 'failed' | 'completed'>('completed');
 
-  // Use SWR for data fetching with polling every 5 seconds
+  const paymentIntent = searchParams.get('payment_intent');
+  const paymentIntentClientSecret = searchParams.get('payment_intent_client_secret');
+  const redirectStatus = searchParams.get('redirect_status');
+
+  useEffect(() => {
+    const confirmStripePayment = async () => {
+      if (!paymentIntent || !paymentIntentClientSecret || !redirectStatus) {
+        return;
+      }
+
+      console.log('🔄 Handling Stripe redirect:', { paymentIntent, redirectStatus });
+      setPaymentStatus('checking');
+
+      try {
+        const stripe = await stripePromise;
+        if (!stripe) {
+          throw new Error('Stripe not loaded');
+        }
+
+        const { paymentIntent: retrievedPaymentIntent, error } = await stripe.retrievePaymentIntent(
+          paymentIntentClientSecret
+        );
+
+        if (error) {
+          console.error('❌ Error retrieving payment intent:', error);
+          setPaymentStatus('failed');
+          return;
+        }
+
+        if (retrievedPaymentIntent.status === 'succeeded') {
+          console.log('✅ Payment confirmed by Stripe');
+          setPaymentStatus('confirmed');
+        } else {
+          console.log('❌ Payment failed or was canceled');
+          setPaymentStatus('failed');
+        }
+      } catch (error) {
+        console.error('❌ Error confirming payment:', error);
+        setPaymentStatus('failed');
+      }
+    };
+
+    confirmStripePayment();
+  }, [paymentIntent, paymentIntentClientSecret, redirectStatus, transactionId]);
+
   const { data: transfer, error, isLoading, mutate } = useSWR<TransferData>(
     transactionId ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/transfers/${transactionId}` : null,
     fetcher,
     {
-      refreshInterval: 5000, // Poll every 5 seconds
+      refreshInterval: 5000,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
     }
@@ -177,13 +218,23 @@ export default function TransferStatusPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-gray-900">Transfer Status</h1>
           <p className="text-gray-600">Track your money transfer in real-time</p>
         </div>
 
-        {/* Main Status Card */}
+        {paymentStatus === 'confirmed' && (
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="flex items-center p-4">
+              <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
+              <div>
+                <div className="font-medium text-green-800">Payment Confirmed!</div>
+                <div className="text-sm text-green-600">Your payment was successful. Processing your transfer...</div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="w-full">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -202,7 +253,6 @@ export default function TransferStatusPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Current Status */}
             <div className={`flex items-center p-4 rounded-lg border ${statusInfo.color}`}>
               <StatusIcon className="h-6 w-6 mr-3" />
               <div>
@@ -211,13 +261,11 @@ export default function TransferStatusPage() {
               </div>
             </div>
 
-            {/* Visual Timeline */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Progress Timeline</h3>
               <div className="space-y-4">
                 {timeline.map((step, index) => (
                   <div key={step.id} className="flex items-start">
-                    {/* Timeline Icon */}
                     <div className="flex flex-col items-center mr-4">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         step.completed 
@@ -241,7 +289,6 @@ export default function TransferStatusPage() {
                       )}
                     </div>
 
-                    {/* Timeline Content */}
                     <div className="flex-1 pb-8">
                       <div className={`font-medium ${
                         step.completed ? 'text-green-700' : step.active ? 'text-blue-700' : 'text-gray-500'
@@ -259,7 +306,6 @@ export default function TransferStatusPage() {
               </div>
             </div>
 
-            {/* Transaction Details */}
             <div className="bg-gray-50 p-4 rounded-lg space-y-3">
               <h3 className="font-semibold">Transaction Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -279,43 +325,19 @@ export default function TransferStatusPage() {
                   <span className="text-gray-600">Last Updated:</span>
                   <span>{new Date(transfer.updatedAt).toLocaleString()}</span>
                 </div>
-                {transfer.stripePaymentIntentId && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Payment ID:</span>
-                    <span className="font-mono text-xs">{transfer.stripePaymentIntentId}</span>
-                  </div>
-                )}
-                {transfer.blockchainTxHash && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Blockchain TX:</span>
-                    <span className="font-mono text-xs">{transfer.blockchainTxHash}</span>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Auto-refresh indicator */}
             <div className="text-center text-sm text-gray-500">
               <RefreshCw className="h-4 w-4 inline mr-1" />
               Updates automatically every 5 seconds
             </div>
 
-            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button onClick={() => window.location.href = '/'} className="flex-1">
                 Send Another Transfer
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              {(transfer.status === 'COMPLETED' || transfer.status === 'FUNDS_SENT_TO_PARTNER') && (
-                <Button variant="outline" onClick={() => window.print()} className="flex-1">
-                  Print Receipt
-                </Button>
-              )}
-              {transfer.status === 'FAILED' && (
-                <Button variant="outline" className="flex-1">
-                  Contact Support
-                </Button>
-              )}
             </div>
           </CardContent>
         </Card>
