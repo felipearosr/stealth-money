@@ -13,13 +13,13 @@
   - _Requirements: 1.1, 1.2, 2.1, 2.2_
 
 - [ ] 3. Implement authentication pages
-- [-] 3.1 Create sign-in page with Clerk component
+- [x] 3.1 Create sign-in page with Clerk component
   - Build sign-in page at /auth/sign-in
   - Integrate Clerk SignIn component
   - Configure post-authentication redirects
   - _Requirements: 2.1, 2.2, 2.4_
 
-- [ ] 3.2 Create sign-up page with Clerk component
+- [-] 3.2 Create sign-up page with Clerk component
   - Build sign-up page at /auth/sign-up
   - Integrate Clerk SignUp component
   - Handle new user onboarding flow
