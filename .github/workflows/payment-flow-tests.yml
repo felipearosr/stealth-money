@@ -134,6 +134,11 @@ jobs:
         cd packages/api
         npm run test:blockchain:release
 
+    - name: Test security features
+      run: |
+        cd packages/api
+        npm run test:security
+
   test-frontend:
     runs-on: ubuntu-latest
     needs: test-payment-flow

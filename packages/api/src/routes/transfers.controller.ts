@@ -5,6 +5,21 @@ import { FxService } from '../services/fx.service';
 import { SimpleDatabaseService } from '../services/database-simple.service';
 import { BlockchainService } from '../services/blockchain.service';
 import { PaymentService } from '../services/payment.service';
+import { 
+  generalRateLimit, 
+  strictRateLimit, 
+  transferCreationRateLimit,
+  apiKeyAuth 
+} from '../middleware/security.middleware';
+import { 
+  validateTransferCreation,
+  validateRecipientUpdate,
+  validateTransactionId,
+  validateExchangeRate,
+  transferCreationSchema,
+  recipientUpdateSchema
+} from '../middleware/validation.middleware';
+import { logTransactionEvent, logSecurityEvent } from '../middleware/logging.middleware';
 
 const router = Router();
 const fxService = new FxService();
@@ -33,7 +48,7 @@ const createTransferSchema = z.object({
 });
 
 // Test endpoint to check blockchain connection and wallet balance
-router.get('/blockchain/health', async (req: Request, res: Response) => {
+router.get('/blockchain/health', generalRateLimit, async (req: Request, res: Response) => {
     try {
         const healthCheck = await blockchainService.healthCheck();
         const walletBalance = await blockchainService.getWalletBalance();
@@ -53,7 +68,7 @@ router.get('/blockchain/health', async (req: Request, res: Response) => {
 });
 
 // Test endpoint to check contract token balance
-router.get('/blockchain/contract-balance', async (req: Request, res: Response) => {
+router.get('/blockchain/contract-balance', generalRateLimit, async (req: Request, res: Response) => {
     try {
         const tokenBalance = await blockchainService.getContractTokenBalance();
         
@@ -72,7 +87,7 @@ router.get('/blockchain/contract-balance', async (req: Request, res: Response) =
 });
 
 // Get Stripe publishable key for frontend
-router.get('/stripe/config', async (req: Request, res: Response) => {
+router.get('/stripe/config', generalRateLimit, async (req: Request, res: Response) => {
     try {
         const publishableKey = paymentService.getPublishableKey();
         res.json({
@@ -89,7 +104,7 @@ router.get('/stripe/config', async (req: Request, res: Response) => {
 });
 
 // Health check for orchestrator service
-router.get('/orchestrator/health', async (req: Request, res: Response) => {
+router.get('/orchestrator/health', generalRateLimit, async (req: Request, res: Response) => {
     try {
         const { OrchestratorService } = await import('../services/orchestrator.service');
         const orchestratorService = new OrchestratorService();
@@ -109,7 +124,7 @@ router.get('/orchestrator/health', async (req: Request, res: Response) => {
 });
 
 // Test endpoint to directly trigger orchestrator workflow
-router.post('/test-orchestrator', async (req: Request, res: Response) => {
+router.post('/test-orchestrator', strictRateLimit, apiKeyAuth, async (req: Request, res: Response) => {
     try {
         const { transactionId } = req.body;
         
@@ -143,7 +158,7 @@ router.post('/test-orchestrator', async (req: Request, res: Response) => {
 });
 
 // Get payment intent status
-router.get('/payments/:paymentIntentId', async (req: Request, res: Response) => {
+router.get('/payments/:paymentIntentId', generalRateLimit, async (req: Request, res: Response) => {
     try {
         const { paymentIntentId } = req.params;
         const paymentIntent = await paymentService.getPaymentIntent(paymentIntentId);
@@ -166,7 +181,7 @@ router.get('/payments/:paymentIntentId', async (req: Request, res: Response) => 
 });
 
 // Test endpoint to check exchange rates
-router.get('/exchange-rate/:from/:to', async (req: Request, res: Response) => {
+router.get('/exchange-rate/:from/:to', generalRateLimit, validateExchangeRate, async (req: Request, res: Response) => {
     console.log(`📊 Exchange rate request: ${req.params.from} -> ${req.params.to}`);
     try {
         const { from, to } = req.params;
@@ -198,7 +213,7 @@ router.get('/exchange-rate/:from/:to', async (req: Request, res: Response) => {
 });
 
 // Get transaction by ID
-router.get('/transfers/:id', async (req: Request, res: Response) => {
+router.get('/transfers/:id', generalRateLimit, validateTransactionId, async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const transaction = await dbService.getTransaction(id);
@@ -218,7 +233,7 @@ router.get('/transfers/:id', async (req: Request, res: Response) => {
 });
 
 // Update transaction with recipient information
-router.put('/transfers/:id/recipient', async (req: Request, res: Response) => {
+router.put('/transfers/:id/recipient', transferCreationRateLimit, validateRecipientUpdate, async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const { recipientName, recipientEmail, recipientPhone, payoutMethod, payoutDetails } = req.body;
@@ -293,7 +308,7 @@ router.get('/transfers', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/transfers', async (req: Request, res: Response) => {
+router.post('/transfers', transferCreationRateLimit, validateTransferCreation, async (req: Request, res: Response) => {
     try {
         const validatedData = createTransferSchema.parse(req.body);
         console.log('Transfer request validated:', validatedData);
