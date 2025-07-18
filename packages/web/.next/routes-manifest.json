@@ -23,6 +23,14 @@
       "namedRegex": "^/pay/(?<nxtPtransactionId>[^/]+?)(?:/)?$"
     },
     {
+      "page": "/recipient/[transactionId]",
+      "regex": "^/recipient/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPtransactionId": "nxtPtransactionId"
+      },
+      "namedRegex": "^/recipient/(?<nxtPtransactionId>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/status/[transactionId]",
       "regex": "^/status/([^/]+?)(?:/)?$",
       "routeKeys": {

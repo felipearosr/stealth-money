@@ -32,15 +32,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 // src/routes/transfers.controller.ts
 const express_1 = require("express");
@@ -49,6 +40,8 @@ const fx_service_1 = require("../services/fx.service");
 const database_simple_service_1 = require("../services/database-simple.service");
 const blockchain_service_1 = require("../services/blockchain.service");
 const payment_service_1 = require("../services/payment.service");
+const security_middleware_1 = require("../middleware/security.middleware");
+const validation_middleware_1 = require("../middleware/validation.middleware");
 const router = (0, express_1.Router)();
 const fxService = new fx_service_1.FxService();
 const dbService = new database_simple_service_1.SimpleDatabaseService();
@@ -74,11 +67,15 @@ const createTransferSchema = zod_1.z.object({
     }).optional(),
 });
 // Test endpoint to check blockchain connection and wallet balance
-router.get('/blockchain/health', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/blockchain/health', security_middleware_1.generalRateLimit, async (req, res) => {
     try {
-        const healthCheck = yield blockchainService.healthCheck();
-        const walletBalance = yield blockchainService.getWalletBalance();
-        res.json(Object.assign(Object.assign({}, healthCheck), { walletBalance: `${walletBalance} ETH`, timestamp: new Date().toISOString() }));
+        const healthCheck = await blockchainService.healthCheck();
+        const walletBalance = await blockchainService.getWalletBalance();
+        res.json({
+            ...healthCheck,
+            walletBalance: `${walletBalance} ETH`,
+            timestamp: new Date().toISOString(),
+        });
     }
     catch (error) {
         console.error('Blockchain health check error:', error);
@@ -87,11 +84,11 @@ router.get('/blockchain/health', (req, res) => __awaiter(void 0, void 0, void 0,
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Test endpoint to check contract token balance
-router.get('/blockchain/contract-balance', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/blockchain/contract-balance', security_middleware_1.generalRateLimit, async (req, res) => {
     try {
-        const tokenBalance = yield blockchainService.getContractTokenBalance();
+        const tokenBalance = await blockchainService.getContractTokenBalance();
         res.json({
             contractAddress: blockchainService.getContractAddress(),
             tokenBalance,
@@ -105,9 +102,9 @@ router.get('/blockchain/contract-balance', (req, res) => __awaiter(void 0, void 
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Get Stripe publishable key for frontend
-router.get('/stripe/config', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/stripe/config', security_middleware_1.generalRateLimit, async (req, res) => {
     try {
         const publishableKey = paymentService.getPublishableKey();
         res.json({
@@ -122,14 +119,17 @@ router.get('/stripe/config', (req, res) => __awaiter(void 0, void 0, void 0, fun
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Health check for orchestrator service
-router.get('/orchestrator/health', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/orchestrator/health', security_middleware_1.generalRateLimit, async (req, res) => {
     try {
-        const { OrchestratorService } = yield Promise.resolve().then(() => __importStar(require('../services/orchestrator.service')));
+        const { OrchestratorService } = await Promise.resolve().then(() => __importStar(require('../services/orchestrator.service')));
         const orchestratorService = new OrchestratorService();
-        const health = yield orchestratorService.healthCheck();
-        res.json(Object.assign(Object.assign({}, health), { timestamp: new Date().toISOString() }));
+        const health = await orchestratorService.healthCheck();
+        res.json({
+            ...health,
+            timestamp: new Date().toISOString(),
+        });
     }
     catch (error) {
         console.error('Orchestrator health check error:', error);
@@ -138,19 +138,19 @@ router.get('/orchestrator/health', (req, res) => __awaiter(void 0, void 0, void 
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Test endpoint to directly trigger orchestrator workflow
-router.post('/test-orchestrator', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/test-orchestrator', security_middleware_1.strictRateLimit, security_middleware_1.apiKeyAuth, async (req, res) => {
     try {
         const { transactionId } = req.body;
         if (!transactionId) {
             return res.status(400).json({ error: 'transactionId is required' });
         }
         console.log(`🧪 Test orchestrator triggered for transaction: ${transactionId}`);
-        const { OrchestratorService } = yield Promise.resolve().then(() => __importStar(require('../services/orchestrator.service')));
+        const { OrchestratorService } = await Promise.resolve().then(() => __importStar(require('../services/orchestrator.service')));
         const orchestratorService = new OrchestratorService();
         // Trigger the main orchestration workflow
-        yield orchestratorService.handleSuccessfulPayment(transactionId);
+        await orchestratorService.handleSuccessfulPayment(transactionId);
         res.json({
             success: true,
             message: 'Orchestrator workflow completed successfully',
@@ -166,12 +166,12 @@ router.post('/test-orchestrator', (req, res) => __awaiter(void 0, void 0, void 0
             transactionId: req.body.transactionId
         });
     }
-}));
+});
 // Get payment intent status
-router.get('/payments/:paymentIntentId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/payments/:paymentIntentId', security_middleware_1.generalRateLimit, async (req, res) => {
     try {
         const { paymentIntentId } = req.params;
-        const paymentIntent = yield paymentService.getPaymentIntent(paymentIntentId);
+        const paymentIntent = await paymentService.getPaymentIntent(paymentIntentId);
         res.json({
             id: paymentIntent.id,
             status: paymentIntent.status,
@@ -188,9 +188,9 @@ router.get('/payments/:paymentIntentId', (req, res) => __awaiter(void 0, void 0,
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Test endpoint to check exchange rates
-router.get('/exchange-rate/:from/:to', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/exchange-rate/:from/:to', security_middleware_1.generalRateLimit, validation_middleware_1.validateExchangeRate, async (req, res) => {
     console.log(`📊 Exchange rate request: ${req.params.from} -> ${req.params.to}`);
     try {
         const { from, to } = req.params;
@@ -201,7 +201,7 @@ router.get('/exchange-rate/:from/:to', (req, res) => __awaiter(void 0, void 0, v
             });
         }
         console.log(`🔄 Fetching rate for ${from.toUpperCase()} -> ${to.toUpperCase()}`);
-        const rate = yield fxService.getRate(from.toUpperCase(), to.toUpperCase());
+        const rate = await fxService.getRate(from.toUpperCase(), to.toUpperCase());
         console.log(`✅ Rate fetched successfully: ${rate}`);
         res.json({
             from: from.toUpperCase(),
@@ -217,12 +217,12 @@ router.get('/exchange-rate/:from/:to', (req, res) => __awaiter(void 0, void 0, v
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Get transaction by ID
-router.get('/transfers/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/transfers/:id', security_middleware_1.generalRateLimit, validation_middleware_1.validateTransactionId, async (req, res) => {
     try {
         const { id } = req.params;
-        const transaction = yield dbService.getTransaction(id);
+        const transaction = await dbService.getTransaction(id);
         if (!transaction) {
             return res.status(404).json({ message: 'Transaction not found' });
         }
@@ -235,11 +235,62 @@ router.get('/transfers/:id', (req, res) => __awaiter(void 0, void 0, void 0, fun
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
-// Get all transactions
-router.get('/transfers', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+// Update transaction with recipient information
+router.put('/transfers/:id/recipient', security_middleware_1.transferCreationRateLimit, validation_middleware_1.validateRecipientUpdate, async (req, res) => {
     try {
-        const transactions = yield dbService.getAllTransactions();
+        const { id } = req.params;
+        const { recipientName, recipientEmail, recipientPhone, payoutMethod, payoutDetails } = req.body;
+        // Validate required fields
+        if (!recipientName || !recipientEmail || !recipientPhone || !payoutMethod) {
+            return res.status(400).json({
+                message: 'Missing required recipient information',
+                required: ['recipientName', 'recipientEmail', 'recipientPhone', 'payoutMethod']
+            });
+        }
+        // Get the existing transaction
+        const existingTransaction = await dbService.getTransaction(id);
+        if (!existingTransaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
+        }
+        // Update the transaction with recipient information
+        const updatedTransaction = await dbService.updateTransactionRecipient(id, {
+            recipientName,
+            recipientEmail,
+            recipientPhone,
+            payoutMethod,
+            payoutDetails
+        });
+        // Create Stripe Payment Intent if not already created
+        let clientSecret = null;
+        if (!existingTransaction.stripePaymentIntentId) {
+            const amountInCents = Math.round(existingTransaction.amount * 100);
+            const paymentResult = await paymentService.createPaymentIntent(amountInCents, existingTransaction.sourceCurrency, id);
+            clientSecret = paymentResult.clientSecret;
+            // Update transaction with payment intent ID
+            await dbService.updateTransactionStatus(id, 'PENDING_PAYMENT', {
+                paymentId: paymentResult.paymentIntentId
+            });
+        }
+        res.json({
+            success: true,
+            transaction: updatedTransaction,
+            clientSecret,
+            message: 'Recipient information updated successfully'
+        });
+    }
+    catch (error) {
+        console.error('Update recipient error:', error);
+        res.status(500).json({
+            message: 'Could not update recipient information',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+// Get all transactions
+router.get('/transfers', async (req, res) => {
+    try {
+        const transactions = await dbService.getAllTransactions();
         res.json(transactions);
     }
     catch (error) {
@@ -249,17 +300,17 @@ router.get('/transfers', (req, res) => __awaiter(void 0, void 0, void 0, functio
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
-router.post('/transfers', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+});
+router.post('/transfers', security_middleware_1.transferCreationRateLimit, validation_middleware_1.validateTransferCreation, async (req, res) => {
     try {
         const validatedData = createTransferSchema.parse(req.body);
         console.log('Transfer request validated:', validatedData);
         const { amount, sourceCurrency, destCurrency, recipientName, recipientEmail, recipientPhone, payoutMethod, payoutDetails } = validatedData;
         // Fetch exchange rate using FxService
-        const exchangeRate = yield fxService.getRate(sourceCurrency, destCurrency);
+        const exchangeRate = await fxService.getRate(sourceCurrency, destCurrency);
         const recipientAmount = amount * exchangeRate;
         // Create transaction record in database with recipient information
-        const newTransaction = yield dbService.createTransaction({
+        const newTransaction = await dbService.createTransaction({
             amount,
             sourceCurrency,
             destCurrency,
@@ -274,9 +325,9 @@ router.post('/transfers', (req, res) => __awaiter(void 0, void 0, void 0, functi
         // Create Stripe Payment Intent
         // Stripe requires the amount in cents, so we multiply by 100
         const amountInCents = Math.round(amount * 100);
-        const { clientSecret, paymentIntentId } = yield paymentService.createPaymentIntent(amountInCents, sourceCurrency, newTransaction.id);
+        const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(amountInCents, sourceCurrency, newTransaction.id);
         // Update our DB record with the Stripe Payment Intent ID for tracking
-        yield dbService.updateTransactionStatus(newTransaction.id, 'PENDING_PAYMENT', {
+        await dbService.updateTransactionStatus(newTransaction.id, 'PENDING_PAYMENT', {
             paymentId: paymentIntentId
         });
         console.log(`Exchange rate ${sourceCurrency} to ${destCurrency}: ${exchangeRate}`);
@@ -306,7 +357,7 @@ router.post('/transfers', (req, res) => __awaiter(void 0, void 0, void 0, functi
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Note: Stripe webhook handling has been moved to /routes/webhooks.controller.ts
 // This provides better separation of concerns and proper raw body parsing
 exports.default = router;

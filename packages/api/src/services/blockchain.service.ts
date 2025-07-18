@@ -1,7 +1,20 @@
 // src/services/blockchain.service.ts
 import { ethers } from 'ethers';
-import { TransferManager__factory } from '../../../contracts/typechain-types';
-import type { TransferManager } from '../../../contracts/typechain-types';
+
+// Conditional imports for blockchain types - only used in real mode
+let TransferManager__factory: any;
+let TransferManager: any;
+
+try {
+  if (process.env.BLOCKCHAIN_MODE === 'real') {
+    const contractTypes = require('../../../contracts/typechain-types');
+    TransferManager__factory = contractTypes.TransferManager__factory;
+    TransferManager = contractTypes.TransferManager;
+  }
+} catch (error) {
+  // Contract types not available - will use mock mode
+  console.log('Contract types not available, using mock mode');
+}
 
 interface BlockchainConfig {
   mode: 'real' | 'mock';
@@ -14,7 +27,7 @@ interface BlockchainConfig {
 export class BlockchainService {
   private provider: ethers.JsonRpcProvider | null = null;
   private wallet: ethers.Wallet | null = null;
-  private transferManagerContract: TransferManager | null = null;
+  private transferManagerContract: any | null = null;
   private config: BlockchainConfig;
   private isConfigured: boolean = false;
 

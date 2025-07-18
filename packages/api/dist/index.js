@@ -32,15 +32,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -54,15 +45,39 @@ const cors_1 = __importDefault(require("cors"));
 const transfers_controller_1 = __importDefault(require("./routes/transfers.controller"));
 const webhooks_controller_1 = __importDefault(require("./routes/webhooks.controller"));
 const database_simple_service_1 = require("./services/database-simple.service");
+const security_middleware_1 = require("./middleware/security.middleware");
+const logging_middleware_1 = require("./middleware/logging.middleware");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 const PORT = parseInt(process.env.PORT || '4000', 10);
-console.log(`🔧 Environment PORT: ${process.env.PORT}`);
-console.log(`🔧 Using PORT: ${PORT}`);
-app.use((0, cors_1.default)()); // Enable Cross-Origin Resource Sharing
+// Create logs directory if it doesn't exist
+const logsDir = path_1.default.join(__dirname, '../logs');
+if (!fs_1.default.existsSync(logsDir)) {
+    fs_1.default.mkdirSync(logsDir, { recursive: true });
+}
+logging_middleware_1.logger.info('Starting Stealth Money API', {
+    port: PORT,
+    nodeEnv: process.env.NODE_ENV,
+    blockchainMode: process.env.BLOCKCHAIN_MODE || 'mock'
+});
+// Trust proxy for accurate IP addresses behind load balancers
+app.set('trust proxy', 1);
+// Security middleware (order matters!)
+app.use(security_middleware_1.requestId);
+app.use(security_middleware_1.helmetConfig);
+app.use(security_middleware_1.speedLimiter);
+app.use(security_middleware_1.generalRateLimit);
+app.use((0, cors_1.default)(security_middleware_1.corsConfig));
+// Request logging middleware
+app.use(logging_middleware_1.requestLogger);
+// Input sanitization middleware
+app.use(security_middleware_1.sanitizeInput);
 // CRITICAL: Raw body parsing for Stripe webhooks MUST come before express.json()
 // Stripe requires the raw, unparsed body for signature verification
 app.use('/api/webhooks/stripe', express_1.default.raw({ type: 'application/json' }));
-app.use(express_1.default.json()); // Enable JSON body parsing for all other routes
+app.use(express_1.default.json({ limit: '10mb' })); // Enable JSON body parsing with size limit
+app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 // Root endpoint
 app.get('/', (req, res) => {
     res.status(200).json({
@@ -88,11 +103,11 @@ app.get('/test', (req, res) => {
     });
 });
 // Direct exchange rate test
-app.get('/test-rate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get('/test-rate', async (req, res) => {
     try {
-        const { FxService } = yield Promise.resolve().then(() => __importStar(require('./services/fx.service')));
+        const { FxService } = await Promise.resolve().then(() => __importStar(require('./services/fx.service')));
         const fxService = new FxService();
-        const rate = yield fxService.getRate('USD', 'EUR');
+        const rate = await fxService.getRate('USD', 'EUR');
         res.json({
             success: true,
             rate,
@@ -108,16 +123,15 @@ app.get('/test-rate', (req, res) => __awaiter(void 0, void 0, void 0, function* 
             error: error instanceof Error ? error.message : 'Unknown error'
         });
     }
-}));
+});
 // Debug environment variables
 app.get('/debug-env', (req, res) => {
-    var _a, _b;
     res.json({
         port: process.env.PORT,
         hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
         hasStripePublishable: !!process.env.STRIPE_PUBLISHABLE_KEY,
-        stripeSecretPrefix: (_a = process.env.STRIPE_SECRET_KEY) === null || _a === void 0 ? void 0 : _a.substring(0, 10),
-        stripePublishablePrefix: (_b = process.env.STRIPE_PUBLISHABLE_KEY) === null || _b === void 0 ? void 0 : _b.substring(0, 10),
+        stripeSecretPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10),
+        stripePublishablePrefix: process.env.STRIPE_PUBLISHABLE_KEY?.substring(0, 10),
         nodeEnv: process.env.NODE_ENV,
         timestamp: new Date().toISOString()
     });
@@ -126,45 +140,64 @@ app.get('/debug-env', (req, res) => {
 app.use('/api', transfers_controller_1.default);
 // Wire up the webhook routes with /api prefix
 app.use('/api/webhooks', webhooks_controller_1.default);
-// Add error handling middleware
+// Error logging middleware
+app.use(logging_middleware_1.errorLogger);
+// Global error handling middleware
 app.use((err, req, res, next) => {
-    console.error('❌ Unhandled error:', err);
-    res.status(500).json({ error: 'Internal server error', message: err.message });
+    const requestId = req.headers['x-request-id'];
+    logging_middleware_1.logger.error('Unhandled application error', {
+        error: {
+            name: err.name,
+            message: err.message,
+            stack: err.stack
+        },
+        requestId,
+        url: req.url,
+        method: req.method,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+    });
+    // Don't expose internal error details in production
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    res.status(err.status || 500).json({
+        error: 'Internal server error',
+        message: isDevelopment ? err.message : 'Something went wrong',
+        requestId,
+        ...(isDevelopment && { stack: err.stack })
+    });
 });
 // Initialize database and start server
-function startServer() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const dbService = new database_simple_service_1.SimpleDatabaseService();
-            // Test database connection and initialize tables
-            console.log('🔌 Testing database connection...');
-            const connected = yield dbService.testConnection();
-            if (connected) {
-                console.log('📊 Initializing database tables...');
-                const initialized = yield dbService.initialize();
-                if (initialized) {
-                    console.log('✅ Database ready!');
-                }
-                else {
-                    console.log('⚠️  Database initialization failed, but continuing...');
-                }
+async function startServer() {
+    try {
+        const dbService = new database_simple_service_1.SimpleDatabaseService();
+        // Test database connection and initialize tables
+        console.log('🔌 Testing database connection...');
+        const connected = await dbService.testConnection();
+        if (connected) {
+            console.log('📊 Initializing database tables...');
+            const initialized = await dbService.initialize();
+            if (initialized) {
+                console.log('✅ Database ready!');
             }
             else {
-                console.log('⚠️  Database connection failed, but continuing...');
+                console.log('⚠️  Database initialization failed, but continuing...');
             }
-            const server = app.listen(PORT, '0.0.0.0', () => {
-                console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
-                console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
-                console.log(`🧪 Test endpoint: http://0.0.0.0:${PORT}/test`);
-            });
-            server.on('error', (error) => {
-                console.error('❌ Server error:', error);
-            });
         }
-        catch (error) {
-            console.error('❌ Failed to start server:', error);
-            process.exit(1);
+        else {
+            console.log('⚠️  Database connection failed, but continuing...');
         }
-    });
+        const server = app.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
+            console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
+            console.log(`🧪 Test endpoint: http://0.0.0.0:${PORT}/test`);
+        });
+        server.on('error', (error) => {
+            console.error('❌ Server error:', error);
+        });
+    }
+    catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
 }
 startServer();

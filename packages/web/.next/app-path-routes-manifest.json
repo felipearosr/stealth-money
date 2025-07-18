@@ -1,7 +1,8 @@
 {
   "/_not-found/page": "/_not-found",
   "/favicon.ico/route": "/favicon.ico",
-  "/pay/[transactionId]/page": "/pay/[transactionId]",
   "/page": "/",
+  "/pay/[transactionId]/page": "/pay/[transactionId]",
+  "/recipient/[transactionId]/page": "/recipient/[transactionId]",
   "/status/[transactionId]/page": "/status/[transactionId]"
 }
