@@ -1,170 +1,168 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements, useStripe } from "@stripe/react-stripe-js";
+import { useParams } from "next/navigation";
+import { useState } from "react";
+import useSWR from "swr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2, Clock } from "lucide-react";
-
-// Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+import { CheckCircle, Clock, AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
 
 interface TransferData {
-  transactionId: string;
-  sourceAmount: number;
+  id: string;
+  amount: string;
   sourceCurrency: string;
   destCurrency: string;
-  recipientAmount: number;
-  rate: number;
+  exchangeRate: string;
+  recipientAmount: string;
   status: string;
+  stripePaymentIntentId: string | null;
+  blockchainTxHash: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-function PaymentStatusContent() {
-  const stripe = useStripe();
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const transactionId = params.transactionId as string;
-  const clientSecret = searchParams.get('payment_intent_client_secret');
-  
-  const [transferData, setTransferData] = useState<TransferData | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<'loading' | 'succeeded' | 'processing' | 'requires_payment_method' | 'failed'>('loading');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+// Fetcher function for SWR
+const fetcher = (url: string) => fetch(url).then((res) => {
+  if (!res.ok) {
+    throw new Error('Failed to fetch transaction');
+  }
+  return res.json();
+});
 
-  useEffect(() => {
-    if (!stripe || !clientSecret) {
-      return;
+// Status timeline configuration
+const getStatusTimeline = (currentStatus: string) => {
+  const steps = [
+    {
+      id: 'payment',
+      title: 'Payment Received',
+      description: 'Your payment has been confirmed',
+      statuses: ['PAID', 'PROCESSING', 'FUNDS_SENT_TO_PARTNER', 'COMPLETED']
+    },
+    {
+      id: 'processing',
+      title: 'Processing',
+      description: 'We are processing your transfer',
+      statuses: ['PROCESSING', 'FUNDS_SENT_TO_PARTNER', 'COMPLETED']
+    },
+    {
+      id: 'blockchain',
+      title: 'Funds Released',
+      description: 'Funds have been sent to our partner',
+      statuses: ['FUNDS_SENT_TO_PARTNER', 'COMPLETED']
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      description: 'Transfer completed successfully',
+      statuses: ['COMPLETED']
     }
+  ];
 
-    stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
-      if (paymentIntent) {
-        setPaymentStatus(paymentIntent.status as any);
-        
-        if (paymentIntent.status === 'succeeded') {
-          fetchTransferData();
-        }
-      }
-    });
-  }, [stripe, clientSecret]);
+  return steps.map(step => ({
+    ...step,
+    completed: step.statuses.includes(currentStatus),
+    active: step.statuses.includes(currentStatus) && !steps.find(s => s.statuses.includes(currentStatus) && steps.indexOf(s) > steps.indexOf(step))
+  }));
+};
 
-  const fetchTransferData = async () => {
-    if (!transactionId) return;
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/transfers/${transactionId}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch transfer data');
-      }
-
-      const data = await response.json();
-      setTransferData(data);
-    } catch (err) {
-      setErrorMessage('Failed to load transfer details');
-      console.error('Transfer fetch error:', err);
+// Get status display info
+const getStatusInfo = (status: string) => {
+  const statusMap: { [key: string]: { color: string; icon: any; message: string } } = {
+    'PENDING_PAYMENT': {
+      color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
+      icon: Clock,
+      message: 'Waiting for payment confirmation'
+    },
+    'PAID': {
+      color: 'text-blue-600 bg-blue-50 border-blue-200',
+      icon: CheckCircle,
+      message: 'Payment confirmed, processing transfer'
+    },
+    'PROCESSING': {
+      color: 'text-blue-600 bg-blue-50 border-blue-200',
+      icon: RefreshCw,
+      message: 'Processing your transfer'
+    },
+    'FUNDS_SENT_TO_PARTNER': {
+      color: 'text-green-600 bg-green-50 border-green-200',
+      icon: CheckCircle,
+      message: 'Funds sent to our payout partner'
+    },
+    'COMPLETED': {
+      color: 'text-green-600 bg-green-50 border-green-200',
+      icon: CheckCircle,
+      message: 'Transfer completed successfully'
+    },
+    'FAILED': {
+      color: 'text-red-600 bg-red-50 border-red-200',
+      icon: AlertCircle,
+      message: 'Transfer failed - manual intervention required'
+    },
+    'CANCELED': {
+      color: 'text-gray-600 bg-gray-50 border-gray-200',
+      icon: AlertCircle,
+      message: 'Transfer was canceled'
     }
   };
 
-  if (paymentStatus === 'loading') {
+  return statusMap[status] || {
+    color: 'text-gray-600 bg-gray-50 border-gray-200',
+    icon: Clock,
+    message: 'Processing...'
+  };
+};
+
+export default function TransferStatusPage() {
+  const params = useParams();
+  const transactionId = params.transactionId as string;
+  const [isManualRefresh, setIsManualRefresh] = useState(false);
+
+  // Use SWR for data fetching with polling every 5 seconds
+  const { data: transfer, error, isLoading, mutate } = useSWR<TransferData>(
+    transactionId ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/transfers/${transactionId}` : null,
+    fetcher,
+    {
+      refreshInterval: 5000, // Poll every 5 seconds
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+    }
+  );
+
+  const handleManualRefresh = async () => {
+    setIsManualRefresh(true);
+    await mutate();
+    setTimeout(() => setIsManualRefresh(false), 1000);
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-2xl">
           <CardContent className="flex items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Checking payment status...</span>
+            <RefreshCw className="h-8 w-8 animate-spin mr-3" />
+            <span>Loading transfer details...</span>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  if (paymentStatus === 'succeeded') {
+  if (error || !transfer) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
-            <CardTitle className="text-green-600">Payment Successful!</CardTitle>
-            <p className="text-sm text-gray-600">Your transfer is being processed</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 mb-2">What happens next?</h3>
-              <ul className="text-sm text-green-700 space-y-1">
-                <li>• Your payment has been confirmed</li>
-                <li>• Funds are being released via blockchain</li>
-                <li>• Recipient will receive money within minutes</li>
-                <li>• You will get an email confirmation shortly</li>
-              </ul>
-            </div>
-
-            {transferData && (
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <h3 className="font-semibold mb-2">Transfer Details</h3>
-                <div className="flex justify-between text-sm">
-                  <span>Transaction ID:</span>
-                  <span className="font-mono text-xs">{transactionId}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Amount Sent:</span>
-                  <span>{transferData.sourceAmount} {transferData.sourceCurrency}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Recipient Gets:</span>
-                  <span>{transferData.recipientAmount} {transferData.destCurrency}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Status:</span>
-                  <span className="text-green-600 font-medium">{transferData.status}</span>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <Button onClick={() => window.location.href = '/'} className="w-full">
-                Send Another Transfer
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => window.print()} 
-                className="w-full"
-              >
-                Print Receipt
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (paymentStatus === 'processing') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <Clock className="h-8 w-8 text-blue-600" />
-            </div>
-            <CardTitle className="text-blue-600">Payment Processing</CardTitle>
-            <p className="text-sm text-gray-600">Please wait while we process your payment</p>
+            <CardTitle className="text-red-600">Transfer Not Found</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-700">
-                Your payment is being processed. This may take a few moments.
-                Please do not close this window.
-              </p>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.reload()}
-              className="w-full"
-            >
-              Refresh Status
+            <p className="text-gray-600">
+              We couldn't find a transfer with ID: {transactionId}
+            </p>
+            <Button onClick={() => window.location.href = '/'}>
+              Start New Transfer
             </Button>
           </CardContent>
         </Card>
@@ -172,63 +170,156 @@ function PaymentStatusContent() {
     );
   }
 
+  const statusInfo = getStatusInfo(transfer.status);
+  const timeline = getStatusTimeline(transfer.status);
+  const StatusIcon = statusInfo.icon;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <XCircle className="h-8 w-8 text-red-600" />
-          </div>
-          <CardTitle className="text-red-600">Payment Failed</CardTitle>
-          <p className="text-sm text-gray-600">
-            {paymentStatus === 'requires_payment_method' 
-              ? 'Your payment method was declined' 
-              : 'There was an issue processing your payment'
-            }
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {errorMessage && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-700">{errorMessage}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Transfer Status</h1>
+          <p className="text-gray-600">Track your money transfer in real-time</p>
+        </div>
+
+        {/* Main Status Card */}
+        <Card className="w-full">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">
+                Sending {transfer.amount} {transfer.sourceCurrency} → {transfer.recipientAmount} {transfer.destCurrency}
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManualRefresh}
+                disabled={isManualRefresh}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isManualRefresh ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
-          )}
-          
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">What you can do:</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Try a different payment method</li>
-              <li>• Check your card details are correct</li>
-              <li>• Contact your bank if the issue persists</li>
-              <li>• Reach out to our support team</li>
-            </ul>
-          </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Current Status */}
+            <div className={`flex items-center p-4 rounded-lg border ${statusInfo.color}`}>
+              <StatusIcon className="h-6 w-6 mr-3" />
+              <div>
+                <div className="font-semibold">{transfer.status.replace(/_/g, ' ')}</div>
+                <div className="text-sm opacity-75">{statusInfo.message}</div>
+              </div>
+            </div>
 
-          <div className="space-y-3">
-            <Button 
-              onClick={() => window.history.back()}
-              className="w-full"
-            >
-              Try Again
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.href = '/'}
-              className="w-full"
-            >
-              Start New Transfer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            {/* Visual Timeline */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Progress Timeline</h3>
+              <div className="space-y-4">
+                {timeline.map((step, index) => (
+                  <div key={step.id} className="flex items-start">
+                    {/* Timeline Icon */}
+                    <div className="flex flex-col items-center mr-4">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        step.completed 
+                          ? 'bg-green-500 text-white' 
+                          : step.active 
+                            ? 'bg-blue-500 text-white animate-pulse' 
+                            : 'bg-gray-200 text-gray-400'
+                      }`}>
+                        {step.completed ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : step.active ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Clock className="h-4 w-4" />
+                        )}
+                      </div>
+                      {index < timeline.length - 1 && (
+                        <div className={`w-0.5 h-8 mt-2 ${
+                          step.completed ? 'bg-green-500' : 'bg-gray-200'
+                        }`} />
+                      )}
+                    </div>
+
+                    {/* Timeline Content */}
+                    <div className="flex-1 pb-8">
+                      <div className={`font-medium ${
+                        step.completed ? 'text-green-700' : step.active ? 'text-blue-700' : 'text-gray-500'
+                      }`}>
+                        {step.title}
+                      </div>
+                      <div className={`text-sm ${
+                        step.completed ? 'text-green-600' : step.active ? 'text-blue-600' : 'text-gray-400'
+                      }`}>
+                        {step.description}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Transaction Details */}
+            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+              <h3 className="font-semibold">Transaction Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Transaction ID:</span>
+                  <span className="font-mono text-xs">{transfer.id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Exchange Rate:</span>
+                  <span>1 {transfer.sourceCurrency} = {parseFloat(transfer.exchangeRate).toFixed(4)} {transfer.destCurrency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Created:</span>
+                  <span>{new Date(transfer.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Last Updated:</span>
+                  <span>{new Date(transfer.updatedAt).toLocaleString()}</span>
+                </div>
+                {transfer.stripePaymentIntentId && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Payment ID:</span>
+                    <span className="font-mono text-xs">{transfer.stripePaymentIntentId}</span>
+                  </div>
+                )}
+                {transfer.blockchainTxHash && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Blockchain TX:</span>
+                    <span className="font-mono text-xs">{transfer.blockchainTxHash}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Auto-refresh indicator */}
+            <div className="text-center text-sm text-gray-500">
+              <RefreshCw className="h-4 w-4 inline mr-1" />
+              Updates automatically every 5 seconds
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button onClick={() => window.location.href = '/'} className="flex-1">
+                Send Another Transfer
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              {(transfer.status === 'COMPLETED' || transfer.status === 'FUNDS_SENT_TO_PARTNER') && (
+                <Button variant="outline" onClick={() => window.print()} className="flex-1">
+                  Print Receipt
+                </Button>
+              )}
+              {transfer.status === 'FAILED' && (
+                <Button variant="outline" className="flex-1">
+                  Contact Support
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
-}
-
-export default function PaymentStatusPage() {
-  return (
-    <Elements stripe={stripePromise}>
-      <PaymentStatusContent />
-    </Elements>
   );
 }
