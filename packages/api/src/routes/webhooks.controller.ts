@@ -112,16 +112,8 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event) {
     
     try {
         // This is where the magic happens - trigger the orchestrator
-        await orchestratorService.processSuccessfulPayment(internalTransactionId, {
-            paymentIntentId: paymentIntent.id,
-            amount: paymentIntent.amount,
-            currency: paymentIntent.currency,
-            paymentMethod: typeof paymentIntent.payment_method === 'string' 
-                ? paymentIntent.payment_method 
-                : paymentIntent.payment_method?.id || null,
-            created: paymentIntent.created,
-            status: paymentIntent.status
-        });
+        // Using the new handleSuccessfulPayment method that follows the exact workflow
+        await orchestratorService.handleSuccessfulPayment(internalTransactionId);
         
         console.log('✅ Payment processing completed successfully');
         

@@ -96,6 +96,40 @@ router.get('/orchestrator/health', async (req: Request, res: Response) => {
     }
 });
 
+// Test endpoint to directly trigger orchestrator workflow
+router.post('/test-orchestrator', async (req: Request, res: Response) => {
+    try {
+        const { transactionId } = req.body;
+        
+        if (!transactionId) {
+            return res.status(400).json({ error: 'transactionId is required' });
+        }
+        
+        console.log(`🧪 Test orchestrator triggered for transaction: ${transactionId}`);
+        
+        const { OrchestratorService } = await import('../services/orchestrator.service');
+        const orchestratorService = new OrchestratorService();
+        
+        // Trigger the main orchestration workflow
+        await orchestratorService.handleSuccessfulPayment(transactionId);
+        
+        res.json({
+            success: true,
+            message: 'Orchestrator workflow completed successfully',
+            transactionId: transactionId,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Test orchestrator error:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            transactionId: req.body.transactionId
+        });
+    }
+});
+
 // Get payment intent status
 router.get('/payments/:paymentIntentId', async (req: Request, res: Response) => {
     try {
