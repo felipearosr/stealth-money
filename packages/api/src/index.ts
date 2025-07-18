@@ -7,6 +7,7 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import transferRoutes from './routes/transfers.controller';
+import webhookRoutes from './routes/webhooks.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 
 const app = express();
@@ -15,7 +16,12 @@ console.log(`🔧 Environment PORT: ${process.env.PORT}`);
 console.log(`🔧 Using PORT: ${PORT}`);
 
 app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Enable JSON body parsing
+
+// CRITICAL: Raw body parsing for Stripe webhooks MUST come before express.json()
+// Stripe requires the raw, unparsed body for signature verification
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
+
+app.use(express.json()); // Enable JSON body parsing for all other routes
 
 // Root endpoint
 app.get('/', (req: Request, res: Response) => {
@@ -81,6 +87,9 @@ app.get('/debug-env', (req: Request, res: Response) => {
 
 // Wire up the transfer routes with /api prefix
 app.use('/api', transferRoutes);
+
+// Wire up the webhook routes with /api prefix
+app.use('/api/webhooks', webhookRoutes);
 
 // Add error handling middleware
 app.use((err: any, req: Request, res: Response, next: any) => {

@@ -135,7 +135,7 @@ export class SimpleDatabaseService {
   async updateTransactionStatus(
     id: string,
     status: string,
-    details: { paymentId?: string; txHash?: string }
+    details: { paymentId?: string; txHash?: string; [key: string]: any }
   ): Promise<Transaction> {
     if (!this.isConfigured || !this.pool) {
       // Return mock updated transaction

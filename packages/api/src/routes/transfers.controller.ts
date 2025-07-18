@@ -76,6 +76,26 @@ router.get('/stripe/config', async (req: Request, res: Response) => {
     }
 });
 
+// Health check for orchestrator service
+router.get('/orchestrator/health', async (req: Request, res: Response) => {
+    try {
+        const { OrchestratorService } = await import('../services/orchestrator.service');
+        const orchestratorService = new OrchestratorService();
+        const health = await orchestratorService.healthCheck();
+        
+        res.json({
+            ...health,
+            timestamp: new Date().toISOString(),
+        });
+    } catch (error) {
+        console.error('Orchestrator health check error:', error);
+        res.status(500).json({
+            message: 'Orchestrator health check failed',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
 // Get payment intent status
 router.get('/payments/:paymentIntentId', async (req: Request, res: Response) => {
     try {
@@ -228,66 +248,7 @@ router.post('/transfers', async (req: Request, res: Response) => {
     }
 });
 
-// Stripe webhook endpoint (requires raw body parser)
-// Note: This endpoint needs express.raw() middleware for proper signature verification
-router.post('/webhooks/stripe', async (req: Request, res: Response) => {
-    try {
-        const sig = req.headers['stripe-signature'] as string;
-        
-        if (!sig) {
-            return res.status(400).json({ message: 'Missing stripe-signature header' });
-        }
-
-        // Note: req.body should be raw buffer for signature verification
-        // You'll need to configure express.raw() middleware for this route
-        const event = paymentService.verifyWebhookSignature(req.body, sig);
-        
-        console.log('Received Stripe webhook:', event.type);
-
-        switch (event.type) {
-            case 'payment_intent.succeeded':
-                const paymentIntent = event.data.object;
-                const transactionId = paymentIntent.metadata.internalTransactionId;
-                
-                if (transactionId) {
-                    // Update database status to PAID
-                    await dbService.updateTransactionStatus(transactionId, 'PAID', {
-                        paymentId: paymentIntent.id
-                    });
-                    
-                    console.log(`Payment succeeded for transaction: ${transactionId}`);
-                    
-                    // TODO: Trigger blockchain release here
-                    // const transaction = await dbService.getTransaction(transactionId);
-                    // await blockchainService.releaseFunds(recipientAddress, amount, transactionId);
-                }
-                break;
-                
-            case 'payment_intent.payment_failed':
-                const failedPayment = event.data.object;
-                const failedTransactionId = failedPayment.metadata.internalTransactionId;
-                
-                if (failedTransactionId) {
-                    await dbService.updateTransactionStatus(failedTransactionId, 'FAILED', {
-                        paymentId: failedPayment.id
-                    });
-                    
-                    console.log(`Payment failed for transaction: ${failedTransactionId}`);
-                }
-                break;
-                
-            default:
-                console.log(`Unhandled event type: ${event.type}`);
-        }
-        
-        res.json({ received: true });
-    } catch (error) {
-        console.error('Stripe webhook error:', error);
-        res.status(400).json({
-            message: 'Webhook error',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
-    }
-});
+// Note: Stripe webhook handling has been moved to /routes/webhooks.controller.ts
+// This provides better separation of concerns and proper raw body parsing
 
 export default router;
