@@ -25,13 +25,13 @@
   - Handle new user onboarding flow
   - _Requirements: 1.1, 1.2, 1.4_
 
-- [-] 4. Add user navigation and session management
+- [x] 4. Add user navigation and session management
   - Integrate UserButton component in main navigation
   - Add sign-in/sign-up buttons for unauthenticated users
   - Implement proper sign-out functionality
   - _Requirements: 2.4, 6.3_
 
-- [ ] 5. Update database schema for user association
+- [-] 5. Update database schema for user association
   - Add userId field to Transaction model in Prisma schema
   - Create database migration for the new field
   - Add database index on userId for efficient queries

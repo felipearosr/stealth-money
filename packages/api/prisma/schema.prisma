@@ -16,6 +16,7 @@ datasource db {
 
 model Transaction {
   id                    String   @id @default(cuid())
+  userId                String?  // Clerk user ID - nullable for backward compatibility
   amount                Float
   sourceCurrency        String
   destCurrency          String
@@ -34,4 +35,6 @@ model Transaction {
   
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  
+  @@index([userId]) // Index for efficient user-specific queries
 }
