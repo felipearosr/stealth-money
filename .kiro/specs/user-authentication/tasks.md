@@ -1,12 +1,12 @@
 # Implementation Plan
 
-- [-] 1. Set up Clerk authentication service
+- [x] 1. Set up Clerk authentication service
   - Create Clerk account and configure application
   - Install Clerk SDK packages in both frontend and backend
   - Configure environment variables for Clerk integration
   - _Requirements: 1.1, 2.1_
 
-- [ ] 2. Configure Clerk in Next.js frontend
+- [-] 2. Configure Clerk in Next.js frontend
   - Set up ClerkProvider in app layout
   - Configure Clerk middleware for route protection
   - Create authentication pages using Clerk components
