@@ -1,0 +1,150 @@
+name: Payment Flow Integration Tests
+
+on:
+  push:
+    branches: [ main, develop, feature/payment-flow ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test-payment-flow:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: stealth_money_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install API dependencies
+      run: |
+        cd packages/api
+        npm ci
+
+    - name: Install Web dependencies
+      run: |
+        cd packages/web
+        npm ci
+
+    - name: Setup test environment variables
+      env:
+        TEST_STRIPE_SECRET: ${{ secrets.STRIPE_SECRET_KEY }}
+        TEST_STRIPE_PUBLIC: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+        TEST_STRIPE_WEBHOOK: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        TEST_EXCHANGE_KEY: ${{ secrets.EXCHANGERATE_API_KEY }}
+      run: |
+        cd packages/api
+        cat > .env << EOF
+        NODE_ENV=test
+        PORT=4000
+        DATABASE_URL=postgresql://postgres:postgres@localhost:5432/stealth_money_test
+        EXCHANGERATE_API_KEY=\${TEST_EXCHANGE_KEY:-test_key_placeholder}
+        STRIPE_SECRET_KEY=\${TEST_STRIPE_SECRET:-sk_test_placeholder}
+        STRIPE_PUBLISHABLE_KEY=\${TEST_STRIPE_PUBLIC:-pk_test_placeholder}
+        STRIPE_WEBHOOK_SECRET=\${TEST_STRIPE_WEBHOOK:-whsec_placeholder}
+        SERVER_WALLET_PRIVATE_KEY=test_private_key
+        NODE_PROVIDER_URL=test_rpc_url
+        TRANSFER_MANAGER_CONTRACT_ADDRESS=0x742d35Cc6634C0532925a3b8D4C9db96590b5c8e
+        EOF
+
+    - name: Setup web environment variables
+      env:
+        TEST_STRIPE_PUBLIC: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+      run: |
+        cd packages/web
+        cat > .env.local << EOF
+        NEXT_PUBLIC_API_URL=http://localhost:4000
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=\${TEST_STRIPE_PUBLIC:-pk_test_placeholder}
+        EOF
+
+    - name: Initialize test database
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d stealth_money_test -c "
+        CREATE TABLE IF NOT EXISTS transactions (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          amount DECIMAL(10,2) NOT NULL,
+          source_currency VARCHAR(3) NOT NULL,
+          dest_currency VARCHAR(3) NOT NULL,
+          exchange_rate DECIMAL(10,6) NOT NULL,
+          recipient_amount DECIMAL(10,2) NOT NULL,
+          status VARCHAR(50) DEFAULT 'PENDING',
+          stripe_payment_intent_id VARCHAR(255),
+          blockchain_tx_hash VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );"
+
+    - name: Build API
+      run: |
+        cd packages/api
+        npm run build
+
+    - name: Start API server
+      run: |
+        cd packages/api
+        npm start &
+        timeout 30 bash -c 'until curl -f http://localhost:4000/health; do sleep 1; done'
+
+    - name: Run payment flow tests
+      run: |
+        node test-payment-flow.js
+
+    - name: Test API endpoints
+      run: |
+        curl -f http://localhost:4000/health
+        curl -f http://localhost:4000/api/orchestrator/health
+        curl -f http://localhost:4000/api/stripe/config
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    needs: test-payment-flow
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd packages/web
+        npm ci
+
+    - name: Setup environment variables
+      env:
+        TEST_STRIPE_PUBLIC: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+      run: |
+        cd packages/web
+        cat > .env.local << EOF
+        NEXT_PUBLIC_API_URL=http://localhost:4000
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=\${TEST_STRIPE_PUBLIC:-pk_test_placeholder}
+        EOF
+
+    - name: Build frontend
+      run: |
+        cd packages/web
+        npm run build

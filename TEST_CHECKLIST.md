@@ -1,510 +1,211 @@
-# Stealth Money - Complete Testing Checklist
+# Payment Flow Integration - Test Checklist
 
-This guide will help you test each component of the Stealth Money system systematically to ensure production readiness.
+Use this checklist to manually verify the payment flow integration is working correctly.
 
-## 🎯 **Testing Overview**
+## Prerequisites ✅
 
-We'll test in this order:
-1. **Environment Setup** - Verify all config is correct
-2. **Database Service** - Test data persistence
-3. **Exchange Rate Service** - Test currency conversion
-4. **Payment Service** - Test Stripe integration
-5. **Blockchain Service** - Test smart contract interaction
-6. **API Endpoints** - Test all REST endpoints
-7. **Frontend Integration** - Test UI components
-8. **Webhook Integration** - Test payment flow
-9. **End-to-End Flow** - Complete user journey
-10. **Production Readiness** - Security and performance
+- [ ] API server running on `http://localhost:4000`
+- [ ] Web server running on `http://localhost:3000` (optional for API-only tests)
+- [ ] Environment variables configured in `packages/api/.env`
+- [ ] Database connection working (if using PostgreSQL)
 
----
+## Automated Tests ✅
 
-## ✅ **Test 1: Environment Setup**
-
-### **Check Configuration Files**
-
-**API Environment (.env):**
+### Run Test Suite
 ```bash
-cd packages/api
-cat .env
+node test-payment-flow.js
 ```
 
-**Expected variables:**
-- [ ] `PORT=4000`
-- [ ] `DATABASE_URL` (starts with postgresql://)
-- [ ] `STRIPE_SECRET_KEY` (starts with sk_test_)
-- [ ] `STRIPE_PUBLISHABLE_KEY` (starts with pk_test_)
-- [ ] `STRIPE_WEBHOOK_SECRET` (starts with whsec_)
-- [ ] `SERVER_WALLET_PRIVATE_KEY` (starts with 0x)
-- [ ] `NODE_PROVIDER_URL` (contains infura.io or alchemy.com)
-- [ ] `TRANSFER_MANAGER_CONTRACT_ADDRESS` (starts with 0x)
+**Expected Results:**
+- [ ] All health endpoints return 200
+- [ ] Transfer creation works (returns transaction ID)
+- [ ] Webhook security blocks unauthorized requests
+- [ ] Exchange rate endpoints return valid data
+- [ ] Test completes with 100% success rate
 
-**Web Environment (.env.local):**
+### Run Local Test Script
 ```bash
-cd packages/web
-cat .env.local
+./run-tests.sh
 ```
 
-**Expected:**
-- [ ] `NEXT_PUBLIC_API_URL=http://localhost:4000`
+**Expected Results:**
+- [ ] API server check passes
+- [ ] All endpoint tests pass
+- [ ] Transfer creation and retrieval work
+- [ ] Webhook security test passes
+- [ ] Script shows "All tests completed successfully!"
 
-### **Test Result:**
-- [ ] ✅ All environment variables present
-- [ ] ❌ Missing variables: ________________
+## Manual API Testing ✅
 
----
-
-## ✅ **Test 2: Database Service**
-
-### **Setup Database**
+### 1. Health Checks
 ```bash
-cd packages/api
-npm run db:migrate -- --name init
-npm run db:generate
-```
-
-### **Test Database Connection**
-```bash
-# Start API server
-npm run dev
-
-# In another terminal, test database
-npx ts-node src/test-fx.ts
-```
-
-### **Manual Database Test**
-```bash
-# Open Prisma Studio
-npm run db:studio
-# Should open http://localhost:5555
-```
-
-**Check:**
-- [ ] Database migration successful
-- [ ] Prisma Studio opens without errors
-- [ ] Can view Transaction table structure
-- [ ] Test script creates and retrieves transactions
-
-### **Test Result:**
-- [ ] ✅ Database fully functional
-- [ ] ❌ Issues found: ________________
-
----
-
-## ✅ **Test 3: Exchange Rate Service**
-
-### **Test Mock Exchange Rates**
-```bash
-# Test various currency pairs
-curl http://localhost:4000/api/exchange-rate/USD/EUR
-curl http://localhost:4000/api/exchange-rate/EUR/GBP
-curl http://localhost:4000/api/exchange-rate/USD/BRL
-curl http://localhost:4000/api/exchange-rate/GBP/USD
-```
-
-**Expected Response Format:**
-```json
-{
-  "from": "USD",
-  "to": "EUR",
-  "rate": 0.8521,
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
-```
-
-### **Test Edge Cases**
-```bash
-# Same currency (should return rate: 1)
-curl http://localhost:4000/api/exchange-rate/USD/USD
-
-# Invalid currency
-curl http://localhost:4000/api/exchange-rate/USD/XYZ
-```
-
-**Check:**
-- [ ] All major currency pairs work (USD, EUR, GBP, BRL)
-- [ ] Same currency returns rate of 1
-- [ ] Invalid currencies return appropriate errors
-- [ ] Rates are realistic (USD/EUR ~0.85, USD/BRL ~5.1)
-
-### **Test Result:**
-- [ ] ✅ Exchange rates working correctly
-- [ ] ❌ Issues found: ________________
-
----
-
-## ✅ **Test 4: Payment Service (Stripe)**
-
-### **Test Stripe Configuration**
-```bash
+curl http://localhost:4000/health
+curl http://localhost:4000/api/orchestrator/health
 curl http://localhost:4000/api/stripe/config
 ```
 
-**Expected Response:**
-```json
-{
-  "publishableKey": "pk_test_51...",
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
-```
+**Expected:**
+- [ ] `/health` returns `{"status": "ok"}`
+- [ ] `/api/orchestrator/health` returns services status
+- [ ] `/api/stripe/config` returns publishable key starting with `pk_test_`
 
-### **Test Transfer Creation (Creates Payment Intent)**
+### 2. Transfer Creation
 ```bash
 curl -X POST http://localhost:4000/api/transfers \
   -H "Content-Type: application/json" \
-  -d '{
-    "amount": 100,
-    "sourceCurrency": "USD",
-    "destCurrency": "EUR"
-  }'
+  -d '{"amount": 100, "sourceCurrency": "USD", "destCurrency": "EUR"}'
 ```
 
-**Expected Response:**
-```json
-{
-  "clientSecret": "pi_..._secret_...",
-  "transactionId": "clx...",
-  "rate": 0.8521,
-  "sourceAmount": 100,
-  "recipientAmount": 85.21,
-  "sourceCurrency": "USD",
-  "destCurrency": "EUR",
-  "status": "PENDING_PAYMENT",
-  "createdAt": "2024-01-15T10:30:00.000Z"
-}
-```
+**Expected:**
+- [ ] Returns 201 status code
+- [ ] Response includes `transactionId` (UUID format)
+- [ ] Response includes `clientSecret` (starts with `pi_`)
+- [ ] Response shows `status: "PENDING_PAYMENT"`
+- [ ] Response includes correct `sourceAmount` and `recipientAmount`
 
-### **Test Payment Intent Retrieval**
+### 3. Transfer Retrieval
 ```bash
-# Use payment intent ID from previous response
-curl http://localhost:4000/api/payments/pi_1234567890
+# Use transaction ID from previous step
+curl http://localhost:4000/api/transfers/YOUR_TRANSACTION_ID
 ```
 
-**Check:**
-- [ ] Stripe config returns publishable key
-- [ ] Transfer creation returns clientSecret
-- [ ] Payment intent can be retrieved
-- [ ] Database record created with PENDING_PAYMENT status
+**Expected:**
+- [ ] Returns 200 status code
+- [ ] Response includes all transaction details
+- [ ] Status is `PENDING_PAYMENT`
+- [ ] All amounts and currencies match creation request
 
-### **Test Result:**
-- [ ] ✅ Stripe integration working
-- [ ] ❌ Issues found: ________________
-
----
-
-## ✅ **Test 5: Blockchain Service**
-
-### **Test Blockchain Connection**
+### 4. Webhook Security
 ```bash
-curl http://localhost:4000/api/blockchain/health
-```
-
-**Expected Response:**
-```json
-{
-  "connected": true,
-  "network": "sepolia",
-  "walletAddress": "0x3081d2Ad64174e3e934123D44EAD1947F8a303C5",
-  "contractAddress": "0x...",
-  "blockNumber": 12345,
-  "walletBalance": "0.05 ETH",
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
-```
-
-### **Test Contract Balance**
-```bash
-curl http://localhost:4000/api/blockchain/contract-balance
-```
-
-**Expected Response:**
-```json
-{
-  "contractAddress": "0x...",
-  "tokenBalance": "1000.0",
-  "timestamp": "2024-01-15T10:30:00.000Z"
-}
-```
-
-**Check:**
-- [ ] Blockchain connection successful
-- [ ] Connected to Sepolia testnet (not mainnet!)
-- [ ] Wallet has test ETH balance
-- [ ] Contract address is valid
-- [ ] Can read contract token balance
-
-### **Test Result:**
-- [ ] ✅ Blockchain integration working
-- [ ] ❌ Issues found: ________________
-
----
-
-## ✅ **Test 6: API Endpoints**
-
-### **Test All Transfer Endpoints**
-```bash
-# Create transfer
-TRANSFER_RESPONSE=$(curl -s -X POST http://localhost:4000/api/transfers \
+# Test without signature (should fail)
+curl -X POST http://localhost:4000/api/webhooks/stripe \
   -H "Content-Type: application/json" \
-  -d '{"amount": 50, "sourceCurrency": "USD", "destCurrency": "EUR"}')
-
-echo $TRANSFER_RESPONSE
-
-# Extract transaction ID
-TRANSACTION_ID=$(echo $TRANSFER_RESPONSE | grep -o '"transactionId":"[^"]*' | cut -d'"' -f4)
-
-# Get specific transfer
-curl http://localhost:4000/api/transfers/$TRANSACTION_ID
-
-# Get all transfers
-curl http://localhost:4000/api/transfers
+  -d '{"test": "data"}'
 ```
 
-### **Test Error Handling**
-```bash
-# Invalid input
-curl -X POST http://localhost:4000/api/transfers \
-  -H "Content-Type: application/json" \
-  -d '{"amount": -100, "sourceCurrency": "USD", "destCurrency": "EUR"}'
+**Expected:**
+- [ ] Returns 400 status code
+- [ ] Error message: "Missing stripe-signature header"
 
-# Missing fields
+### 5. Exchange Rates
+```bash
+curl http://localhost:4000/api/exchange-rate/USD/EUR
+curl http://localhost:4000/api/exchange-rate/USD/BRL
+curl http://localhost:4000/api/exchange-rate/USD/GBP
+```
+
+**Expected:**
+- [ ] All return 200 status code
+- [ ] Each response includes numeric `rate` value
+- [ ] Response includes correct `from` and `to` currencies
+- [ ] Rates are reasonable (e.g., USD to EUR around 0.85-0.95)
+
+## Webhook Processing Test ✅
+
+### Test Orchestrator Directly
+```bash
+# Use transaction ID from transfer creation
+curl -X POST http://localhost:4000/api/test-orchestrator \
+  -H "Content-Type: application/json" \
+  -d '{"transactionId": "YOUR_TRANSACTION_ID"}'
+```
+
+**Expected:**
+- [ ] Returns 200 status code (or 500 if already processed)
+- [ ] API logs show orchestrator workflow steps
+- [ ] Transaction status changes from `PENDING_PAYMENT`
+
+### Check Transaction Status After Processing
+```bash
+curl http://localhost:4000/api/transfers/YOUR_TRANSACTION_ID
+```
+
+**Expected:**
+- [ ] Status is no longer `PENDING_PAYMENT`
+- [ ] Status is `PROCESSING`, `FAILED`, or `FUNDS_SENT_TO_PARTNER`
+- [ ] `updatedAt` timestamp is recent
+
+## Frontend Integration Test ✅ (Optional)
+
+### 1. Homepage
+- [ ] Visit `http://localhost:3000`
+- [ ] Transfer calculator loads without errors
+- [ ] Currency dropdowns work
+- [ ] Lock icons toggle correctly
+- [ ] Exchange rates load automatically
+- [ ] Amount calculations work both ways
+
+### 2. Payment Flow
+- [ ] Enter transfer details (e.g., $100 USD → EUR)
+- [ ] Click "Continue" button
+- [ ] Redirected to payment page `/pay/[transactionId]`
+- [ ] Payment page shows correct transfer summary
+- [ ] Stripe payment form loads
+- [ ] Form accepts test card: `4242424242424242`
+
+### 3. Status Page
+- [ ] After payment, redirected to `/status/[transactionId]`
+- [ ] Status page loads transaction details
+- [ ] Payment confirmation banner appears
+- [ ] Status updates automatically (every 5 seconds)
+- [ ] Timeline shows progress correctly
+
+## Error Handling Tests ✅
+
+### 1. Invalid Requests
+```bash
+# Invalid currency codes
+curl http://localhost:4000/api/exchange-rate/INVALID/EUR
+
+# Invalid transaction ID
+curl http://localhost:4000/api/transfers/invalid-id
+
+# Missing required fields
 curl -X POST http://localhost:4000/api/transfers \
   -H "Content-Type: application/json" \
   -d '{"amount": 100}'
 ```
 
-**Check:**
-- [ ] Transfer creation works
-- [ ] Can retrieve specific transfers
-- [ ] Can list all transfers
-- [ ] Proper error messages for invalid input
-- [ ] Validation catches negative amounts and missing fields
+**Expected:**
+- [ ] All return appropriate error status codes (400/404)
+- [ ] Error messages are clear and helpful
+- [ ] No server crashes or unhandled exceptions
 
-### **Test Result:**
-- [ ] ✅ All API endpoints working
-- [ ] ❌ Issues found: ________________
+## Final Verification ✅
 
----
+### Complete End-to-End Test
+1. [ ] Create transfer via API
+2. [ ] Verify transfer in database/response
+3. [ ] Trigger orchestrator workflow
+4. [ ] Confirm status updates
+5. [ ] Check all logs for errors
+6. [ ] Verify no hanging processes
 
-## ✅ **Test 7: Frontend Integration**
+### Ready for Production Checklist
+- [ ] All automated tests pass (100% success rate)
+- [ ] All manual tests pass
+- [ ] No errors in server logs
+- [ ] Performance meets requirements
+- [ ] Security tests pass
+- [ ] Error handling works correctly
+- [ ] Documentation is up to date
 
-### **Start Web Application**
-```bash
-cd packages/web
-npm run dev
-```
+## ✅ Success Criteria
 
-**Open browser:** http://localhost:3000
+**All tests pass when:**
+- Automated test suite shows 100% success rate
+- All manual API tests return expected responses
+- Frontend integration works end-to-end
+- Error handling is graceful and informative
+- Performance meets requirements
+- Security measures are effective
 
-### **Test UI Components**
-- [ ] Page loads without errors
-- [ ] "Stealth Money" title displays
-- [ ] Transfer calculator card appears
-- [ ] Both input fields are editable
-- [ ] Currency dropdowns work
-- [ ] Exchange rate displays
-
-### **Test Two-Way Calculations**
-1. **Send Amount Test:**
-   - Enter `100` in "You Send" field
-   - Verify "Recipient Gets" updates automatically
-   - Check exchange rate display
-
-2. **Receive Amount Test:**
-   - Clear fields
-   - Enter `85` in "Recipient Gets" field
-   - Verify "You Send" updates automatically
-
-3. **Currency Change Test:**
-   - Change source currency from USD to EUR
-   - Verify calculations update
-   - Change destination currency
-   - Verify calculations update again
-
-### **Test Loading States**
-- [ ] Loading indicator appears during API calls
-- [ ] Button disables during loading
-- [ ] Error messages display if API fails
-
-**Check:**
-- [ ] All UI components render correctly
-- [ ] Two-way calculations work
-- [ ] Currency changes trigger recalculation
-- [ ] Loading and error states work
-- [ ] No console errors in browser
-
-### **Test Result:**
-- [ ] ✅ Frontend fully functional
-- [ ] ❌ Issues found: ________________
+**Ready for Step 2 when:**
+- This checklist is 100% complete
+- No critical issues remain
+- Payment flow integration is fully functional
+- System is stable under normal load
 
 ---
 
-## ✅ **Test 8: Webhook Integration**
-
-### **Setup Webhook Forwarding**
-```bash
-# Terminal 1: Keep API running
-cd packages/api
-npm run dev
-
-# Terminal 2: Start webhook forwarding
-stripe listen --forward-to localhost:4000/api/webhooks/stripe
-```
-
-### **Test Webhook Processing**
-```bash
-# Trigger test webhook
-stripe trigger payment_intent.succeeded
-```
-
-**Expected in API logs:**
-```
-Received Stripe webhook: payment_intent.succeeded
-Payment succeeded for transaction: clx123abc
-```
-
-### **Test Webhook with Real Transaction**
-1. Create a transfer via API (get transaction ID)
-2. Trigger webhook with that transaction ID
-3. Check database for status update
-
-**Check:**
-- [ ] Webhook endpoint receives events
-- [ ] Signature verification works
-- [ ] Database updates on payment success
-- [ ] Error handling for invalid webhooks
-
-### **Test Result:**
-- [ ] ✅ Webhooks working correctly
-- [ ] ❌ Issues found: ________________
-
----
-
-## ✅ **Test 9: End-to-End Flow**
-
-### **Complete User Journey**
-1. **Start all services:**
-   ```bash
-   # Terminal 1: API
-   cd packages/api && npm run dev
-   
-   # Terminal 2: Web
-   cd packages/web && npm run dev
-   
-   # Terminal 3: Webhooks
-   stripe listen --forward-to localhost:4000/api/webhooks/stripe
-   ```
-
-2. **User Flow Test:**
-   - Open http://localhost:3000
-   - Enter transfer: $100 USD → EUR
-   - Verify calculations are correct
-   - Click "Continue" (when payment is implemented)
-   - Use test card: `4242424242424242`
-   - Verify payment processes
-   - Check database for status updates
-
-### **Database Verification**
-```bash
-# Check transaction status progression
-npm run db:studio
-# Look for: PENDING → PENDING_PAYMENT → PAID
-```
-
-**Check:**
-- [ ] Complete flow works without errors
-- [ ] Database tracks all status changes
-- [ ] Real-time calculations work
-- [ ] Payment processing works
-- [ ] Webhook updates database
-
-### **Test Result:**
-- [ ] ✅ End-to-end flow successful
-- [ ] ❌ Issues found: ________________
-
----
-
-## ✅ **Test 10: Production Readiness**
-
-### **Security Checklist**
-- [ ] All API keys are test keys (sk_test_, pk_test_)
-- [ ] Using testnet (Sepolia, not mainnet)
-- [ ] Webhook signature verification enabled
-- [ ] No private keys in version control
-- [ ] Environment variables properly configured
-
-### **Performance Tests**
-```bash
-# Test multiple concurrent requests
-for i in {1..10}; do
-  curl -X POST http://localhost:4000/api/transfers \
-    -H "Content-Type: application/json" \
-    -d '{"amount": '$i'0, "sourceCurrency": "USD", "destCurrency": "EUR"}' &
-done
-wait
-```
-
-### **Error Handling Tests**
-```bash
-# Test with API server down
-# Stop API server, try frontend
-# Should show appropriate error messages
-
-# Test with invalid data
-curl -X POST http://localhost:4000/api/transfers \
-  -H "Content-Type: application/json" \
-  -d '{"amount": "invalid", "sourceCurrency": "USD", "destCurrency": "EUR"}'
-```
-
-### **Monitoring Setup**
-- [ ] API logs are clear and informative
-- [ ] Database queries are efficient
-- [ ] No memory leaks during extended testing
-- [ ] Proper error responses for all failure cases
-
-### **Test Result:**
-- [ ] ✅ Production ready
-- [ ] ❌ Issues to fix: ________________
-
----
-
-## 🎉 **Final Checklist**
-
-Before considering production deployment:
-
-### **Functionality**
-- [ ] All 10 test sections pass
-- [ ] No critical bugs found
-- [ ] Performance is acceptable
-- [ ] Error handling is robust
-
-### **Security**
-- [ ] All test credentials only
-- [ ] No sensitive data in logs
-- [ ] Webhook signatures verified
-- [ ] Input validation working
-
-### **Documentation**
-- [ ] All setup guides are accurate
-- [ ] API endpoints documented
-- [ ] Environment variables documented
-- [ ] Troubleshooting guides complete
-
----
-
-## 🚀 **Next Steps After Testing**
-
-Once all tests pass:
-1. **Document any issues found**
-2. **Fix critical bugs**
-3. **Optimize performance bottlenecks**
-4. **Prepare production environment**
-5. **Set up monitoring and alerting**
-
----
-
-**Testing Status: [ ] Complete [ ] In Progress [ ] Not Started**
-
-**Overall Result: [ ] ✅ Ready for Production [ ] ❌ Needs Work**
-
-**Notes:**
-_Use this space to document any issues, fixes, or observations during testing._
+**Next Step:** Recipient Information Collection (Step 2 of MVP completion)
