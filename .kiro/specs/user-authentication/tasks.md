@@ -31,13 +31,13 @@
   - Implement proper sign-out functionality
   - _Requirements: 2.4, 6.3_
 
-- [-] 5. Update database schema for user association
+- [x] 5. Update database schema for user association
   - Add userId field to Transaction model in Prisma schema
   - Create database migration for the new field
   - Add database index on userId for efficient queries
   - _Requirements: 3.4, 4.3_
 
-- [ ] 6. Implement Clerk authentication middleware in API
+- [-] 6. Implement Clerk authentication middleware in API
   - Install and configure Clerk Express middleware
   - Create authentication middleware for protected routes
   - Add user ID extraction from JWT tokens
