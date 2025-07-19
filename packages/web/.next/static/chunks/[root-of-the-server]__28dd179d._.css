@@ -179,14 +179,19 @@
     --color-red-50: oklch(97.1% .013 17.38);
     --color-red-100: oklch(93.6% .032 17.717);
     --color-red-200: oklch(88.5% .062 18.334);
+    --color-red-500: oklch(63.7% .237 25.331);
     --color-red-600: oklch(57.7% .245 27.325);
+    --color-red-800: oklch(44.4% .177 26.899);
     --color-orange-600: oklch(64.6% .222 41.116);
     --color-yellow-50: oklch(98.7% .026 102.212);
     --color-yellow-100: oklch(97.3% .071 103.193);
     --color-yellow-200: oklch(94.5% .129 101.54);
     --color-yellow-400: oklch(85.2% .199 91.936);
+    --color-yellow-500: oklch(79.5% .184 86.047);
     --color-yellow-600: oklch(68.1% .162 75.834);
+    --color-yellow-800: oklch(47.6% .114 61.907);
     --color-green-50: oklch(98.2% .018 155.826);
+    --color-green-100: oklch(96.2% .044 156.743);
     --color-green-200: oklch(92.5% .084 155.995);
     --color-green-500: oklch(72.3% .219 149.579);
     --color-green-600: oklch(62.7% .194 149.214);
@@ -528,6 +533,40 @@
     grid-row-start: 1;
   }
 
+  .container {
+    width: 100%;
+  }
+
+  @media (width >= 40rem) {
+    .container {
+      max-width: 40rem;
+    }
+  }
+
+  @media (width >= 48rem) {
+    .container {
+      max-width: 48rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .container {
+      max-width: 64rem;
+    }
+  }
+
+  @media (width >= 80rem) {
+    .container {
+      max-width: 80rem;
+    }
+  }
+
+  @media (width >= 96rem) {
+    .container {
+      max-width: 96rem;
+    }
+  }
+
   .-mx-1 {
     margin-inline: calc(var(--spacing) * -1);
   }
@@ -542,6 +581,10 @@
 
   .mt-2 {
     margin-top: calc(var(--spacing) * 2);
+  }
+
+  .mt-4 {
+    margin-top: calc(var(--spacing) * 4);
   }
 
   .mt-6 {
@@ -566,6 +609,10 @@
 
   .mr-4 {
     margin-right: calc(var(--spacing) * 4);
+  }
+
+  .mb-1 {
+    margin-bottom: calc(var(--spacing) * 1);
   }
 
   .mb-2 {
@@ -1040,6 +1087,10 @@
     border-color: var(--color-red-200);
   }
 
+  .border-transparent {
+    border-color: #0000;
+  }
+
   .border-white {
     border-color: var(--color-white);
   }
@@ -1102,6 +1153,10 @@
 
   .bg-green-50 {
     background-color: var(--color-green-50);
+  }
+
+  .bg-green-100 {
+    background-color: var(--color-green-100);
   }
 
   .bg-green-500 {
@@ -1283,6 +1338,10 @@
     padding-inline: calc(var(--spacing) * 2);
   }
 
+  .px-2\.5 {
+    padding-inline: calc(var(--spacing) * 2.5);
+  }
+
   .px-3 {
     padding-inline: calc(var(--spacing) * 3);
   }
@@ -1293,6 +1352,10 @@
 
   .px-6 {
     padding-inline: calc(var(--spacing) * 6);
+  }
+
+  .py-0\.5 {
+    padding-block: calc(var(--spacing) * .5);
   }
 
   .py-1 {
@@ -1482,6 +1545,10 @@
     color: var(--color-emerald-600);
   }
 
+  .text-foreground {
+    color: var(--foreground);
+  }
+
   .text-gray-400 {
     color: var(--color-gray-400);
   }
@@ -1498,8 +1565,16 @@
     color: var(--color-gray-700);
   }
 
+  .text-gray-800 {
+    color: var(--color-gray-800);
+  }
+
   .text-gray-900 {
     color: var(--color-gray-900);
+  }
+
+  .text-green-500 {
+    color: var(--color-green-500);
   }
 
   .text-green-600 {
@@ -1530,8 +1605,16 @@
     color: var(--primary-foreground);
   }
 
+  .text-red-500 {
+    color: var(--color-red-500);
+  }
+
   .text-red-600 {
     color: var(--color-red-600);
+  }
+
+  .text-red-800 {
+    color: var(--color-red-800);
   }
 
   .text-secondary-foreground {
@@ -1554,8 +1637,16 @@
     color: var(--color-yellow-400);
   }
 
+  .text-yellow-500 {
+    color: var(--color-yellow-500);
+  }
+
   .text-yellow-600 {
     color: var(--color-yellow-600);
+  }
+
+  .text-yellow-800 {
+    color: var(--color-yellow-800);
   }
 
   .capitalize {
@@ -1736,6 +1827,18 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-destructive\/80:hover {
+      background-color: var(--destructive);
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-destructive\/80:hover {
+        background-color: color-mix(in oklab, var(--destructive) 80%, transparent);
+      }
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-destructive\/90:hover {
       background-color: var(--destructive);
     }
@@ -1762,6 +1865,18 @@
   @media (hover: hover) {
     .hover\:bg-gray-100:hover {
       background-color: var(--color-gray-100);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-primary\/80:hover {
+      background-color: var(--primary);
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-primary\/80:hover {
+        background-color: color-mix(in oklab, var(--primary) 80%, transparent);
+      }
     }
   }
 
@@ -1846,6 +1961,13 @@
   }
 
   @media (hover: hover) {
+    .hover\:shadow-md:hover {
+      --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, #0000001a), 0 2px 4px -2px var(--tw-shadow-color, #0000001a);
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:shadow-xl:hover {
       --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color, #0000001a), 0 8px 10px -6px var(--tw-shadow-color, #0000001a);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
@@ -1868,12 +1990,31 @@
     color: var(--accent-foreground);
   }
 
+  .focus\:ring-2:focus {
+    --tw-ring-shadow: var(--tw-ring-inset, ) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+
   .focus\:ring-blue-500:focus {
     --tw-ring-color: var(--color-blue-500);
   }
 
   .focus\:ring-emerald-500:focus {
     --tw-ring-color: var(--color-emerald-500);
+  }
+
+  .focus\:ring-ring:focus {
+    --tw-ring-color: var(--ring);
+  }
+
+  .focus\:ring-offset-2:focus {
+    --tw-ring-offset-width: 2px;
+    --tw-ring-offset-shadow: var(--tw-ring-inset, ) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  }
+
+  .focus\:outline-none:focus {
+    --tw-outline-style: none;
+    outline-style: none;
   }
 
   .focus-visible\:border-ring:focus-visible {

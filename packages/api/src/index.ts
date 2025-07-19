@@ -8,6 +8,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import transferRoutes from './routes/transfers.controller';
 import webhookRoutes from './routes/webhooks.controller';
+import accountRoutes from './routes/account.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 import { 
   helmetConfig, 
@@ -126,6 +127,9 @@ app.use('/api', transferRoutes);
 
 // Wire up the webhook routes with /api prefix
 app.use('/api/webhooks', webhookRoutes);
+
+// Wire up the account routes with /api prefix
+app.use('/api', accountRoutes);
 
 // Error logging middleware
 app.use(errorLogger);

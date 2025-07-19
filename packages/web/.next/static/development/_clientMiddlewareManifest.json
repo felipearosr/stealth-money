@@ -10,5 +10,9 @@
   {
     "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/(api|trpc))(.*)(\\\\.json)?[\\/#\\?]?$",
     "originalSource": "/(api|trpc)(.*)"
+  },
+  {
+    "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/((?!_next\\/static|_next\\/image|favicon.ico).*))(\\\\.json)?[\\/#\\?]?$",
+    "originalSource": "/((?!_next/static|_next/image|favicon.ico).*)"
   }
 ]

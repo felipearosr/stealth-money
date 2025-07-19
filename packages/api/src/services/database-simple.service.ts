@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 
 interface Transaction {
   id: string;
+  userId?: string; // User ID for account tracking
   amount: number;
   sourceCurrency: string;
   destCurrency: string;
@@ -66,6 +67,7 @@ export class SimpleDatabaseService {
       await this.pool.query(`
         CREATE TABLE IF NOT EXISTS transactions (
           id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+          user_id VARCHAR(255),
           amount DECIMAL(10,2) NOT NULL,
           source_currency VARCHAR(3) NOT NULL,
           dest_currency VARCHAR(3) NOT NULL,
@@ -87,6 +89,15 @@ export class SimpleDatabaseService {
         );
       `);
       
+      // Add user_id index if it doesn't exist
+      try {
+        await this.pool.query(`
+          CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+        `);
+      } catch (indexError) {
+        console.log('Index creation skipped (may already exist)');
+      }
+      
       console.log('✅ Database table created/verified');
       return true;
     } catch (error) {
@@ -106,11 +117,13 @@ export class SimpleDatabaseService {
     recipientPhone?: string;
     payoutMethod?: string;
     payoutDetails?: any;
+    userId?: string; // Add user ID support
   }): Promise<Transaction> {
     if (!this.isConfigured || !this.pool) {
       // Return mock transaction for testing
       return {
         id: `mock_${Date.now()}`,
+        userId: data.userId,
         amount: data.amount,
         sourceCurrency: data.sourceCurrency,
         destCurrency: data.destCurrency,
@@ -124,12 +137,13 @@ export class SimpleDatabaseService {
 
     const query = `
       INSERT INTO transactions (
-        amount, source_currency, dest_currency, exchange_rate, recipient_amount,
+        user_id, amount, source_currency, dest_currency, exchange_rate, recipient_amount,
         recipient_name, recipient_email, recipient_phone, payout_method, payout_details
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING 
         id,
+        user_id as "userId",
         amount,
         source_currency as "sourceCurrency",
         dest_currency as "destCurrency",
@@ -148,6 +162,7 @@ export class SimpleDatabaseService {
     `;
 
     const values = [
+      data.userId || null,
       data.amount,
       data.sourceCurrency,
       data.destCurrency,
@@ -359,6 +374,40 @@ export class SimpleDatabaseService {
     `;
 
     const result = await this.pool.query(query);
+    return result.rows;
+  }
+
+  async getTransactionsByUserId(userId: string): Promise<Transaction[]> {
+    if (!this.isConfigured || !this.pool) {
+      // Return empty array for mock mode
+      return [];
+    }
+
+    const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+    `;
+
+    const result = await this.pool.query(query, [userId]);
     return result.rows;
   }
 

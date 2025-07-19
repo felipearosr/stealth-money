@@ -50,7 +50,8 @@ const config = {
     matcher: [
         '/((?!.*\\..*|_next).*)',
         '/',
-        '/(api|trpc)(.*)'
+        '/(api|trpc)(.*)',
+        '/((?!_next/static|_next/image|favicon.ico).*)'
     ]
 };
 }}),

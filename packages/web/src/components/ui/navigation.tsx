@@ -22,11 +22,6 @@ function AuthenticatedNavigation() {
   if (isSignedIn) {
     return (
       <div className="flex items-center space-x-4">
-        <Link href="/dashboard">
-          <Button variant="outline" className="border-gray-300">
-            Dashboard
-          </Button>
-        </Link>
         <UserButton 
           appearance={{
             elements: {

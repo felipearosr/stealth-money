@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
 import { z } from "zod";
 import { Lock, LockOpen } from "lucide-react";
+import { useUser, useAuth } from '@clerk/nextjs';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,8 @@ interface TransferCalculatorProps {
 
 export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
   const router = useRouter();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   
   // Form state
   const [amountToSend, setAmountToSend] = useState('1000');
@@ -84,39 +87,44 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
     fetchRate();
   }, [debouncedSourceCurrency, debouncedDestCurrency]);
 
-  // Two-way calculation logic based on locked field
+  // Calculate amounts based on locked field
   useEffect(() => {
     if (!rate) return;
 
-    if (lockedField === 'send') {
-      const amount = parseFloat(debouncedAmountToSend);
-      if (!isNaN(amount)) {
-        setAmountToReceive((amount * rate).toFixed(2));
-      } else {
-        setAmountToReceive('');
-      }
-    } else { // lockedField === 'receive'
-      const amount = parseFloat(debouncedAmountToReceive);
-      if (!isNaN(amount)) {
-        setAmountToSend((amount / rate).toFixed(2));
-      } else {
-        setAmountToSend('');
-      }
+    if (lockedField === 'send' && amountToSend && !isNaN(parseFloat(amountToSend))) {
+      const sendAmount = parseFloat(amountToSend);
+      const receiveAmount = sendAmount * rate;
+      setAmountToReceive(receiveAmount.toFixed(2));
+    } else if (lockedField === 'receive' && amountToReceive && !isNaN(parseFloat(amountToReceive))) {
+      const receiveAmount = parseFloat(amountToReceive);
+      const sendAmount = receiveAmount / rate;
+      setAmountToSend(sendAmount.toFixed(2));
     }
-  }, [debouncedAmountToSend, debouncedAmountToReceive, lockedField, rate]);
+  }, [rate, lockedField, amountToSend, amountToReceive]);
 
-  // Toggle lock field
   const toggleLock = (field: 'send' | 'receive') => {
-    setLockedField(field === lockedField ? (field === 'send' ? 'receive' : 'send') : field);
+    setLockedField(field === 'send' ? 'receive' : 'send');
   };
 
   // Calculate fee and total
-  const fee = amountToSend ? (parseFloat(amountToSend) * 0.029).toFixed(2) : '0.00';
-  const total = amountToSend ? (parseFloat(amountToSend) + parseFloat(fee)).toFixed(2) : '0.00';
+  const fee = parseFloat(amountToSend) * 0.029;
+  const total = parseFloat(amountToSend) + fee;
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user is authenticated first
+    if (!isLoaded) {
+      setError('Loading user information...');
+      return;
+    }
+
+    if (!isSignedIn) {
+      // Immediately redirect to sign-in page
+      router.push('/auth/sign-in');
+      return;
+    }
     
     // Clear previous validation errors
     setValidationErrors({});
@@ -166,21 +174,27 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
     setIsLoading(true);
 
     try {
-      // Make API call to create transfer
+      // Get user's authentication token
+      const token = await getToken();
+      
+      // Make API call to create transfer with user authentication
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/transfers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           amount: parseFloat(amountToSend),
           sourceCurrency,
           destCurrency,
+          userId: user?.id, // Include user ID for account tracking
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create transfer');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to create transfer');
       }
 
       const transferData = await response.json();
@@ -200,6 +214,11 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Send Money</CardTitle>
+        {user && (
+          <p className="text-sm text-gray-600">
+            Sending as {user.firstName || user.emailAddresses[0]?.emailAddress}
+          </p>
+        )}
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
@@ -314,11 +333,11 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
             </div>
             <div className="flex justify-between text-sm text-gray-600">
               <span>Fee (2.9%):</span>
-              <span>{sourceCurrency} {fee}</span>
+              <span>{sourceCurrency} {fee.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-600">
               <span>Total to pay:</span>
-              <span className="font-semibold">{sourceCurrency} {total}</span>
+              <span className="font-semibold">{sourceCurrency} {total.toFixed(2)}</span>
             </div>
           </div>
         </CardContent>
@@ -328,7 +347,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
             className="w-full" 
             disabled={isLoading || !rate || !amountToSend || !amountToReceive || parseFloat(amountToSend) <= 0}
           >
-            {isLoading ? "Processing..." : "Continue"}
+            {isLoading ? "Processing..." : isSignedIn ? "Continue" : "Sign In to Continue"}
           </Button>
         </CardFooter>
       </form>

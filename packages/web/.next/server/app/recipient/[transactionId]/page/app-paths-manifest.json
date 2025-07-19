@@ -1,0 +1,3 @@
+{
+  "/recipient/[transactionId]/page": "app/recipient/[transactionId]/page.js"
+}

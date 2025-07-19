@@ -20,6 +20,7 @@ import {
   recipientUpdateSchema
 } from '../middleware/validation.middleware';
 import { logTransactionEvent, logSecurityEvent } from '../middleware/logging.middleware';
+import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 const fxService = new FxService();
@@ -45,6 +46,7 @@ const createTransferSchema = z.object({
         walletNumber: z.string().optional(),
         pickupLocation: z.string().optional(),
     }).optional(),
+    userId: z.string().optional(), // User ID for account tracking
 });
 
 // Test endpoint to check blockchain connection and wallet balance
@@ -294,10 +296,21 @@ router.put('/transfers/:id/recipient', transferCreationRateLimit, validateRecipi
     }
 });
 
-// Get all transactions
-router.get('/transfers', async (req: Request, res: Response) => {
+// Get all transactions (now requires authentication and filters by user)
+router.get('/transfers', requireAuth, async (req: Request, res: Response) => {
     try {
-        const transactions = await dbService.getAllTransactions();
+        // Get user ID from authenticated request
+        const userId = (req as any).userId;
+        
+        if (!userId) {
+            return res.status(401).json({ 
+                message: 'User authentication required',
+                error: 'No user ID found in request'
+            });
+        }
+
+        // Get transactions for the authenticated user
+        const transactions = await dbService.getTransactionsByUserId(userId);
         res.json(transactions);
     } catch (error) {
         console.error('Get transactions error:', error);
@@ -308,10 +321,20 @@ router.get('/transfers', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/transfers', transferCreationRateLimit, validateTransferCreation, async (req: Request, res: Response) => {
+router.post('/transfers', requireAuth, transferCreationRateLimit, validateTransferCreation, async (req: Request, res: Response) => {
     try {
         const validatedData = createTransferSchema.parse(req.body);
         console.log('Transfer request validated:', validatedData);
+
+        // Get user ID from authenticated request
+        const userId = (req as any).userId;
+        
+        if (!userId) {
+            return res.status(401).json({ 
+                message: 'User authentication required',
+                error: 'No user ID found in request'
+            });
+        }
 
         const { 
             amount, 
@@ -328,7 +351,7 @@ router.post('/transfers', transferCreationRateLimit, validateTransferCreation, a
         const exchangeRate = await fxService.getRate(sourceCurrency, destCurrency);
         const recipientAmount = amount * exchangeRate;
 
-        // Create transaction record in database with recipient information
+        // Create transaction record in database with user ID and recipient information
         const newTransaction = await dbService.createTransaction({
             amount,
             sourceCurrency,
@@ -340,6 +363,7 @@ router.post('/transfers', transferCreationRateLimit, validateTransferCreation, a
             recipientPhone,
             payoutMethod,
             payoutDetails,
+            userId, // Include user ID for account tracking
         });
 
         // Create Stripe Payment Intent
@@ -358,7 +382,7 @@ router.post('/transfers', transferCreationRateLimit, validateTransferCreation, a
 
         console.log(`Exchange rate ${sourceCurrency} to ${destCurrency}: ${exchangeRate}`);
         console.log(`${amount} ${sourceCurrency} = ${recipientAmount.toFixed(2)} ${destCurrency}`);
-        console.log(`Transaction created with ID: ${newTransaction.id}`);
+        console.log(`Transaction created with ID: ${newTransaction.id} for user: ${userId}`);
         console.log(`Payment Intent created: ${paymentIntentId}`);
 
         // The frontend needs this secret to confirm the payment
