@@ -7,71 +7,53 @@ import { generalRateLimit } from '../middleware/security.middleware';
 const router = Router();
 const dbService = new SimpleDatabaseService();
 
-// Get user's account balance and received money
-router.get('/account/balance', requireAuth, generalRateLimit, async (req: Request, res: Response) => {
-    try {
-        const userId = (req as any).userId;
-        
-        if (!userId) {
-            return res.status(401).json({ 
-                message: 'User authentication required',
-                error: 'No user ID found in request'
-            });
-        }
-
-        // Get all transactions for the user
-        const transactions = await dbService.getTransactionsByUserId(userId);
-        
-        // Calculate balance metrics
-        let totalReceived = 0;
-        let availableBalance = 0;
-        let pendingAmount = 0;
-        const recentTransactions: any[] = [];
-        let primaryCurrency = 'USD'; // Default currency
-
-        transactions.forEach(transaction => {
-            // For now, we'll consider all completed transactions as "received money"
-            // In a real implementation, you'd distinguish between sent and received
-            if (transaction.status === 'COMPLETED') {
-                totalReceived += transaction.recipientAmount;
-                availableBalance += transaction.recipientAmount;
-                primaryCurrency = transaction.destCurrency;
-                
-                // Add to recent transactions (last 10)
-                if (recentTransactions.length < 10) {
-                    recentTransactions.push({
-                        id: transaction.id,
-                        amount: transaction.recipientAmount,
-                        currency: transaction.destCurrency,
-                        status: transaction.status,
-                        senderName: transaction.recipientName || 'Unknown Sender',
-                        createdAt: transaction.createdAt
-                    });
-                }
-            } else if (transaction.status === 'PROCESSING' || transaction.status === 'PENDING_PAYMENT') {
-                pendingAmount += transaction.recipientAmount;
-                primaryCurrency = transaction.destCurrency;
-            }
-        });
-
-        // Sort recent transactions by date (newest first)
-        recentTransactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-        res.json({
-            totalReceived: parseFloat(totalReceived.toFixed(2)),
-            availableBalance: parseFloat(availableBalance.toFixed(2)),
-            pendingAmount: parseFloat(pendingAmount.toFixed(2)),
-            currency: primaryCurrency,
-            recentTransactions
-        });
-
-    } catch (error) {
-        console.error('Account balance error:', error);
-        res.status(500).json({
-            message: 'Could not fetch account balance',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+// Get user account balance and recent transactions
+router.get('/account/balance', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required',
+        error: 'No user ID found in request'
+      });
     }
+
+    // Get all transactions for the user (sent and received)
+    const sentTransactions = await dbService.getTransactionsByUserId(userId);
+    const receivedTransactions = await dbService.getTransactionsReceivedByUserId(userId);
+
+    // Calculate totals
+    const totalSent = sentTransactions.reduce((sum, tx) => sum + tx.amount, 0);
+    const totalReceived = receivedTransactions.reduce((sum, tx) => sum + tx.recipientAmount, 0);
+    const availableBalance = totalReceived - totalSent;
+
+    // Get recent received transactions (money sent to this user)
+    const recentReceived = receivedTransactions
+      .filter(tx => tx.status === 'COMPLETED')
+      .slice(0, 5)
+      .map(tx => ({
+        id: tx.id,
+        amount: tx.recipientAmount,
+        currency: tx.destCurrency,
+        from: tx.userId, // Sender's user ID
+        status: tx.status,
+        date: tx.createdAt
+      }));
+
+    res.json({
+      totalSent: parseFloat(totalSent.toFixed(2)),
+      totalReceived: parseFloat(totalReceived.toFixed(2)),
+      availableBalance: parseFloat(availableBalance.toFixed(2)),
+      recentReceived
+    });
+  } catch (error) {
+    console.error('Get account balance error:', error);
+    res.status(500).json({
+      message: 'Could not fetch account balance',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Get user's transaction history

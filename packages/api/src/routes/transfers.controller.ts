@@ -28,25 +28,13 @@ const dbService = new SimpleDatabaseService();
 const blockchainService = new BlockchainService();
 const paymentService = new PaymentService();
 
-// Zod schema for validation
+// Transfer creation validation schema
 const createTransferSchema = z.object({
-    amount: z.number().positive(),
-    sourceCurrency: z.string().length(3),
-    destCurrency: z.string().length(3),
-    // Recipient information (optional for now to maintain backward compatibility)
-    recipientName: z.string().min(1).optional(),
-    recipientEmail: z.string().email().optional(),
-    recipientPhone: z.string().min(1).optional(),
-    payoutMethod: z.enum(['bank_account', 'mobile_wallet', 'cash_pickup', 'debit_card']).optional(),
-    payoutDetails: z.object({
-        bankName: z.string().optional(),
-        accountNumber: z.string().optional(),
-        routingNumber: z.string().optional(),
-        walletProvider: z.string().optional(),
-        walletNumber: z.string().optional(),
-        pickupLocation: z.string().optional(),
-    }).optional(),
-    userId: z.string().optional(), // User ID for account tracking
+  amount: z.number().min(0.01).max(50000),
+  sourceCurrency: z.string().length(3).regex(/^[A-Z]{3}$/),
+  destCurrency: z.string().length(3).regex(/^[A-Z]{3}$/),
+  recipientUserId: z.string().min(1), // Recipient user ID (email or username)
+  userId: z.string().optional(), // Sender user ID (from auth)
 });
 
 // Test endpoint to check blockchain connection and wallet balance
@@ -327,9 +315,9 @@ router.post('/transfers', requireAuth, transferCreationRateLimit, validateTransf
         console.log('Transfer request validated:', validatedData);
 
         // Get user ID from authenticated request
-        const userId = (req as any).userId;
+        const senderUserId = (req as any).userId;
         
-        if (!userId) {
+        if (!senderUserId) {
             return res.status(401).json({ 
                 message: 'User authentication required',
                 error: 'No user ID found in request'
@@ -340,62 +328,57 @@ router.post('/transfers', requireAuth, transferCreationRateLimit, validateTransf
             amount, 
             sourceCurrency, 
             destCurrency,
-            recipientName,
-            recipientEmail,
-            recipientPhone,
-            payoutMethod,
-            payoutDetails
+            recipientUserId
         } = validatedData;
+
+        // Validate that sender and recipient are different
+        if (senderUserId === recipientUserId) {
+            return res.status(400).json({
+                message: 'Cannot send money to yourself',
+                error: 'Invalid recipient'
+            });
+        }
+
+        // TODO: Validate that recipientUserId exists in the system
+        // For now, we'll assume the recipient exists
 
         // Fetch exchange rate using FxService
         const exchangeRate = await fxService.getRate(sourceCurrency, destCurrency);
         const recipientAmount = amount * exchangeRate;
 
-        // Create transaction record in database with user ID and recipient information
+        // Create transaction record in database for internal transfer
         const newTransaction = await dbService.createTransaction({
             amount,
             sourceCurrency,
             destCurrency,
             exchangeRate,
             recipientAmount: parseFloat(recipientAmount.toFixed(2)),
-            recipientName,
-            recipientEmail,
-            recipientPhone,
-            payoutMethod,
-            payoutDetails,
-            userId, // Include user ID for account tracking
+            recipientUserId, // Store recipientUserId
+            userId: senderUserId, // Store senderUserId
         });
 
-        // Create Stripe Payment Intent
-        // Stripe requires the amount in cents, so we multiply by 100
-        const amountInCents = Math.round(amount * 100);
-        const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(
-            amountInCents,
-            sourceCurrency,
-            newTransaction.id
-        );
+        // For internal transfers, we don't need Stripe payment intents
+        // The money is transferred directly between accounts
+        // Update transaction status to COMPLETED for internal transfers
+        await dbService.updateTransactionStatus(newTransaction.id, 'COMPLETED', {});
 
-        // Update our DB record with the Stripe Payment Intent ID for tracking
-        await dbService.updateTransactionStatus(newTransaction.id, 'PENDING_PAYMENT', { 
-            paymentId: paymentIntentId 
-        });
-
+        console.log(`Internal transfer created: ${amount} ${sourceCurrency} from ${senderUserId} to ${recipientUserId}`);
         console.log(`Exchange rate ${sourceCurrency} to ${destCurrency}: ${exchangeRate}`);
-        console.log(`${amount} ${sourceCurrency} = ${recipientAmount.toFixed(2)} ${destCurrency}`);
-        console.log(`Transaction created with ID: ${newTransaction.id} for user: ${userId}`);
-        console.log(`Payment Intent created: ${paymentIntentId}`);
+        console.log(`Recipient receives: ${recipientAmount.toFixed(2)} ${destCurrency}`);
 
-        // The frontend needs this secret to confirm the payment
+        // Return success response for internal transfer
         res.status(201).json({
-            clientSecret,
+            success: true,
             transactionId: newTransaction.id,
             rate: exchangeRate,
             sourceAmount: amount,
             recipientAmount: parseFloat(recipientAmount.toFixed(2)),
             sourceCurrency,
             destCurrency,
-            status: 'PENDING_PAYMENT',
+            recipientUserId,
+            status: 'COMPLETED',
             createdAt: newTransaction.createdAt,
+            message: 'Money sent successfully to platform user'
         });
     } catch (error) {
         if (error instanceof z.ZodError) {

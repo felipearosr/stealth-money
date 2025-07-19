@@ -15,16 +15,11 @@ import { getExchangeRate } from "@/lib/api";
 
 // Form validation schema
 const transferSchema = z.object({
-  amountToSend: z.string().min(1, "Amount is required").refine(
-    (val) => !isNaN(Number(val)) && Number(val) > 0,
-    "Amount must be a positive number"
-  ),
-  amountToReceive: z.string().min(1, "Receive amount is required").refine(
-    (val) => !isNaN(Number(val)) && Number(val) > 0,
-    "Receive amount must be a positive number"
-  ),
-  sourceCurrency: z.string().min(1, "Source currency is required"),
-  destCurrency: z.string().min(1, "Destination currency is required"),
+  amountToSend: z.string().min(1, 'Amount is required'),
+  amountToReceive: z.string().min(1, 'Amount is required'),
+  sourceCurrency: z.string().min(3, 'Source currency is required'),
+  destCurrency: z.string().min(3, 'Destination currency is required'),
+  recipientUserId: z.string().min(1, 'Recipient is required'),
 });
 
 interface TransferCalculatorProps {
@@ -47,6 +42,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
   const [amountToReceive, setAmountToReceive] = useState('');
   const [sourceCurrency, setSourceCurrency] = useState('USD');
   const [destCurrency, setDestCurrency] = useState('EUR');
+  const [recipientUserId, setRecipientUserId] = useState(''); // Add recipient user ID state
   const [lockedField, setLockedField] = useState<'send' | 'receive'>('send');
   
   // API state
@@ -54,6 +50,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Debounced values to avoid excessive API calls
   const [debouncedAmountToSend] = useDebounce(amountToSend, 500);
@@ -136,6 +133,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
       amountToReceive,
       sourceCurrency,
       destCurrency,
+      recipientUserId,
     };
 
     try {
@@ -153,31 +151,17 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
       }
     }
 
-    if (!rate) {
-      setError('Exchange rate not available');
-      return;
-    }
-
-    // If onContinue prop is provided, use the multi-step flow
-    if (onContinue) {
-      onContinue({
-        amount: parseFloat(amountToSend),
-        sourceCurrency,
-        destCurrency,
-        rate,
-        recipientAmount: parseFloat(amountToReceive),
-      });
-      return;
-    }
-
-    // Create initial transfer without recipient information
     setIsLoading(true);
 
     try {
-      // Get user's authentication token
+      // For now, we'll use a placeholder recipient user ID
+      // In a real implementation, you'd have a user search/selection interface
+      if (!recipientUserId.trim()) {
+        setError('Please enter a recipient user ID or email');
+        return;
+      }
+
       const token = await getToken();
-      
-      // Make API call to create transfer with user authentication
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/transfers`, {
         method: 'POST',
         headers: {
@@ -188,7 +172,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
           amount: parseFloat(amountToSend),
           sourceCurrency,
           destCurrency,
-          userId: user?.id, // Include user ID for account tracking
+          recipientUserId: recipientUserId.trim(), // Use the form value
         }),
       });
 
@@ -199,12 +183,22 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
 
       const transferData = await response.json();
       
-      // Redirect to recipient page to collect recipient information
-      router.push(`/recipient/${transferData.transactionId}`);
+      // Show success message for internal transfer
+      setSuccess(`Successfully sent ${amountToSend} ${sourceCurrency} to ${recipientUserId}!`);
       
-    } catch (err) {
-      setError('Failed to create transfer. Please try again.');
-      console.error('Transfer creation error:', err);
+      // Reset form
+      setAmountToSend('');
+      setAmountToReceive('');
+      setRecipientUserId('');
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Transfer creation error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create transfer');
     } finally {
       setIsLoading(false);
     }
@@ -223,49 +217,55 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           {/* You Send Section */}
-          <div className="space-y-2">
-            <Label htmlFor="send-amount">You Send</Label>
-            <div className="flex space-x-2">
-              <div className="flex-1 relative">
+          <div className="space-y-4">
+              {/* Recipient User ID */}
+              <div>
+                <Label htmlFor="recipientUserId">Send to (User ID or Email)</Label>
                 <Input
-                  id="send-amount"
-                  type="number"
-                  placeholder="0.00"
-                  className="pr-10"
-                  value={amountToSend}
-                  onChange={(e) => setAmountToSend(e.target.value)}
-                  disabled={lockedField === 'send'}
+                  id="recipientUserId"
+                  type="text"
+                  placeholder="Enter recipient's user ID or email"
+                  value={recipientUserId}
+                  onChange={(e) => setRecipientUserId(e.target.value)}
+                  className={validationErrors.recipientUserId ? 'border-red-500' : ''}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                  onClick={() => toggleLock('send')}
-                >
-                  {lockedField === 'send' ? (
-                    <Lock className="h-4 w-4" />
-                  ) : (
-                    <LockOpen className="h-4 w-4" />
-                  )}
-                </Button>
+                {validationErrors.recipientUserId && (
+                  <p className="text-sm text-red-500 mt-1">{validationErrors.recipientUserId}</p>
+                )}
               </div>
-              <Select value={sourceCurrency} onValueChange={setSourceCurrency}>
-                <SelectTrigger className="w-20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="BRL">BRL</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Amount to Send */}
+              <div>
+                <Label htmlFor="amountToSend">Amount to Send</Label>
+                <div className="relative">
+                  <Input
+                    id="amountToSend"
+                    type="number"
+                    placeholder="0.00"
+                    value={amountToSend}
+                    onChange={(e) => setAmountToSend(e.target.value)}
+                    className={validationErrors.amountToSend ? 'border-red-500' : ''}
+                    disabled={lockedField === 'receive'}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <Select value={sourceCurrency} onValueChange={setSourceCurrency}>
+                      <SelectTrigger className="w-20 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                        <SelectItem value="JPY">JPY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {validationErrors.amountToSend && (
+                  <p className="text-sm text-red-500 mt-1">{validationErrors.amountToSend}</p>
+                )}
+              </div>
             </div>
-            {validationErrors.amountToSend && (
-              <p className="text-sm text-red-600">{validationErrors.amountToSend}</p>
-            )}
-          </div>
 
           {/* They Receive Section */}
           <div className="space-y-2">
@@ -319,6 +319,11 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
                 {error}
               </div>
             )}
+            {success && (
+              <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
+                {success}
+              </div>
+            )}
             <div className="flex justify-between text-sm text-gray-600">
               <span>Exchange Rate:</span>
               <span>
@@ -345,9 +350,9 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
           <Button 
             type="submit"
             className="w-full" 
-            disabled={isLoading || !rate || !amountToSend || !amountToReceive || parseFloat(amountToSend) <= 0}
+            disabled={isLoading || !rate || !amountToSend || !amountToReceive || !recipientUserId.trim() || parseFloat(amountToSend) <= 0}
           >
-            {isLoading ? "Processing..." : isSignedIn ? "Continue" : "Sign In to Continue"}
+            {isLoading ? "Processing..." : isSignedIn ? "Send Money" : "Sign In to Continue"}
           </Button>
         </CardFooter>
       </form>
