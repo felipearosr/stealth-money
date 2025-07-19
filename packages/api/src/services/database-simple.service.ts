@@ -89,6 +89,16 @@ export class SimpleDatabaseService {
         );
       `);
       
+      // Add user_id column if it doesn't exist (migration)
+      try {
+        await this.pool.query(`
+          ALTER TABLE transactions ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);
+        `);
+        console.log('✅ Added user_id column to transactions table');
+      } catch (migrationError) {
+        console.log('⚠️  user_id column migration skipped (may already exist)');
+      }
+      
       // Add user_id index if it doesn't exist
       try {
         await this.pool.query(`
