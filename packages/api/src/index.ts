@@ -75,18 +75,6 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'API is healthy' });
 });
 
-// Simple test endpoint
-app.get('/test', (req: Request, res: Response) => {
-  res.status(200).json({ 
-    message: 'Test endpoint working',
-    timestamp: new Date().toISOString(),
-    env: {
-      hasExchangeRateKey: !!process.env.EXCHANGERATE_API_KEY,
-      nodeEnv: process.env.NODE_ENV
-    }
-  });
-});
-
 // Direct exchange rate test
 app.get('/test-rate', async (req: Request, res: Response) => {
   try {

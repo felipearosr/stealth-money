@@ -7,14 +7,21 @@ export interface AuthenticatedRequest extends Request {
   user?: any;
 }
 
-const isClerkConfigured = process.env.CLERK_SECRET_KEY && 
-  !process.env.CLERK_SECRET_KEY.includes('placeholder');
-
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Check if Clerk is configured dynamically
+    const isClerkConfigured = process.env.CLERK_SECRET_KEY && 
+      process.env.CLERK_SECRET_KEY !== 'placeholder' &&
+      !process.env.CLERK_SECRET_KEY.includes('placeholder');
+    
+    console.log('🔐 Auth middleware - isClerkConfigured:', isClerkConfigured);
+    console.log('🔐 Auth middleware - CLERK_SECRET_KEY exists:', !!process.env.CLERK_SECRET_KEY);
+    
     // If Clerk is not configured, skip authentication for development
     if (!isClerkConfigured) {
       console.log('⚠️  Clerk not configured - skipping authentication');
+      // Set a mock user ID for testing
+      (req as AuthenticatedRequest).userId = 'mock-user-id';
       return next();
     }
 
@@ -73,6 +80,11 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
 export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Check if Clerk is configured dynamically
+    const isClerkConfigured = process.env.CLERK_SECRET_KEY && 
+      process.env.CLERK_SECRET_KEY !== 'placeholder' &&
+      !process.env.CLERK_SECRET_KEY.includes('placeholder');
+    
     // If Clerk is not configured, skip authentication
     if (!isClerkConfigured) {
       return next();

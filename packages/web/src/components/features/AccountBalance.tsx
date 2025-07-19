@@ -8,17 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Wallet, ArrowDown, ArrowUp } from 'lucide-react';
 
 interface AccountBalance {
+  totalSent: number;
   totalReceived: number;
   availableBalance: number;
-  pendingAmount: number;
-  currency: string;
-  recentTransactions: {
+  recentReceived: {
     id: string;
     amount: number;
     currency: string;
+    from: string;
     status: string;
-    senderName?: string;
-    createdAt: string;
+    date: string;
   }[];
 }
 
@@ -64,9 +63,12 @@ export function AccountBalance() {
   }, [isLoaded, isSignedIn, user]);
 
   const formatCurrency = (amount: number, currency: string) => {
+    // Default to USD if currency is undefined or invalid
+    const safeCurrency = currency && currency.length === 3 ? currency : 'USD';
+    
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency,
+      currency: safeCurrency,
     }).format(amount);
   };
 
@@ -141,35 +143,35 @@ export function AccountBalance() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                {balance ? formatCurrency(balance.availableBalance, balance.currency) : '$0.00'}
+                {balance ? formatCurrency(balance.availableBalance, 'USD') : '$0.00'}
               </div>
               <div className="text-sm text-gray-600">Available Balance</div>
             </div>
             <div className="text-center p-4 bg-yellow-50 rounded-lg">
               <div className="text-2xl font-bold text-yellow-600">
-                {balance ? formatCurrency(balance.pendingAmount, balance.currency) : '$0.00'}
+                {balance ? formatCurrency(balance.totalReceived, 'USD') : '$0.00'}
               </div>
-              <div className="text-sm text-gray-600">Pending</div>
+              <div className="text-sm text-gray-600">Total Received</div>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">
-                {balance ? formatCurrency(balance.totalReceived, balance.currency) : '$0.00'}
+                {balance ? formatCurrency(balance.totalSent, 'USD') : '$0.00'}
               </div>
-              <div className="text-sm text-gray-600">Total Received</div>
+              <div className="text-sm text-gray-600">Total Sent</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Recent Transactions */}
-      {balance && balance.recentTransactions.length > 0 && (
+      {balance && balance.recentReceived.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Recent Money Received</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {balance.recentTransactions.map((transaction) => (
+              {balance.recentReceived.map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-green-100 rounded-full">
@@ -179,13 +181,11 @@ export function AccountBalance() {
                       <div className="font-medium">
                         {formatCurrency(transaction.amount, transaction.currency)}
                       </div>
-                      {transaction.senderName && (
-                        <div className="text-sm text-gray-600">
-                          From: {transaction.senderName}
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-600">
+                        From: {transaction.from}
+                      </div>
                       <div className="text-xs text-gray-500">
-                        {formatDate(transaction.createdAt)}
+                        {formatDate(transaction.date)}
                       </div>
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export function AccountBalance() {
       )}
 
       {/* Empty State */}
-      {balance && balance.recentTransactions.length === 0 && (
+      {balance && balance.recentReceived.length === 0 && (
         <Card>
           <CardContent className="p-6 text-center">
             <ArrowDown className="h-12 w-12 mx-auto text-gray-400 mb-4" />
