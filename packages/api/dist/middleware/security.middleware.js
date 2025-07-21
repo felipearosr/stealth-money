@@ -44,7 +44,7 @@ exports.transferCreationRateLimit = (0, express_rate_limit_1.default)({
 exports.speedLimiter = (0, express_slow_down_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     delayAfter: 50, // Allow 50 requests per windowMs without delay
-    delayMs: 500, // Add 500ms delay per request after delayAfter
+    delayMs: () => 500, // Add 500ms delay per request after delayAfter
     maxDelayMs: 20000, // Maximum delay of 20 seconds
 });
 // Helmet configuration for security headers
@@ -171,14 +171,25 @@ const sanitizeInput = (req, res, next) => {
         }
         return obj;
     };
-    if (req.body) {
-        req.body = sanitize(req.body);
+    // Sanitize body if it exists
+    if (req.body && Object.keys(req.body).length > 0) {
+        // Create a new sanitized body object
+        const sanitizedBody = sanitize(req.body);
+        // Clear the original body and set the sanitized version
+        Object.keys(req.body).forEach(key => delete req.body[key]);
+        Object.assign(req.body, sanitizedBody);
     }
-    if (req.query) {
-        req.query = sanitize(req.query);
+    // Sanitize query parameters if they exist
+    if (req.query && Object.keys(req.query).length > 0) {
+        const sanitizedQuery = sanitize(req.query);
+        // Store sanitized query in a custom property for access in route handlers
+        req.sanitizedQuery = sanitizedQuery;
     }
-    if (req.params) {
-        req.params = sanitize(req.params);
+    // Sanitize params if they exist
+    if (req.params && Object.keys(req.params).length > 0) {
+        const sanitizedParams = sanitize(req.params);
+        // Store sanitized params in a custom property for access in route handlers
+        req.sanitizedParams = sanitizedParams;
     }
     next();
 };

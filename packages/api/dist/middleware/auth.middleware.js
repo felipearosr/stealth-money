@@ -2,13 +2,19 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.optionalAuth = exports.requireAuth = void 0;
 const express_1 = require("@clerk/express");
-const isClerkConfigured = process.env.CLERK_SECRET_KEY &&
-    !process.env.CLERK_SECRET_KEY.includes('placeholder');
 const requireAuth = async (req, res, next) => {
     try {
+        // Check if Clerk is configured dynamically
+        const isClerkConfigured = process.env.CLERK_SECRET_KEY &&
+            process.env.CLERK_SECRET_KEY !== 'placeholder' &&
+            !process.env.CLERK_SECRET_KEY.includes('placeholder');
+        console.log('🔐 Auth middleware - isClerkConfigured:', isClerkConfigured);
+        console.log('🔐 Auth middleware - CLERK_SECRET_KEY exists:', !!process.env.CLERK_SECRET_KEY);
         // If Clerk is not configured, skip authentication for development
         if (!isClerkConfigured) {
             console.log('⚠️  Clerk not configured - skipping authentication');
+            // Set a mock user ID for testing
+            req.userId = 'mock-user-id';
             return next();
         }
         const authHeader = req.headers.authorization;
@@ -62,6 +68,10 @@ const requireAuth = async (req, res, next) => {
 exports.requireAuth = requireAuth;
 const optionalAuth = async (req, res, next) => {
     try {
+        // Check if Clerk is configured dynamically
+        const isClerkConfigured = process.env.CLERK_SECRET_KEY &&
+            process.env.CLERK_SECRET_KEY !== 'placeholder' &&
+            !process.env.CLERK_SECRET_KEY.includes('placeholder');
         // If Clerk is not configured, skip authentication
         if (!isClerkConfigured) {
             return next();

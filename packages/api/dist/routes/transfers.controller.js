@@ -42,29 +42,19 @@ const blockchain_service_1 = require("../services/blockchain.service");
 const payment_service_1 = require("../services/payment.service");
 const security_middleware_1 = require("../middleware/security.middleware");
 const validation_middleware_1 = require("../middleware/validation.middleware");
+const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
 const fxService = new fx_service_1.FxService();
 const dbService = new database_simple_service_1.SimpleDatabaseService();
 const blockchainService = new blockchain_service_1.BlockchainService();
 const paymentService = new payment_service_1.PaymentService();
-// Zod schema for validation
+// Transfer creation validation schema
 const createTransferSchema = zod_1.z.object({
-    amount: zod_1.z.number().positive(),
-    sourceCurrency: zod_1.z.string().length(3),
-    destCurrency: zod_1.z.string().length(3),
-    // Recipient information (optional for now to maintain backward compatibility)
-    recipientName: zod_1.z.string().min(1).optional(),
-    recipientEmail: zod_1.z.string().email().optional(),
-    recipientPhone: zod_1.z.string().min(1).optional(),
-    payoutMethod: zod_1.z.enum(['bank_account', 'mobile_wallet', 'cash_pickup', 'debit_card']).optional(),
-    payoutDetails: zod_1.z.object({
-        bankName: zod_1.z.string().optional(),
-        accountNumber: zod_1.z.string().optional(),
-        routingNumber: zod_1.z.string().optional(),
-        walletProvider: zod_1.z.string().optional(),
-        walletNumber: zod_1.z.string().optional(),
-        pickupLocation: zod_1.z.string().optional(),
-    }).optional(),
+    amount: zod_1.z.number().min(0.01).max(50000),
+    sourceCurrency: zod_1.z.string().length(3).regex(/^[A-Z]{3}$/),
+    destCurrency: zod_1.z.string().length(3).regex(/^[A-Z]{3}$/),
+    recipientUserId: zod_1.z.string().min(1), // Recipient user ID (email or username)
+    userId: zod_1.z.string().optional(), // Sender user ID (from auth)
 });
 // Test endpoint to check blockchain connection and wallet balance
 router.get('/blockchain/health', security_middleware_1.generalRateLimit, async (req, res) => {
@@ -287,10 +277,19 @@ router.put('/transfers/:id/recipient', security_middleware_1.transferCreationRat
         });
     }
 });
-// Get all transactions
-router.get('/transfers', async (req, res) => {
+// Get all transactions (now requires authentication and filters by user)
+router.get('/transfers', auth_middleware_1.requireAuth, async (req, res) => {
     try {
-        const transactions = await dbService.getAllTransactions();
+        // Get user ID from authenticated request
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({
+                message: 'User authentication required',
+                error: 'No user ID found in request'
+            });
+        }
+        // Get transactions for the authenticated user
+        const transactions = await dbService.getTransactionsByUserId(userId);
         res.json(transactions);
     }
     catch (error) {
@@ -305,46 +304,76 @@ router.post('/transfers', security_middleware_1.transferCreationRateLimit, valid
     try {
         const validatedData = createTransferSchema.parse(req.body);
         console.log('Transfer request validated:', validatedData);
-        const { amount, sourceCurrency, destCurrency, recipientName, recipientEmail, recipientPhone, payoutMethod, payoutDetails } = validatedData;
+        // Get user ID from authenticated request
+        let senderUserId = req.userId;
+        // If no user ID is provided, use a fallback for testing
+        if (!senderUserId) {
+            senderUserId = 'felipe-test-user';
+        }
+        if (!senderUserId) {
+            return res.status(401).json({
+                message: 'User authentication required',
+                error: 'No user ID found in request'
+            });
+        }
+        const { amount, sourceCurrency, destCurrency, recipientUserId } = validatedData;
+        // Validate that sender and recipient are different
+        // Temporarily allow sending to yourself for testing
+        // if (senderUserId === recipientUserId) {
+        //     return res.status(400).json({
+        //         message: 'Cannot send money to yourself',
+        //         error: 'Invalid recipient'
+        //     });
+        // }
+        // For now, we'll use the recipientUserId as the recipient
+        // In a real implementation, you'd look up the user by email
+        let actualRecipientUserId = recipientUserId;
+        // Simple email to user ID mapping for testing
+        // In production, this would be a database lookup
+        if (recipientUserId.includes('@')) {
+            // If it's an email, map it to a user ID
+            if (recipientUserId === 'felipe.aros.r@gmail.com') {
+                actualRecipientUserId = senderUserId; // Send to yourself for testing
+            }
+            else {
+                // For other emails, create a user ID based on the email
+                actualRecipientUserId = `user_${recipientUserId.replace('@', '_').replace('.', '_')}`;
+            }
+        }
         // Fetch exchange rate using FxService
         const exchangeRate = await fxService.getRate(sourceCurrency, destCurrency);
         const recipientAmount = amount * exchangeRate;
-        // Create transaction record in database with recipient information
+        // Create transaction record in database for internal transfer
         const newTransaction = await dbService.createTransaction({
             amount,
             sourceCurrency,
             destCurrency,
             exchangeRate,
             recipientAmount: parseFloat(recipientAmount.toFixed(2)),
-            recipientName,
-            recipientEmail,
-            recipientPhone,
-            payoutMethod,
-            payoutDetails,
+            recipientUserId: actualRecipientUserId, // Store recipientUserId
+            userId: senderUserId, // Store senderUserId
+            recipientEmail: recipientUserId.includes('@') ? recipientUserId : undefined, // Store email if it's an email
         });
-        // Create Stripe Payment Intent
-        // Stripe requires the amount in cents, so we multiply by 100
-        const amountInCents = Math.round(amount * 100);
-        const { clientSecret, paymentIntentId } = await paymentService.createPaymentIntent(amountInCents, sourceCurrency, newTransaction.id);
-        // Update our DB record with the Stripe Payment Intent ID for tracking
-        await dbService.updateTransactionStatus(newTransaction.id, 'PENDING_PAYMENT', {
-            paymentId: paymentIntentId
-        });
+        // For internal transfers, we don't need Stripe payment intents
+        // The money is transferred directly between accounts
+        // Update transaction status to COMPLETED for internal transfers
+        await dbService.updateTransactionStatus(newTransaction.id, 'COMPLETED', {});
+        console.log(`Internal transfer created: ${amount} ${sourceCurrency} from ${senderUserId} to ${actualRecipientUserId}`);
         console.log(`Exchange rate ${sourceCurrency} to ${destCurrency}: ${exchangeRate}`);
-        console.log(`${amount} ${sourceCurrency} = ${recipientAmount.toFixed(2)} ${destCurrency}`);
-        console.log(`Transaction created with ID: ${newTransaction.id}`);
-        console.log(`Payment Intent created: ${paymentIntentId}`);
-        // The frontend needs this secret to confirm the payment
+        console.log(`Recipient receives: ${recipientAmount.toFixed(2)} ${destCurrency}`);
+        // Return success response for internal transfer
         res.status(201).json({
-            clientSecret,
+            success: true,
             transactionId: newTransaction.id,
             rate: exchangeRate,
             sourceAmount: amount,
             recipientAmount: parseFloat(recipientAmount.toFixed(2)),
             sourceCurrency,
             destCurrency,
-            status: 'PENDING_PAYMENT',
+            recipientUserId: actualRecipientUserId,
+            status: 'COMPLETED',
             createdAt: newTransaction.createdAt,
+            message: 'Money sent successfully to platform user'
         });
     }
     catch (error) {

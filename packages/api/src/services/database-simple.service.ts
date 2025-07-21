@@ -473,6 +473,41 @@ export class SimpleDatabaseService {
     return result.rows;
   }
 
+  async getTransactionsReceivedByEmail(email: string): Promise<Transaction[]> {
+    if (!this.isConfigured || !this.pool) {
+      // Return empty array for mock mode
+      return [];
+    }
+
+    const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE recipient_email = $1
+      ORDER BY created_at DESC
+    `;
+
+    const result = await this.pool.query(query, [email]);
+    return result.rows;
+  }
+
   async testConnection(): Promise<boolean> {
     if (!this.isConfigured || !this.pool) {
       console.log('⚠️  Database not configured - skipping connection test');

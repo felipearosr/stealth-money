@@ -12,9 +12,22 @@ router.get('/account/balance', async (req: Request, res: Response) => {
   try {
     let userId = (req as any).userId;
     
-    // If no user ID is provided, use a mock user ID for testing
+    // If no user ID is provided, use a fallback for testing
     if (!userId) {
-      userId = 'mock-user-id';
+      userId = 'felipe-test-user';
+    }
+    
+    // Allow checking other user balances for demo purposes
+    const queryUserId = req.query.userId as string;
+    if (queryUserId) {
+      userId = queryUserId;
+    }
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required',
+        error: 'No user ID found in request'
+      });
     }
 
     // Get all transactions for the user (sent and received)
@@ -29,7 +42,11 @@ router.get('/account/balance', async (req: Request, res: Response) => {
     
     const totalReceived = receivedTransactions.reduce((sum, tx) => {
       const amount = typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0;
-      return sum + amount;
+      // Only count USD amounts for balance calculation to avoid currency mixing
+      if (tx.destCurrency === 'USD') {
+        return sum + amount;
+      }
+      return sum;
     }, 0);
     
     const availableBalance = totalReceived - totalSent;

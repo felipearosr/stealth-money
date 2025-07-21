@@ -75,6 +75,105 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'API is healthy' });
 });
 
+// Email-based balance lookup (for Clerk integration)
+app.get('/balance-by-email/:email', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    const dbService = new SimpleDatabaseService();
+    
+    // Find all transactions where this email is the recipient
+    const receivedTransactions = await dbService.getTransactionsReceivedByEmail(email);
+    
+    // Calculate totals
+    const totalReceived = receivedTransactions.reduce((sum: number, tx: any) => {
+      const amount = typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0;
+      return sum + amount;
+    }, 0);
+    
+    // For now, assume no money sent (since we're just receiving)
+    const totalSent = 0;
+    const availableBalance = totalReceived - totalSent;
+
+    // Get recent received transactions
+    const recentReceived = receivedTransactions
+      .filter((tx: any) => tx.status === 'COMPLETED')
+      .slice(0, 5)
+      .map((tx: any) => ({
+        id: tx.id,
+        amount: typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0,
+        currency: tx.destCurrency,
+        from: tx.userId,
+        status: tx.status,
+        date: tx.createdAt
+      }));
+
+    res.json({
+      email,
+      totalSent: parseFloat(totalSent.toFixed(2)),
+      totalReceived: parseFloat(totalReceived.toFixed(2)),
+      availableBalance: parseFloat(availableBalance.toFixed(2)),
+      recentReceived,
+      message: "This balance will be available when you create your Clerk account with this email"
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to get balance by email',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Test account balance for any user
+app.get('/test-balance/:userId', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const dbService = new SimpleDatabaseService();
+    
+    // Get all transactions for the user (sent and received)
+    const sentTransactions = await dbService.getTransactionsByUserId(userId);
+    const receivedTransactions = await dbService.getTransactionsReceivedByUserId(userId);
+
+    // Calculate totals with safety checks
+    const totalSent = sentTransactions.reduce((sum, tx) => {
+      const amount = typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount) || 0;
+      return sum + amount;
+    }, 0);
+    
+    const totalReceived = receivedTransactions.reduce((sum, tx) => {
+      const amount = typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0;
+      return sum + amount;
+    }, 0);
+    
+    const availableBalance = totalReceived - totalSent;
+
+    // Get recent received transactions
+    const recentReceived = receivedTransactions
+      .filter(tx => tx.status === 'COMPLETED')
+      .slice(0, 5)
+      .map(tx => ({
+        id: tx.id,
+        amount: typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0,
+        currency: tx.destCurrency,
+        from: tx.userId,
+        status: tx.status,
+        date: tx.createdAt
+      }));
+
+    res.json({
+      userId,
+      totalSent: parseFloat(totalSent.toFixed(2)),
+      totalReceived: parseFloat(totalReceived.toFixed(2)),
+      availableBalance: parseFloat(availableBalance.toFixed(2)),
+      recentReceived
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to get account balance',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Direct exchange rate test
 app.get('/test-rate', async (req: Request, res: Response) => {
   try {

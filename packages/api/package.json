@@ -17,7 +17,9 @@
     "blockchain:real": "node setup-blockchain.js real",
     "blockchain:status": "node setup-blockchain.js status",
     "test:security": "node test-security.js",
-    "security:test": "node test-security.js"
+    "security:test": "node test-security.js",
+    "test:circle": "node test-circle.js",
+    "circle:test": "node test-circle.js"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +27,7 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
+    "@circle-fin/circle-sdk": "^2.9.0",
     "@clerk/express": "^1.7.10",
     "@prisma/client": "^6.12.0",
     "@types/pg": "^8.15.4",

@@ -43,6 +43,8 @@ class SimpleDatabaseService {
             await this.pool.query(`
         CREATE TABLE IF NOT EXISTS transactions (
           id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+          user_id VARCHAR(255),
+          recipient_user_id VARCHAR(255),
           amount DECIMAL(10,2) NOT NULL,
           source_currency VARCHAR(3) NOT NULL,
           dest_currency VARCHAR(3) NOT NULL,
@@ -52,7 +54,7 @@ class SimpleDatabaseService {
           stripe_payment_intent_id VARCHAR(255) UNIQUE,
           blockchain_tx_hash VARCHAR(255) UNIQUE,
           
-          -- Recipient Information
+          -- Recipient Information (for external transfers - keeping for backward compatibility)
           recipient_name VARCHAR(255),
           recipient_email VARCHAR(255),
           recipient_phone VARCHAR(50),
@@ -63,6 +65,35 @@ class SimpleDatabaseService {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
+            // Add user_id column if it doesn't exist (migration)
+            try {
+                await this.pool.query(`
+          ALTER TABLE transactions ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);
+        `);
+                console.log('✅ Added user_id column to transactions table');
+            }
+            catch (migrationError) {
+                console.log('⚠️  user_id column migration skipped (may already exist)');
+            }
+            // Add recipient_user_id column if it doesn't exist (migration)
+            try {
+                await this.pool.query(`
+          ALTER TABLE transactions ADD COLUMN IF NOT EXISTS recipient_user_id VARCHAR(255);
+        `);
+                console.log('✅ Added recipient_user_id column to transactions table');
+            }
+            catch (migrationError) {
+                console.log('⚠️  recipient_user_id column migration skipped (may already exist)');
+            }
+            // Add user_id index if it doesn't exist
+            try {
+                await this.pool.query(`
+          CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+        `);
+            }
+            catch (indexError) {
+                console.log('Index creation skipped (may already exist)');
+            }
             console.log('✅ Database table created/verified');
             return true;
         }
@@ -76,6 +107,8 @@ class SimpleDatabaseService {
             // Return mock transaction for testing
             return {
                 id: `mock_${Date.now()}`,
+                userId: data.userId,
+                recipientUserId: data.recipientUserId,
                 amount: data.amount,
                 sourceCurrency: data.sourceCurrency,
                 destCurrency: data.destCurrency,
@@ -88,12 +121,14 @@ class SimpleDatabaseService {
         }
         const query = `
       INSERT INTO transactions (
-        amount, source_currency, dest_currency, exchange_rate, recipient_amount,
+        user_id, recipient_user_id, amount, source_currency, dest_currency, exchange_rate, recipient_amount,
         recipient_name, recipient_email, recipient_phone, payout_method, payout_details
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING 
         id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
         amount,
         source_currency as "sourceCurrency",
         dest_currency as "destCurrency",
@@ -111,6 +146,8 @@ class SimpleDatabaseService {
         updated_at as "updatedAt"
     `;
         const values = [
+            data.userId || null,
+            data.recipientUserId || null,
             data.amount,
             data.sourceCurrency,
             data.destCurrency,
@@ -295,6 +332,102 @@ class SimpleDatabaseService {
       ORDER BY created_at DESC
     `;
         const result = await this.pool.query(query);
+        return result.rows;
+    }
+    async getTransactionsByUserId(userId) {
+        if (!this.isConfigured || !this.pool) {
+            // Return empty array for mock mode
+            return [];
+        }
+        const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+    `;
+        const result = await this.pool.query(query, [userId]);
+        return result.rows;
+    }
+    async getTransactionsReceivedByUserId(userId) {
+        if (!this.isConfigured || !this.pool) {
+            // Return empty array for mock mode
+            return [];
+        }
+        const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE recipient_user_id = $1
+      ORDER BY created_at DESC
+    `;
+        const result = await this.pool.query(query, [userId]);
+        return result.rows;
+    }
+    async getTransactionsReceivedByEmail(email) {
+        if (!this.isConfigured || !this.pool) {
+            // Return empty array for mock mode
+            return [];
+        }
+        const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE recipient_email = $1
+      ORDER BY created_at DESC
+    `;
+        const result = await this.pool.query(query, [email]);
         return result.rows;
     }
     async testConnection() {

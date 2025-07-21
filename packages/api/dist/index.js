@@ -44,6 +44,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const transfers_controller_1 = __importDefault(require("./routes/transfers.controller"));
 const webhooks_controller_1 = __importDefault(require("./routes/webhooks.controller"));
+const account_controller_1 = __importDefault(require("./routes/account.controller"));
 const database_simple_service_1 = require("./services/database-simple.service");
 const security_middleware_1 = require("./middleware/security.middleware");
 const logging_middleware_1 = require("./middleware/logging.middleware");
@@ -91,16 +92,93 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'API is healthy' });
 });
-// Simple test endpoint
-app.get('/test', (req, res) => {
-    res.status(200).json({
-        message: 'Test endpoint working',
-        timestamp: new Date().toISOString(),
-        env: {
-            hasExchangeRateKey: !!process.env.EXCHANGERATE_API_KEY,
-            nodeEnv: process.env.NODE_ENV
-        }
-    });
+// Email-based balance lookup (for Clerk integration)
+app.get('/balance-by-email/:email', async (req, res) => {
+    try {
+        const { email } = req.params;
+        const dbService = new database_simple_service_1.SimpleDatabaseService();
+        // Find all transactions where this email is the recipient
+        const receivedTransactions = await dbService.getTransactionsReceivedByEmail(email);
+        // Calculate totals
+        const totalReceived = receivedTransactions.reduce((sum, tx) => {
+            const amount = typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0;
+            return sum + amount;
+        }, 0);
+        // For now, assume no money sent (since we're just receiving)
+        const totalSent = 0;
+        const availableBalance = totalReceived - totalSent;
+        // Get recent received transactions
+        const recentReceived = receivedTransactions
+            .filter((tx) => tx.status === 'COMPLETED')
+            .slice(0, 5)
+            .map((tx) => ({
+            id: tx.id,
+            amount: typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0,
+            currency: tx.destCurrency,
+            from: tx.userId,
+            status: tx.status,
+            date: tx.createdAt
+        }));
+        res.json({
+            email,
+            totalSent: parseFloat(totalSent.toFixed(2)),
+            totalReceived: parseFloat(totalReceived.toFixed(2)),
+            availableBalance: parseFloat(availableBalance.toFixed(2)),
+            recentReceived,
+            message: "This balance will be available when you create your Clerk account with this email"
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            error: 'Failed to get balance by email',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+// Test account balance for any user
+app.get('/test-balance/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const dbService = new database_simple_service_1.SimpleDatabaseService();
+        // Get all transactions for the user (sent and received)
+        const sentTransactions = await dbService.getTransactionsByUserId(userId);
+        const receivedTransactions = await dbService.getTransactionsReceivedByUserId(userId);
+        // Calculate totals with safety checks
+        const totalSent = sentTransactions.reduce((sum, tx) => {
+            const amount = typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount) || 0;
+            return sum + amount;
+        }, 0);
+        const totalReceived = receivedTransactions.reduce((sum, tx) => {
+            const amount = typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0;
+            return sum + amount;
+        }, 0);
+        const availableBalance = totalReceived - totalSent;
+        // Get recent received transactions
+        const recentReceived = receivedTransactions
+            .filter(tx => tx.status === 'COMPLETED')
+            .slice(0, 5)
+            .map(tx => ({
+            id: tx.id,
+            amount: typeof tx.recipientAmount === 'number' ? tx.recipientAmount : parseFloat(tx.recipientAmount) || 0,
+            currency: tx.destCurrency,
+            from: tx.userId,
+            status: tx.status,
+            date: tx.createdAt
+        }));
+        res.json({
+            userId,
+            totalSent: parseFloat(totalSent.toFixed(2)),
+            totalReceived: parseFloat(totalReceived.toFixed(2)),
+            availableBalance: parseFloat(availableBalance.toFixed(2)),
+            recentReceived
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            error: 'Failed to get account balance',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
 });
 // Direct exchange rate test
 app.get('/test-rate', async (req, res) => {
@@ -124,22 +202,12 @@ app.get('/test-rate', async (req, res) => {
         });
     }
 });
-// Debug environment variables
-app.get('/debug-env', (req, res) => {
-    res.json({
-        port: process.env.PORT,
-        hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
-        hasStripePublishable: !!process.env.STRIPE_PUBLISHABLE_KEY,
-        stripeSecretPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10),
-        stripePublishablePrefix: process.env.STRIPE_PUBLISHABLE_KEY?.substring(0, 10),
-        nodeEnv: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
-    });
-});
 // Wire up the transfer routes with /api prefix
 app.use('/api', transfers_controller_1.default);
 // Wire up the webhook routes with /api prefix
 app.use('/api/webhooks', webhooks_controller_1.default);
+// Wire up the account routes with /api prefix
+app.use('/api', account_controller_1.default);
 // Error logging middleware
 app.use(logging_middleware_1.errorLogger);
 // Global error handling middleware
