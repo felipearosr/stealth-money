@@ -1,7 +1,7 @@
 // src/routes/transfers.controller.ts
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { FxService } from '../services/fx.service';
+import { FXService } from '../services/fx.service';
 import { SimpleDatabaseService } from '../services/database-simple.service';
 import { BlockchainService } from '../services/blockchain.service';
 import { PaymentService } from '../services/payment.service';
@@ -23,7 +23,7 @@ import { logTransactionEvent, logSecurityEvent } from '../middleware/logging.mid
 import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
-const fxService = new FxService();
+const fxService = new FXService();
 const dbService = new SimpleDatabaseService();
 const blockchainService = new BlockchainService();
 const paymentService = new PaymentService();
@@ -166,6 +166,335 @@ router.get('/payments/:paymentIntentId', generalRateLimit, async (req: Request, 
         res.status(500).json({
             message: 'Could not fetch payment intent',
             error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+// Transfer status endpoint - Task 4.3
+router.get('/transfers/:id/status', generalRateLimit, async (req: Request, res: Response) => {
+    try {
+        // Validate request parameters
+        const transferIdSchema = z.object({
+            id: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_-]+$/)
+        });
+
+        const { id } = transferIdSchema.parse(req.params);
+
+        // Import services
+        const { TransferService } = await import('../services/transfer.service');
+        const transferService = new TransferService();
+
+        // Get transfer status from TransferService
+        let transferStatus;
+        try {
+            transferStatus = await transferService.getTransferStatus(id);
+        } catch (error) {
+            // If transfer not found in TransferService, check database
+            const transaction = await dbService.getTransaction(id);
+            if (!transaction) {
+                return res.status(404).json({
+                    error: 'TRANSFER_NOT_FOUND',
+                    message: 'Transfer not found',
+                    transferId: id
+                });
+            }
+
+            // Convert database transaction to transfer status format
+            transferStatus = {
+                id: transaction.id,
+                status: transaction.status || 'UNKNOWN',
+                sendAmount: transaction.amount,
+                receiveAmount: transaction.recipientAmount,
+                exchangeRate: transaction.exchangeRate,
+                fees: 0, // Calculate fees if needed
+                timeline: [{
+                    id: `event-${transaction.id}-created`,
+                    transferId: transaction.id,
+                    type: 'transfer_created',
+                    status: 'success',
+                    message: 'Transfer created',
+                    timestamp: transaction.createdAt,
+                    metadata: {}
+                }],
+                estimatedCompletion: transaction.createdAt ? 
+                    new Date(new Date(transaction.createdAt).getTime() + 5 * 60 * 1000) : undefined,
+                completedAt: transaction.status === 'COMPLETED' ? transaction.updatedAt : undefined
+            };
+        }
+
+        // Format response according to design document
+        const response = {
+            transferId: transferStatus.id,
+            status: transferStatus.status,
+            timeline: transferStatus.timeline.map(event => ({
+                type: event.type,
+                status: event.status,
+                message: event.message,
+                timestamp: event.timestamp instanceof Date ? 
+                    event.timestamp.toISOString() : event.timestamp,
+                metadata: event.metadata || {}
+            })),
+            sendAmount: transferStatus.sendAmount,
+            receiveAmount: transferStatus.receiveAmount,
+            exchangeRate: transferStatus.exchangeRate,
+            fees: transferStatus.fees,
+            estimatedCompletion: transferStatus.estimatedCompletion instanceof Date ?
+                transferStatus.estimatedCompletion.toISOString() : transferStatus.estimatedCompletion,
+            completedAt: transferStatus.completedAt instanceof Date ?
+                transferStatus.completedAt.toISOString() : transferStatus.completedAt,
+            lastUpdated: new Date().toISOString()
+        };
+
+        res.json(response);
+
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+                error: 'INVALID_TRANSFER_ID',
+                message: 'Invalid transfer ID format',
+                details: error.errors.map(err => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                }))
+            });
+        }
+
+        console.error('Transfer status error:', error);
+        res.status(500).json({
+            error: 'STATUS_FETCH_FAILED',
+            message: 'Failed to fetch transfer status',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            retryable: true
+        });
+    }
+});
+
+// Transfer creation endpoint - Task 4.2
+router.post('/transfers/create', transferCreationRateLimit, async (req: Request, res: Response) => {
+    try {
+        // Validate request body
+        const createTransferSchema = z.object({
+            sendAmount: z.number().min(0.01).max(50000),
+            cardDetails: z.object({
+                number: z.string().min(13).max(19),
+                expiryMonth: z.number().min(1).max(12),
+                expiryYear: z.number().min(new Date().getFullYear()).max(new Date().getFullYear() + 20),
+                cvv: z.string().min(3).max(4)
+            }),
+            recipientInfo: z.object({
+                name: z.string().min(2).max(100),
+                email: z.string().email(),
+                bankAccount: z.object({
+                    iban: z.string().min(15).max(34),
+                    bic: z.string().min(8).max(11),
+                    bankName: z.string().min(2).max(100),
+                    accountHolderName: z.string().min(2).max(100),
+                    country: z.literal('DE')
+                })
+            }),
+            rateId: z.string().optional() // Optional locked rate ID
+        });
+
+        const validatedData = createTransferSchema.parse(req.body);
+        const { sendAmount, cardDetails, recipientInfo, rateId } = validatedData;
+
+        // Get user ID from authenticated request (optional for now)
+        const userId = (req as any).userId || 'anonymous-user';
+
+        // Import services
+        const { FXService } = await import('../services/fx.service');
+        const { CirclePaymentService } = await import('../services/circle-payment.service');
+        const { CircleWalletService } = await import('../services/circle-wallet.service');
+        const { CirclePayoutService } = await import('../services/circle-payout.service');
+        const { TransferService } = await import('../services/transfer.service');
+
+        const fxService = new FXService();
+        const transferService = new TransferService();
+
+        // Validate or get exchange rate
+        let exchangeRate: number;
+        let calculation;
+
+        if (rateId) {
+            // Use locked rate if provided
+            const lockedRate = await fxService.getLockedRate(rateId);
+            if (!lockedRate) {
+                return res.status(400).json({
+                    error: 'RATE_EXPIRED',
+                    message: 'The locked exchange rate has expired',
+                    retryable: false
+                });
+            }
+            exchangeRate = lockedRate.rate;
+            calculation = {
+                sendAmount: lockedRate.amount,
+                receiveAmount: lockedRate.convertedAmount,
+                exchangeRate: lockedRate.rate,
+                fees: lockedRate.fees
+            };
+        } else {
+            // Calculate fresh rate
+            calculation = await fxService.calculateTransfer({
+                sendAmount,
+                sendCurrency: 'USD',
+                receiveCurrency: 'EUR'
+            });
+            exchangeRate = calculation.exchangeRate;
+        }
+
+        // Create transfer record in database
+        const transferRecord = await dbService.createTransaction({
+            amount: sendAmount,
+            sourceCurrency: 'USD',
+            destCurrency: 'EUR',
+            exchangeRate,
+            recipientAmount: calculation.receiveAmount,
+            recipientUserId: recipientInfo.email,
+            userId,
+            recipientEmail: recipientInfo.email,
+            recipientName: recipientInfo.name,
+            payoutMethod: 'bank_account',
+            payoutDetails: {
+                iban: recipientInfo.bankAccount.iban,
+                bic: recipientInfo.bankAccount.bic,
+                bankName: recipientInfo.bankAccount.bankName,
+                accountHolderName: recipientInfo.bankAccount.accountHolderName,
+                country: recipientInfo.bankAccount.country
+            }
+        });
+
+        // Transform card details to match CirclePaymentService format
+        const transformedCardDetails = {
+            number: cardDetails.number,
+            cvv: cardDetails.cvv,
+            expiry: {
+                month: cardDetails.expiryMonth.toString().padStart(2, '0'),
+                year: cardDetails.expiryYear.toString()
+            },
+            billingDetails: {
+                name: recipientInfo.name, // Use recipient name as default
+                city: 'Unknown',
+                country: 'US',
+                line1: 'Unknown',
+                postalCode: '00000'
+            }
+        };
+
+        // Process the transfer using TransferService
+        const result = await transferService.createTransfer({
+            sendAmount,
+            sendCurrency: 'USD',
+            receiveCurrency: 'EUR',
+            cardDetails: transformedCardDetails,
+            recipientInfo,
+            exchangeRate
+        });
+
+        // Return success response
+        res.status(201).json({
+            transferId: transferRecord.id,
+            status: 'PROCESSING', // Use a consistent status for the API response
+            estimatedCompletion: result.estimatedCompletion?.toISOString(),
+            sendAmount,
+            receiveAmount: calculation.receiveAmount,
+            exchangeRate,
+            fees: calculation.fees,
+            timeline: [{
+                type: 'transfer_created',
+                status: 'success',
+                message: 'Transfer created successfully',
+                timestamp: new Date().toISOString()
+            }]
+        });
+
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+                error: 'VALIDATION_FAILED',
+                message: 'Request validation failed',
+                details: error.errors.map(err => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                })),
+                retryable: false
+            });
+        }
+
+        console.error('Transfer creation error:', error);
+        res.status(500).json({
+            error: 'TRANSFER_CREATION_FAILED',
+            message: 'Failed to create transfer',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            retryable: true
+        });
+    }
+});
+
+// Transfer calculation endpoint - Task 4.1
+router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: Response) => {
+    try {
+        // Validate request body
+        const calculateSchema = z.object({
+            sendAmount: z.number().min(0.01).max(50000),
+            sendCurrency: z.literal('USD'),
+            receiveCurrency: z.literal('EUR')
+        });
+
+        const validatedData = calculateSchema.parse(req.body);
+        const { sendAmount, sendCurrency, receiveCurrency } = validatedData;
+
+        // Use the FXService instance
+        const fxServiceInstance = new FXService();
+
+        // Calculate transfer using the FX service
+        const calculation = await fxServiceInstance.calculateTransfer({
+            sendAmount,
+            sendCurrency,
+            receiveCurrency
+        });
+
+        // Format response according to design document
+        const response = {
+            sendAmount: calculation.sendAmount,
+            receiveAmount: calculation.receiveAmount,
+            exchangeRate: calculation.exchangeRate,
+            fees: calculation.fees.total,
+            rateValidUntil: calculation.rateValidUntil.toISOString(),
+            breakdown: {
+                sendAmountUSD: calculation.breakdown.sendAmountUSD,
+                fees: {
+                    cardProcessing: calculation.fees.cardProcessing,
+                    transfer: calculation.fees.transfer,
+                    payout: calculation.fees.payout,
+                    total: calculation.fees.total
+                },
+                netAmountUSD: calculation.breakdown.netAmountUSD,
+                exchangeRate: calculation.breakdown.exchangeRate,
+                receiveAmountEUR: calculation.breakdown.finalAmountEUR
+            },
+            estimatedArrival: calculation.estimatedArrival,
+            rateId: calculation.rateId
+        };
+
+        res.json(response);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+                error: 'Invalid request',
+                message: 'Request validation failed',
+                details: error.errors.map(err => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                }))
+            });
+        }
+
+        console.error('Transfer calculation error:', error);
+        res.status(500).json({
+            error: 'CALCULATION_FAILED',
+            message: 'Failed to calculate transfer',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            retryable: true
         });
     }
 });

@@ -530,4 +530,21 @@ export class FXService extends CircleService {
       };
     }
   }
+
+  /**
+   * Simple getRate method for backward compatibility
+   * @param fromCurrency Source currency (e.g., 'USD')
+   * @param toCurrency Target currency (e.g., 'EUR')
+   * @returns Exchange rate as a number
+   */
+  async getRate(fromCurrency: string, toCurrency: string): Promise<number> {
+    const response = await this.getExchangeRate({
+      fromCurrency: fromCurrency as 'USD',
+      toCurrency: toCurrency as 'EUR'
+    });
+    return response.rate;
+  }
 }
+
+// Export as both FXService and FxService for backward compatibility
+export { FXService as FxService };
