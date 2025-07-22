@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TransferCalculator } from '../TransferCalculator'
 
@@ -128,7 +128,8 @@ describe('TransferCalculator', () => {
           body: JSON.stringify({
             sendAmount: 200,
             sendCurrency: 'USD',
-            receiveCurrency: 'EUR'
+            receiveCurrency: 'EUR',
+            calculatorMode: 'send'
           }),
         })
       )
@@ -303,7 +304,8 @@ describe('TransferCalculator', () => {
       receiveAmount: 85.50,
       exchangeRate: 0.855,
       fees: 5.50,
-      rateId: 'rate_123'
+      rateId: 'rate_123',
+      calculatorMode: 'send'
     })
   })
 
@@ -370,5 +372,278 @@ describe('TransferCalculator', () => {
     
     // Should still not call API for zero amount
     expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  describe('Calculator Mode Switcher', () => {
+    it('renders with "You Send" mode selected by default', () => {
+      render(<TransferCalculator />)
+      
+      // Check that mode switcher is present
+      expect(screen.getByText('You Send')).toBeInTheDocument()
+      expect(screen.getByText('Recipient Gets')).toBeInTheDocument()
+      
+      // Check that "You Send" is active (has white background)
+      const youSendButton = screen.getByText('You Send').closest('button')
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      
+      expect(youSendButton).toHaveClass('bg-white')
+      expect(recipientGetsButton).not.toHaveClass('bg-white')
+      
+      // Check that labels are correct for "You Send" mode
+      expect(screen.getByText('You send')).toBeInTheDocument()
+      expect(screen.getByText('Recipient gets')).toBeInTheDocument()
+    })
+
+    it('switches to "Recipient Gets" mode when clicked', async () => {
+      render(<TransferCalculator />)
+      
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      // Check that "Recipient Gets" is now active
+      const youSendButton = screen.getByText('You Send').closest('button')
+      
+      expect(recipientGetsButton).toHaveClass('bg-white')
+      expect(youSendButton).not.toHaveClass('bg-white')
+      
+      // Check that labels have switched
+      expect(screen.getByText('Recipient gets')).toBeInTheDocument()
+      expect(screen.getByText('You send')).toBeInTheDocument()
+    })
+
+    it('switches back to "You Send" mode when clicked again', async () => {
+      render(<TransferCalculator />)
+      
+      // First switch to "Recipient Gets"
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      // Then switch back to "You Send"
+      const youSendButton = screen.getByText('You Send').closest('button')
+      await userEvent.click(youSendButton!)
+      
+      // Check that "You Send" is active again
+      expect(youSendButton).toHaveClass('bg-white')
+      expect(recipientGetsButton).not.toHaveClass('bg-white')
+    })
+
+    it('sends correct API request in "You Send" mode', async () => {
+      const mockResponse = {
+        sendAmount: 100,
+        receiveAmount: 85.50,
+        sendCurrency: 'USD',
+        receiveCurrency: 'EUR',
+        exchangeRate: 0.855,
+        fees: 5.50,
+        rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        breakdown: {
+          sendAmountUSD: 100,
+          fees: { cardProcessing: 2.90, transfer: 1.50, payout: 1.10, total: 5.50 },
+          netAmountUSD: 94.50,
+          exchangeRate: 0.855,
+          receiveAmount: 85.50
+        },
+        estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        rateId: 'rate_123'
+      }
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      render(<TransferCalculator />)
+      
+      const amountInput = screen.getByPlaceholderText('100.00')
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '100')
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:4000/api/transfers/calculate',
+          expect.objectContaining({
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sendAmount: 100,
+              sendCurrency: 'USD',
+              receiveCurrency: 'EUR',
+              calculatorMode: 'send'
+            }),
+          })
+        )
+      })
+    })
+
+    it('sends correct API request in "Recipient Gets" mode', async () => {
+      const mockResponse = {
+        sendAmount: 117.00,
+        receiveAmount: 100,
+        sendCurrency: 'USD',
+        receiveCurrency: 'EUR',
+        exchangeRate: 0.855,
+        fees: 5.50,
+        rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        breakdown: {
+          sendAmountUSD: 117.00,
+          fees: { cardProcessing: 2.90, transfer: 1.50, payout: 1.10, total: 5.50 },
+          netAmountUSD: 111.50,
+          exchangeRate: 0.855,
+          receiveAmount: 100
+        },
+        estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        rateId: 'rate_123'
+      }
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      render(<TransferCalculator />)
+      
+      // Switch to "Recipient Gets" mode
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      const amountInput = screen.getByPlaceholderText('100.00')
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '100')
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:4000/api/transfers/calculate',
+          expect.objectContaining({
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              receiveAmount: 100,
+              sendCurrency: 'USD',
+              receiveCurrency: 'EUR',
+              calculatorMode: 'receive'
+            }),
+          })
+        )
+      })
+    })
+
+    it('preserves amount when switching modes with existing calculation', async () => {
+      const sendModeResponse = {
+        sendAmount: 100,
+        receiveAmount: 85.50,
+        sendCurrency: 'USD',
+        receiveCurrency: 'EUR',
+        exchangeRate: 0.855,
+        fees: 5.50,
+        rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        breakdown: {
+          sendAmountUSD: 100,
+          fees: { cardProcessing: 2.90, transfer: 1.50, payout: 1.10, total: 5.50 },
+          netAmountUSD: 94.50,
+          exchangeRate: 0.855,
+          receiveAmount: 85.50
+        },
+        estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        rateId: 'rate_123'
+      }
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => sendModeResponse,
+      })
+
+      render(<TransferCalculator />)
+      
+      // Enter amount in "You Send" mode
+      const amountInput = screen.getByPlaceholderText('100.00')
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '100')
+
+      // Wait for calculation to complete
+      await waitFor(() => {
+        expect(screen.getAllByText('€85.50')).toHaveLength(2) // One in output, one in breakdown
+      })
+
+      // Switch to "Recipient Gets" mode
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+
+      // Check that the input now shows the receive amount
+      await waitFor(() => {
+        expect(amountInput).toHaveValue('85.5')
+      })
+    })
+
+    it('includes calculator mode in onContinue callback', async () => {
+      const mockResponse = {
+        sendAmount: 100,
+        receiveAmount: 85.50,
+        sendCurrency: 'USD',
+        receiveCurrency: 'EUR',
+        exchangeRate: 0.855,
+        fees: 5.50,
+        rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        breakdown: {
+          sendAmountUSD: 100,
+          fees: { cardProcessing: 2.90, transfer: 1.50, payout: 1.10, total: 5.50 },
+          netAmountUSD: 94.50,
+          exchangeRate: 0.855,
+          receiveAmount: 85.50
+        },
+        estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        rateId: 'rate_123'
+      }
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      })
+
+      render(<TransferCalculator onContinue={mockOnContinue} />)
+      
+      // Switch to "Recipient Gets" mode
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      const amountInput = screen.getByPlaceholderText('100.00')
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '85.50')
+
+      await waitFor(() => {
+        expect(screen.getByText('Continue with this rate')).toBeInTheDocument()
+      })
+
+      const continueButton = screen.getByText('Continue with this rate')
+      await userEvent.click(continueButton)
+
+      expect(mockOnContinue).toHaveBeenCalledWith({
+        sendAmount: 100,
+        receiveAmount: 85.50,
+        exchangeRate: 0.855,
+        fees: 5.50,
+        rateId: 'rate_123',
+        calculatorMode: 'receive'
+      })
+    })
+
+    it('shows correct currency selectors based on mode', async () => {
+      render(<TransferCalculator />)
+      
+      // In "You Send" mode, input should have USD selector, output should have EUR selector
+      expect(screen.getByText('🇺🇸')).toBeInTheDocument() // USD flag in input
+      expect(screen.getByText('🇪🇺')).toBeInTheDocument() // EUR flag in output
+      
+      // Switch to "Recipient Gets" mode
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      // Currency selectors should still be present but in different positions
+      expect(screen.getByText('🇺🇸')).toBeInTheDocument()
+      expect(screen.getByText('🇪🇺')).toBeInTheDocument()
+    })
   })
 })

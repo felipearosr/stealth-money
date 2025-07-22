@@ -15,8 +15,6 @@ import {
   RECEIVE_CURRENCIES,
   formatCurrency,
   formatNumberInput,
-  validateAmount,
-  getCurrencyDisplayName,
   type SendCurrency,
   type ReceiveCurrency
 } from "@/lib/currencies";
@@ -55,6 +53,20 @@ interface TransferCalculation {
   rateId: string;
 }
 
+type CalculatorMode = 'send' | 'receive';
+
+interface CalculatorModeConfig {
+  mode: CalculatorMode;
+  label: string;
+  description: string;
+  inputLabel: string;
+  outputLabel: string;
+  inputIcon: typeof DollarSign;
+  outputIcon: typeof Euro;
+}
+
+
+
 interface TransferCalculatorProps {
   onContinue?: (data: {
     sendAmount: number;
@@ -62,12 +74,14 @@ interface TransferCalculatorProps {
     exchangeRate: number;
     fees: number;
     rateId: string;
+    calculatorMode: CalculatorMode;
   }) => void;
 }
 
 export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
   // Component state
-  const [sendAmount, setSendAmount] = useState<string>('');
+  const [calculatorMode, setCalculatorMode] = useState<CalculatorMode>('send');
+  const [inputAmount, setInputAmount] = useState<string>('');
   const [sendCurrency, setSendCurrency] = useState<SendCurrency>('USD');
   const [receiveCurrency, setReceiveCurrency] = useState<ReceiveCurrency>('EUR');
   const [calculation, setCalculation] = useState<TransferCalculation | null>(null);
@@ -77,12 +91,13 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Debounced values to avoid excessive API calls
-  const [debouncedSendAmount] = useDebounce(sendAmount, 500);
+  const [debouncedInputAmount] = useDebounce(inputAmount, 500);
+  const [debouncedCalculatorMode] = useDebounce(calculatorMode, 300);
   const [debouncedSendCurrency] = useDebounce(sendCurrency, 300);
   const [debouncedReceiveCurrency] = useDebounce(receiveCurrency, 300);
 
   // Calculate transfer using API
-  const calculateTransfer = async (amount: string, fromCurrency: SendCurrency, toCurrency: ReceiveCurrency) => {
+  const calculateTransfer = async (amount: string, mode: CalculatorMode, fromCurrency: SendCurrency, toCurrency: ReceiveCurrency) => {
     if (!amount || amount === '0' || amount === '') {
       setCalculation(null);
       return;
@@ -90,9 +105,10 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
 
     const numericAmount = parseFloat(amount);
     
-    // Validate amount using dynamic schema
+    // Validate amount using dynamic schema based on mode
     try {
-      const schema = createTransferCalculationSchema(fromCurrency);
+      const validationCurrency = mode === 'send' ? fromCurrency : toCurrency;
+      const schema = createTransferCalculationSchema(validationCurrency);
       schema.parse({ sendAmount: numericAmount });
       setValidationError(null);
     } catch (err) {
@@ -108,16 +124,28 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      
+      // Prepare request body based on calculator mode
+      const requestBody = mode === 'send' 
+        ? {
+            sendAmount: numericAmount,
+            sendCurrency: fromCurrency,
+            receiveCurrency: toCurrency,
+            calculatorMode: mode
+          }
+        : {
+            receiveAmount: numericAmount,
+            sendCurrency: fromCurrency,
+            receiveCurrency: toCurrency,
+            calculatorMode: mode
+          };
+
       const response = await fetch(`${API_URL}/api/transfers/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          sendAmount: numericAmount,
-          sendCurrency: fromCurrency,
-          receiveCurrency: toCurrency
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -137,18 +165,36 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
     }
   };
 
-  // Effect to calculate transfer when amount or currencies change
+  // Effect to calculate transfer when amount, mode, or currencies change
   useEffect(() => {
     // Calculate when amount or currencies change
-    if (debouncedSendAmount && debouncedSendAmount !== '0' && debouncedSendAmount !== '') {
-      calculateTransfer(debouncedSendAmount, debouncedSendCurrency, debouncedReceiveCurrency);
+    if (debouncedInputAmount && debouncedInputAmount !== '0' && debouncedInputAmount !== '') {
+      calculateTransfer(debouncedInputAmount, debouncedCalculatorMode, debouncedSendCurrency, debouncedReceiveCurrency);
     }
-  }, [debouncedSendAmount, debouncedSendCurrency, debouncedReceiveCurrency]);
+  }, [debouncedInputAmount, debouncedCalculatorMode, debouncedSendCurrency, debouncedReceiveCurrency]);
 
   // Handle amount input change
   const handleAmountChange = (value: string) => {
-    const formatted = formatNumberInput(value, sendCurrency);
-    setSendAmount(formatted);
+    const validationCurrency = calculatorMode === 'send' ? sendCurrency : receiveCurrency;
+    const formatted = formatNumberInput(value, validationCurrency);
+    setInputAmount(formatted);
+  };
+
+  // Handle calculator mode toggle
+  const handleModeToggle = () => {
+    const newMode = calculatorMode === 'send' ? 'receive' : 'send';
+    setCalculatorMode(newMode);
+    
+    // If we have a calculation, preserve the amount by switching to the opposite field
+    if (calculation) {
+      if (newMode === 'receive') {
+        // Switching to "Recipient Gets" mode, use the current receive amount
+        setInputAmount(calculation.receiveAmount.toString());
+      } else {
+        // Switching to "You Send" mode, use the current send amount
+        setInputAmount(calculation.sendAmount.toString());
+      }
+    }
   };
 
   // Handle continue button click
@@ -160,6 +206,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
         exchangeRate: calculation.exchangeRate,
         fees: calculation.fees,
         rateId: calculation.rateId,
+        calculatorMode: calculatorMode,
       });
     }
   };
@@ -180,42 +227,105 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Send Amount and Currency */}
+        {/* Calculator Mode Switcher */}
+        <div className="flex items-center justify-center">
+          <div className="bg-gray-100 rounded-lg p-1 flex">
+            <button
+              onClick={handleModeToggle}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                calculatorMode === 'send'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                You Send
+              </div>
+            </button>
+            <button
+              onClick={handleModeToggle}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                calculatorMode === 'receive'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Euro className="h-4 w-4" />
+                Recipient Gets
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Input Amount and Currency */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              You send
+              {calculatorMode === 'send' ? (
+                <>
+                  <DollarSign className="h-4 w-4" />
+                  You send
+                </>
+              ) : (
+                <>
+                  <Euro className="h-4 w-4" />
+                  Recipient gets
+                </>
+              )}
             </Label>
           </div>
           
           <div className="flex gap-3">
             <div className="flex-1">
               <Input
-                id="send-amount"
+                id="input-amount"
                 type="text"
-                placeholder={SUPPORTED_CURRENCIES[sendCurrency].decimalPlaces === 0 ? "1000" : "100.00"}
-                value={sendAmount}
+                placeholder={
+                  calculatorMode === 'send'
+                    ? SUPPORTED_CURRENCIES[sendCurrency].decimalPlaces === 0 ? "1000" : "100.00"
+                    : SUPPORTED_CURRENCIES[receiveCurrency].decimalPlaces === 0 ? "1000" : "100.00"
+                }
+                value={inputAmount}
                 onChange={(e) => handleAmountChange(e.target.value)}
                 className={`text-lg font-medium ${validationError ? 'border-red-500' : ''}`}
               />
             </div>
             <div className="w-32">
-              <Select value={sendCurrency} onValueChange={(value) => setSendCurrency(value as SendCurrency)}>
-                <SelectTrigger className="h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SEND_CURRENCIES.map((currency) => (
-                    <SelectItem key={currency} value={currency}>
-                      <div className="flex items-center gap-2">
-                        <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
-                        <span>{currency}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {calculatorMode === 'send' ? (
+                <Select value={sendCurrency} onValueChange={(value) => setSendCurrency(value as SendCurrency)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SEND_CURRENCIES.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        <div className="flex items-center gap-2">
+                          <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                          <span>{currency}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={receiveCurrency} onValueChange={(value) => setReceiveCurrency(value as ReceiveCurrency)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECEIVE_CURRENCIES.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        <div className="flex items-center gap-2">
+                          <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                          <span>{currency}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           
@@ -234,37 +344,68 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
           </div>
         </div>
 
-        {/* Receive Currency */}
+        {/* Output Amount and Currency */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label className="flex items-center gap-2">
-              <Euro className="h-4 w-4" />
-              Recipient gets
+              {calculatorMode === 'send' ? (
+                <>
+                  <Euro className="h-4 w-4" />
+                  Recipient gets
+                </>
+              ) : (
+                <>
+                  <DollarSign className="h-4 w-4" />
+                  You send
+                </>
+              )}
             </Label>
           </div>
           
           <div className="flex gap-3">
             <div className="flex-1">
               <div className="h-10 px-3 py-2 border border-input bg-gray-50 rounded-md flex items-center text-lg font-medium text-muted-foreground">
-                {calculation ? formatCurrency(calculation.receiveAmount, receiveCurrency) : '---'}
+                {calculation ? (
+                  calculatorMode === 'send' 
+                    ? formatCurrency(calculation.receiveAmount, receiveCurrency)
+                    : formatCurrency(calculation.sendAmount, sendCurrency)
+                ) : '---'}
               </div>
             </div>
             <div className="w-32">
-              <Select value={receiveCurrency} onValueChange={(value) => setReceiveCurrency(value as ReceiveCurrency)}>
-                <SelectTrigger className="h-10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RECEIVE_CURRENCIES.map((currency) => (
-                    <SelectItem key={currency} value={currency}>
-                      <div className="flex items-center gap-2">
-                        <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
-                        <span>{currency}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {calculatorMode === 'send' ? (
+                <Select value={receiveCurrency} onValueChange={(value) => setReceiveCurrency(value as ReceiveCurrency)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECEIVE_CURRENCIES.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        <div className="flex items-center gap-2">
+                          <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                          <span>{currency}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={sendCurrency} onValueChange={(value) => setSendCurrency(value as SendCurrency)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SEND_CURRENCIES.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        <div className="flex items-center gap-2">
+                          <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                          <span>{currency}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
         </div>
