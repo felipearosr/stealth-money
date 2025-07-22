@@ -20,12 +20,14 @@ import {
 } from "@/lib/currencies";
 
 // Dynamic validation schema for transfer calculation
-const createTransferCalculationSchema = (sendCurrency: string) => {
-  const currency = SUPPORTED_CURRENCIES[sendCurrency];
+const createTransferCalculationSchema = (currency: string, mode: CalculatorMode) => {
+  const currencyConfig = SUPPORTED_CURRENCIES[currency];
+  const fieldName = mode === 'send' ? 'sendAmount' : 'receiveAmount';
+  
   return z.object({
-    sendAmount: z.number()
-      .min(currency.minAmount, `Amount must be at least ${formatCurrency(currency.minAmount, sendCurrency)}`)
-      .max(currency.maxAmount, `Amount cannot exceed ${formatCurrency(currency.maxAmount, sendCurrency)}`),
+    [fieldName]: z.number()
+      .min(currencyConfig.minAmount, `Amount must be at least ${formatCurrency(currencyConfig.minAmount, currency)}`)
+      .max(currencyConfig.maxAmount, `Amount cannot exceed ${formatCurrency(currencyConfig.maxAmount, currency)}`),
   });
 };
 
@@ -64,9 +66,10 @@ interface TransferCalculatorProps {
     rateId: string;
     calculatorMode: CalculatorMode;
   }) => void;
+  isNavigating?: boolean;
 }
 
-export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
+export function TransferCalculator({ onContinue, isNavigating = false }: TransferCalculatorProps) {
   // Component state
   const [calculatorMode, setCalculatorMode] = useState<CalculatorMode>('send');
   const [inputAmount, setInputAmount] = useState<string>('');
@@ -96,8 +99,9 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
     // Validate amount using dynamic schema based on mode
     try {
       const validationCurrency = mode === 'send' ? fromCurrency : toCurrency;
-      const schema = createTransferCalculationSchema(validationCurrency);
-      schema.parse({ sendAmount: numericAmount });
+      const schema = createTransferCalculationSchema(validationCurrency, mode);
+      const fieldName = mode === 'send' ? 'sendAmount' : 'receiveAmount';
+      schema.parse({ [fieldName]: numericAmount });
       setValidationError(null);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -113,20 +117,27 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       
-      // Prepare request body based on calculator mode
-      const requestBody = mode === 'send' 
-        ? {
-            sendAmount: numericAmount,
-            sendCurrency: fromCurrency,
-            receiveCurrency: toCurrency,
-            calculatorMode: mode
-          }
-        : {
-            receiveAmount: numericAmount,
-            sendCurrency: fromCurrency,
-            receiveCurrency: toCurrency,
-            calculatorMode: mode
-          };
+      // TEMPORARY: Backend only supports sendAmount mode currently
+      // For "receive" mode, we need to estimate the send amount first
+      let requestBody;
+      let estimatedSendAmount = numericAmount;
+      
+      if (mode === 'receive') {
+        // Rough estimation: assume 10% fees and current exchange rate of ~0.85 for USD->EUR
+        // This is a temporary workaround until backend supports receiveAmount
+        const roughExchangeRate = toCurrency === 'EUR' ? 0.85 : 
+                                 toCurrency === 'GBP' ? 0.80 : 
+                                 toCurrency === 'CLP' ? 800 : 
+                                 toCurrency === 'MXN' ? 20 : 0.85;
+        estimatedSendAmount = Math.ceil((numericAmount / roughExchangeRate) * 1.1);
+      }
+      
+      requestBody = {
+        sendAmount: estimatedSendAmount,
+        sendCurrency: fromCurrency,
+        receiveCurrency: toCurrency,
+        calculatorMode: 'send' // Always send as 'send' mode for now
+      };
 
       const response = await fetch(`${API_URL}/api/transfers/calculate`, {
         method: 'POST',
@@ -142,6 +153,43 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
       }
 
       const data: TransferCalculation = await response.json();
+      
+      // If we're in "receive" mode, we need to adjust the calculation
+      // to match the desired receive amount as closely as possible
+      if (mode === 'receive') {
+        const actualReceiveAmount = data.receiveAmount;
+        const targetReceiveAmount = numericAmount;
+        
+        if (Math.abs(actualReceiveAmount - targetReceiveAmount) > targetReceiveAmount * 0.05) {
+          // If we're off by more than 5%, try to adjust
+          const adjustmentFactor = targetReceiveAmount / actualReceiveAmount;
+          const adjustedSendAmount = Math.ceil(data.sendAmount * adjustmentFactor);
+          
+          // Make a second API call with the adjusted amount
+          const adjustedRequestBody = {
+            sendAmount: adjustedSendAmount,
+            sendCurrency: fromCurrency,
+            receiveCurrency: toCurrency,
+            calculatorMode: 'send'
+          };
+          
+          const adjustedResponse = await fetch(`${API_URL}/api/transfers/calculate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(adjustedRequestBody),
+          });
+          
+          if (adjustedResponse.ok) {
+            const adjustedData = await adjustedResponse.json();
+            setCalculation(adjustedData);
+            setLastUpdated(new Date());
+            return;
+          }
+        }
+      }
+      
       setCalculation(data);
       setLastUpdated(new Date());
     } catch (err) {
@@ -531,10 +579,18 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
             {onContinue && (
               <Button 
                 onClick={handleContinue}
-                className="w-full"
+                disabled={isNavigating}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"
                 size="lg"
               >
-                Continue with this rate
+                {isNavigating ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  'Continue with this rate'
+                )}
               </Button>
             )}
           </div>

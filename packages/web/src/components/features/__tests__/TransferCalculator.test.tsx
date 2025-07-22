@@ -309,6 +309,102 @@ describe('TransferCalculator', () => {
     })
   })
 
+  it('shows loading state on continue button when isNavigating is true', async () => {
+    const mockResponse = {
+      sendAmount: 100,
+      receiveAmount: 85.50,
+      sendCurrency: 'USD',
+      receiveCurrency: 'EUR',
+      exchangeRate: 0.855,
+      fees: 5.50,
+      rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      breakdown: {
+        sendAmountUSD: 100,
+        fees: {
+          cardProcessing: 2.90,
+          transfer: 1.50,
+          payout: 1.10,
+          total: 5.50
+        },
+        netAmountUSD: 94.50,
+        exchangeRate: 0.855,
+        receiveAmount: 85.50
+      },
+      estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      rateId: 'rate_123'
+    }
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockResponse,
+    })
+
+    render(<TransferCalculator onContinue={mockOnContinue} isNavigating={true} />)
+    
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
+    await userEvent.clear(amountInput)
+    await userEvent.type(amountInput, '100')
+
+    await waitFor(() => {
+      expect(screen.getByText('Processing...')).toBeInTheDocument()
+    })
+
+    const continueButton = screen.getByText('Processing...').closest('button')
+    expect(continueButton).toBeDisabled()
+    
+    // Should show spinning icon
+    const spinningIcon = screen.getByText('Processing...').parentElement?.querySelector('.animate-spin')
+    expect(spinningIcon).toBeInTheDocument()
+  })
+
+  it('disables continue button when isNavigating is true', async () => {
+    const mockResponse = {
+      sendAmount: 100,
+      receiveAmount: 85.50,
+      sendCurrency: 'USD',
+      receiveCurrency: 'EUR',
+      exchangeRate: 0.855,
+      fees: 5.50,
+      rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      breakdown: {
+        sendAmountUSD: 100,
+        fees: {
+          cardProcessing: 2.90,
+          transfer: 1.50,
+          payout: 1.10,
+          total: 5.50
+        },
+        netAmountUSD: 94.50,
+        exchangeRate: 0.855,
+        receiveAmount: 85.50
+      },
+      estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      rateId: 'rate_123'
+    }
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockResponse,
+    })
+
+    render(<TransferCalculator onContinue={mockOnContinue} isNavigating={true} />)
+    
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
+    await userEvent.clear(amountInput)
+    await userEvent.type(amountInput, '100')
+
+    await waitFor(() => {
+      const continueButton = screen.getByText('Processing...').closest('button')
+      expect(continueButton).toBeDisabled()
+    })
+
+    // Try to click the disabled button - should not call onContinue
+    const continueButton = screen.getByText('Processing...').closest('button')
+    await userEvent.click(continueButton!)
+
+    expect(mockOnContinue).not.toHaveBeenCalled()
+  })
+
   it('shows rate expiration warning when rate is about to expire', async () => {
     const mockResponse = {
       sendAmount: 100,
@@ -372,6 +468,24 @@ describe('TransferCalculator', () => {
     
     // Should still not call API for zero amount
     expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it('handles "Request validation failed" error from API', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({ message: 'Request validation failed' }),
+    })
+
+    render(<TransferCalculator />)
+    
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
+    await userEvent.clear(amountInput)
+    await userEvent.type(amountInput, '100')
+
+    await waitFor(() => {
+      expect(screen.getByText('Calculation Error')).toBeInTheDocument()
+      expect(screen.getByText('Request validation failed')).toBeInTheDocument()
+    })
   })
 
   describe('Calculator Mode Switcher', () => {
@@ -513,21 +627,25 @@ describe('TransferCalculator', () => {
       await userEvent.type(amountInput, '100')
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:4000/api/transfers/calculate',
-          expect.objectContaining({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              receiveAmount: 100,
-              sendCurrency: 'USD',
-              receiveCurrency: 'EUR',
-              calculatorMode: 'receive'
-            }),
-          })
-        )
+        // In "Recipient Gets" mode, we estimate sendAmount and always send as 'send' mode
+        // The estimation logic will make multiple API calls to get close to the target
+        expect(global.fetch).toHaveBeenCalled()
+        
+        // Check that at least one call was made with the correct structure
+        const calls = (global.fetch as jest.Mock).mock.calls
+        const hasCorrectCall = calls.some(call => {
+          const [url, options] = call
+          if (url !== 'http://localhost:4000/api/transfers/calculate') return false
+          
+          const body = JSON.parse(options.body)
+          return body.sendCurrency === 'USD' && 
+                 body.receiveCurrency === 'EUR' && 
+                 body.calculatorMode === 'send' &&
+                 typeof body.sendAmount === 'number' &&
+                 body.sendAmount > 0
+        })
+        
+        expect(hasCorrectCall).toBe(true)
       })
     })
 
@@ -644,6 +762,85 @@ describe('TransferCalculator', () => {
       // Currency selectors should still be present but in different positions
       expect(screen.getByText('🇺🇸')).toBeInTheDocument()
       expect(screen.getByText('🇪🇺')).toBeInTheDocument()
+    })
+
+    it('validates amount input correctly in "Recipient Gets" mode', async () => {
+      render(<TransferCalculator />)
+      
+      // Switch to "Recipient Gets" mode
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      const amountInput = screen.getByPlaceholderText('Enter amount recipient gets (e.g. 100.00)')
+      
+      // Test invalid amount (too small) - EUR minimum is €1.00
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '0.50')
+      
+      await waitFor(() => {
+        expect(screen.getByText('Amount must be at least €1.00')).toBeInTheDocument()
+      }, { timeout: 2000 })
+
+      // Test invalid amount (too large) - EUR maximum is €45,000.00
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '50000')
+      
+      await waitFor(() => {
+        expect(screen.getByText('Amount cannot exceed €45,000.00')).toBeInTheDocument()
+      })
+    })
+
+    it('handles mode switching with validation errors', async () => {
+      render(<TransferCalculator />)
+      
+      const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
+      
+      // Enter invalid amount in "You Send" mode
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '0.50')
+      
+      await waitFor(() => {
+        expect(screen.getByText('Amount must be at least $1.00')).toBeInTheDocument()
+      })
+
+      // Switch to "Recipient Gets" mode - should clear validation error but preserve input
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      // Validation error should be cleared since there's no calculation to preserve
+      await waitFor(() => {
+        expect(screen.queryByText('Amount must be at least $1.00')).not.toBeInTheDocument()
+      })
+      
+      // Input should preserve the value but will be validated against new currency
+      expect(amountInput).toHaveValue('0.50')
+      
+      // Should show new validation error for EUR currency
+      await waitFor(() => {
+        expect(screen.getByText('Amount must be at least €1.00')).toBeInTheDocument()
+      })
+    })
+
+    it('handles API errors in "Recipient Gets" mode', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ message: 'Request validation failed' }),
+      })
+
+      render(<TransferCalculator />)
+      
+      // Switch to "Recipient Gets" mode
+      const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
+      await userEvent.click(recipientGetsButton!)
+      
+      const amountInput = screen.getByPlaceholderText('Enter amount recipient gets (e.g. 100.00)')
+      await userEvent.clear(amountInput)
+      await userEvent.type(amountInput, '100')
+
+      await waitFor(() => {
+        expect(screen.getByText('Calculation Error')).toBeInTheDocument()
+        expect(screen.getByText('Request validation failed')).toBeInTheDocument()
+      })
     })
   })
 })
