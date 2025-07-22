@@ -27,25 +27,25 @@ describe('TransferCalculator', () => {
     expect(screen.getByText('Calculate how much your recipient will receive')).toBeInTheDocument()
     expect(screen.getByText('You send')).toBeInTheDocument()
     expect(screen.getByText('Recipient gets')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('100.00')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')).toBeInTheDocument()
     // Check for currency selectors
     expect(screen.getByText('🇺🇸')).toBeInTheDocument() // USD flag
     expect(screen.getByText('🇪🇺')).toBeInTheDocument() // EUR flag
-    // Should show empty recipient amount initially
-    expect(screen.getByText('---')).toBeInTheDocument()
+    // Should show helpful guidance text for recipient amount initially
+    expect(screen.getByText('Amount recipient will receive')).toBeInTheDocument()
   })
 
   it('validates amount input correctly', async () => {
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     
     // Test invalid amount (too small)
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '0.001')
     
     await waitFor(() => {
-      expect(screen.getByText('Invalid amount')).toBeInTheDocument()
+      expect(screen.getByText('Amount must be at least $1.00')).toBeInTheDocument()
     }, { timeout: 2000 })
 
     // Test invalid amount (too large)
@@ -53,14 +53,14 @@ describe('TransferCalculator', () => {
     await userEvent.type(amountInput, '60000')
     
     await waitFor(() => {
-      expect(screen.getByText('Invalid amount')).toBeInTheDocument()
+      expect(screen.getByText('Amount cannot exceed $50,000.00')).toBeInTheDocument()
     })
   })
 
   it('formats number input correctly', async () => {
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     
     // Test that non-numeric characters are removed
     await userEvent.clear(amountInput)
@@ -113,7 +113,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '200') // Use a different amount to avoid conflicts with default
 
@@ -169,7 +169,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '200')
 
@@ -184,7 +184,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -202,7 +202,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -244,7 +244,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -288,7 +288,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator onContinue={mockOnContinue} />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -341,7 +341,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -353,7 +353,7 @@ describe('TransferCalculator', () => {
   it('does not call API for empty or zero amounts', async () => {
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByPlaceholderText('100.00')
+    const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
     
     // Clear the input (empty) - this should not trigger API call
     await userEvent.clear(amountInput)
@@ -454,7 +454,7 @@ describe('TransferCalculator', () => {
 
       render(<TransferCalculator />)
       
-      const amountInput = screen.getByPlaceholderText('100.00')
+      const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
       await userEvent.clear(amountInput)
       await userEvent.type(amountInput, '100')
 
@@ -508,7 +508,7 @@ describe('TransferCalculator', () => {
       const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
       await userEvent.click(recipientGetsButton!)
       
-      const amountInput = screen.getByPlaceholderText('100.00')
+      const amountInput = screen.getByPlaceholderText('Enter amount recipient gets (e.g. 100.00)')
       await userEvent.clear(amountInput)
       await userEvent.type(amountInput, '100')
 
@@ -559,7 +559,7 @@ describe('TransferCalculator', () => {
       render(<TransferCalculator />)
       
       // Enter amount in "You Send" mode
-      const amountInput = screen.getByPlaceholderText('100.00')
+      const amountInput = screen.getByPlaceholderText('Enter amount to send (e.g. 100.00)')
       await userEvent.clear(amountInput)
       await userEvent.type(amountInput, '100')
 
@@ -609,7 +609,7 @@ describe('TransferCalculator', () => {
       const recipientGetsButton = screen.getByText('Recipient Gets').closest('button')
       await userEvent.click(recipientGetsButton!)
       
-      const amountInput = screen.getByPlaceholderText('100.00')
+      const amountInput = screen.getByPlaceholderText('Enter amount recipient gets (e.g. 100.00)')
       await userEvent.clear(amountInput)
       await userEvent.type(amountInput, '85.50')
 

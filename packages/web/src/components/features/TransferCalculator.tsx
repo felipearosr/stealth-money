@@ -55,18 +55,6 @@ interface TransferCalculation {
 
 type CalculatorMode = 'send' | 'receive';
 
-interface CalculatorModeConfig {
-  mode: CalculatorMode;
-  label: string;
-  description: string;
-  inputLabel: string;
-  outputLabel: string;
-  inputIcon: typeof DollarSign;
-  outputIcon: typeof Euro;
-}
-
-
-
 interface TransferCalculatorProps {
   onContinue?: (data: {
     sendAmount: number;
@@ -113,7 +101,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
       setValidationError(null);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        setValidationError(err.errors?.[0]?.message || 'Invalid amount');
+        setValidationError(err.issues?.[0]?.message || 'Invalid amount');
         setCalculation(null);
         return;
       }
@@ -284,8 +272,8 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
                 type="text"
                 placeholder={
                   calculatorMode === 'send'
-                    ? SUPPORTED_CURRENCIES[sendCurrency].decimalPlaces === 0 ? "1000" : "100.00"
-                    : SUPPORTED_CURRENCIES[receiveCurrency].decimalPlaces === 0 ? "1000" : "100.00"
+                    ? `Enter amount to send (${SUPPORTED_CURRENCIES[sendCurrency].decimalPlaces === 0 ? "e.g. 1000" : "e.g. 100.00"})`
+                    : `Enter amount recipient gets (${SUPPORTED_CURRENCIES[receiveCurrency].decimalPlaces === 0 ? "e.g. 1000" : "e.g. 100.00"})`
                 }
                 value={inputAmount}
                 onChange={(e) => handleAmountChange(e.target.value)}
@@ -369,7 +357,14 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
                   calculatorMode === 'send' 
                     ? formatCurrency(calculation.receiveAmount, receiveCurrency)
                     : formatCurrency(calculation.sendAmount, sendCurrency)
-                ) : '---'}
+                ) : (
+                  <span className="text-sm">
+                    {calculatorMode === 'send' 
+                      ? 'Amount recipient will receive'
+                      : 'Amount you need to send'
+                    }
+                  </span>
+                )}
               </div>
             </div>
             <div className="w-32">
@@ -409,6 +404,33 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
             </div>
           </div>
         </div>
+
+        {/* Empty State Guidance */}
+        {!inputAmount && !isLoading && !error && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-blue-700 mb-2">
+              <Calculator className="h-4 w-4" />
+              <span className="font-medium">Get Started</span>
+            </div>
+            <p className="text-sm text-blue-600 mb-3">
+              Enter an amount above to see how much your recipient will receive and the total cost including fees.
+            </p>
+            <div className="space-y-2 text-xs text-blue-600">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                <span>Real-time exchange rates</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                <span>Transparent fee breakdown</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                <span>Fast international transfers</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Calculation Results */}
         {isLoading && (
