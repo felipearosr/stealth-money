@@ -13,6 +13,10 @@ interface Transaction {
   status: string;
   stripePaymentIntentId?: string;
   blockchainTxHash?: string;
+  // Circle-specific IDs for tracking
+  circlePaymentId?: string;
+  circleTransferId?: string;
+  circlePayoutId?: string;
   // Recipient Information (for external transfers - keeping for backward compatibility)
   recipientName?: string;
   recipientEmail?: string;
@@ -79,6 +83,11 @@ export class SimpleDatabaseService {
           stripe_payment_intent_id VARCHAR(255) UNIQUE,
           blockchain_tx_hash VARCHAR(255) UNIQUE,
           
+          -- Circle-specific IDs for tracking
+          circle_payment_id VARCHAR(255) UNIQUE,
+          circle_transfer_id VARCHAR(255) UNIQUE,
+          circle_payout_id VARCHAR(255) UNIQUE,
+          
           -- Recipient Information (for external transfers - keeping for backward compatibility)
           recipient_name VARCHAR(255),
           recipient_email VARCHAR(255),
@@ -111,6 +120,34 @@ export class SimpleDatabaseService {
         console.log('⚠️  recipient_user_id column migration skipped (may already exist)');
       }
       
+      // Add Circle-specific columns if they don't exist (migration)
+      try {
+        await this.pool.query(`
+          ALTER TABLE transactions ADD COLUMN IF NOT EXISTS circle_payment_id VARCHAR(255) UNIQUE;
+        `);
+        console.log('✅ Added circle_payment_id column to transactions table');
+      } catch (migrationError) {
+        console.log('⚠️  circle_payment_id column migration skipped (may already exist)');
+      }
+      
+      try {
+        await this.pool.query(`
+          ALTER TABLE transactions ADD COLUMN IF NOT EXISTS circle_transfer_id VARCHAR(255) UNIQUE;
+        `);
+        console.log('✅ Added circle_transfer_id column to transactions table');
+      } catch (migrationError) {
+        console.log('⚠️  circle_transfer_id column migration skipped (may already exist)');
+      }
+      
+      try {
+        await this.pool.query(`
+          ALTER TABLE transactions ADD COLUMN IF NOT EXISTS circle_payout_id VARCHAR(255) UNIQUE;
+        `);
+        console.log('✅ Added circle_payout_id column to transactions table');
+      } catch (migrationError) {
+        console.log('⚠️  circle_payout_id column migration skipped (may already exist)');
+      }
+
       // Add user_id index if it doesn't exist
       try {
         await this.pool.query(`
@@ -208,7 +245,14 @@ export class SimpleDatabaseService {
   async updateTransactionStatus(
     id: string,
     status: string,
-    details: { paymentId?: string; txHash?: string; [key: string]: any }
+    details: { 
+      paymentId?: string; 
+      txHash?: string; 
+      circlePaymentId?: string;
+      circleTransferId?: string;
+      circlePayoutId?: string;
+      [key: string]: any 
+    }
   ): Promise<Transaction> {
     if (!this.isConfigured || !this.pool) {
       // Return mock updated transaction
@@ -222,6 +266,9 @@ export class SimpleDatabaseService {
         status,
         stripePaymentIntentId: details.paymentId,
         blockchainTxHash: details.txHash,
+        circlePaymentId: details.circlePaymentId,
+        circleTransferId: details.circleTransferId,
+        circlePayoutId: details.circlePayoutId,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -233,8 +280,11 @@ export class SimpleDatabaseService {
         status = $1,
         stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id),
         blockchain_tx_hash = COALESCE($3, blockchain_tx_hash),
+        circle_payment_id = COALESCE($4, circle_payment_id),
+        circle_transfer_id = COALESCE($5, circle_transfer_id),
+        circle_payout_id = COALESCE($6, circle_payout_id),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
+      WHERE id = $7
       RETURNING 
         id,
         amount,
@@ -245,6 +295,9 @@ export class SimpleDatabaseService {
         status,
         stripe_payment_intent_id as "stripePaymentIntentId",
         blockchain_tx_hash as "blockchainTxHash",
+        circle_payment_id as "circlePaymentId",
+        circle_transfer_id as "circleTransferId",
+        circle_payout_id as "circlePayoutId",
         recipient_name as "recipientName",
         recipient_email as "recipientEmail",
         recipient_phone as "recipientPhone",
@@ -254,7 +307,15 @@ export class SimpleDatabaseService {
         updated_at as "updatedAt"
     `;
 
-    const values = [status, details.paymentId, details.txHash, id];
+    const values = [
+      status, 
+      details.paymentId, 
+      details.txHash, 
+      details.circlePaymentId,
+      details.circleTransferId,
+      details.circlePayoutId,
+      id
+    ];
     const result = await this.pool.query(query, values);
     return result.rows[0];
   }
@@ -506,6 +567,123 @@ export class SimpleDatabaseService {
 
     const result = await this.pool.query(query, [email]);
     return result.rows;
+  }
+
+  /**
+   * Find transaction by Circle payment ID
+   */
+  async getTransactionByCirclePaymentId(circlePaymentId: string): Promise<Transaction | null> {
+    if (!this.isConfigured || !this.pool) {
+      return null;
+    }
+
+    const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        circle_payment_id as "circlePaymentId",
+        circle_transfer_id as "circleTransferId",
+        circle_payout_id as "circlePayoutId",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE circle_payment_id = $1
+    `;
+
+    const result = await this.pool.query(query, [circlePaymentId]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Find transaction by Circle transfer ID
+   */
+  async getTransactionByCircleTransferId(circleTransferId: string): Promise<Transaction | null> {
+    if (!this.isConfigured || !this.pool) {
+      return null;
+    }
+
+    const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        circle_payment_id as "circlePaymentId",
+        circle_transfer_id as "circleTransferId",
+        circle_payout_id as "circlePayoutId",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE circle_transfer_id = $1
+    `;
+
+    const result = await this.pool.query(query, [circleTransferId]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Find transaction by Circle payout ID
+   */
+  async getTransactionByCirclePayoutId(circlePayoutId: string): Promise<Transaction | null> {
+    if (!this.isConfigured || !this.pool) {
+      return null;
+    }
+
+    const query = `
+      SELECT 
+        id,
+        user_id as "userId",
+        recipient_user_id as "recipientUserId",
+        amount,
+        source_currency as "sourceCurrency",
+        dest_currency as "destCurrency",
+        exchange_rate as "exchangeRate",
+        recipient_amount as "recipientAmount",
+        status,
+        stripe_payment_intent_id as "stripePaymentIntentId",
+        blockchain_tx_hash as "blockchainTxHash",
+        circle_payment_id as "circlePaymentId",
+        circle_transfer_id as "circleTransferId",
+        circle_payout_id as "circlePayoutId",
+        recipient_name as "recipientName",
+        recipient_email as "recipientEmail",
+        recipient_phone as "recipientPhone",
+        payout_method as "payoutMethod",
+        payout_details as "payoutDetails",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM transactions 
+      WHERE circle_payout_id = $1
+    `;
+
+    const result = await this.pool.query(query, [circlePayoutId]);
+    return result.rows[0] || null;
   }
 
   async testConnection(): Promise<boolean> {
