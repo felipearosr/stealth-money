@@ -3,20 +3,39 @@
 import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import { z } from "zod";
-import { Calculator, RefreshCw, AlertCircle, DollarSign, Euro } from "lucide-react";
+import { Calculator, RefreshCw, AlertCircle, DollarSign, Euro, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  SUPPORTED_CURRENCIES, 
+  SEND_CURRENCIES, 
+  RECEIVE_CURRENCIES,
+  formatCurrency,
+  formatNumberInput,
+  validateAmount,
+  getCurrencyDisplayName,
+  type SendCurrency,
+  type ReceiveCurrency
+} from "@/lib/currencies";
 
-// Validation schema for transfer calculation
-const transferCalculationSchema = z.object({
-  sendAmount: z.number().min(0.01, 'Amount must be at least $0.01').max(50000, 'Amount cannot exceed $50,000'),
-});
+// Dynamic validation schema for transfer calculation
+const createTransferCalculationSchema = (sendCurrency: string) => {
+  const currency = SUPPORTED_CURRENCIES[sendCurrency];
+  return z.object({
+    sendAmount: z.number()
+      .min(currency.minAmount, `Amount must be at least ${formatCurrency(currency.minAmount, sendCurrency)}`)
+      .max(currency.maxAmount, `Amount cannot exceed ${formatCurrency(currency.maxAmount, sendCurrency)}`),
+  });
+};
 
 interface TransferCalculation {
   sendAmount: number;
   receiveAmount: number;
+  sendCurrency: string;
+  receiveCurrency: string;
   exchangeRate: number;
   fees: number;
   rateValidUntil: string;
@@ -30,7 +49,7 @@ interface TransferCalculation {
     };
     netAmountUSD: number;
     exchangeRate: number;
-    receiveAmountEUR: number;
+    receiveAmount: number;
   };
   estimatedArrival: string;
   rateId: string;
@@ -48,44 +67,22 @@ interface TransferCalculatorProps {
 
 export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
   // Component state
-  const [sendAmount, setSendAmount] = useState<string>('100');
+  const [sendAmount, setSendAmount] = useState<string>('');
+  const [sendCurrency, setSendCurrency] = useState<SendCurrency>('USD');
+  const [receiveCurrency, setReceiveCurrency] = useState<ReceiveCurrency>('EUR');
   const [calculation, setCalculation] = useState<TransferCalculation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Debounced send amount to avoid excessive API calls
+  // Debounced values to avoid excessive API calls
   const [debouncedSendAmount] = useDebounce(sendAmount, 500);
-
-  // Format currency display
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  // Format number input
-  const formatNumberInput = (value: string) => {
-    // Remove any non-numeric characters except decimal point
-    const cleaned = value.replace(/[^\d.]/g, '');
-    // Ensure only one decimal point
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      return parts[0] + '.' + parts[1];
-    }
-    // Limit to 2 decimal places
-    if (parts[1] && parts[1].length > 2) {
-      return parts[0] + '.' + parts[1].substring(0, 2);
-    }
-    return cleaned;
-  };
+  const [debouncedSendCurrency] = useDebounce(sendCurrency, 300);
+  const [debouncedReceiveCurrency] = useDebounce(receiveCurrency, 300);
 
   // Calculate transfer using API
-  const calculateTransfer = async (amount: string) => {
+  const calculateTransfer = async (amount: string, fromCurrency: SendCurrency, toCurrency: ReceiveCurrency) => {
     if (!amount || amount === '0' || amount === '') {
       setCalculation(null);
       return;
@@ -93,9 +90,10 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
 
     const numericAmount = parseFloat(amount);
     
-    // Validate amount
+    // Validate amount using dynamic schema
     try {
-      transferCalculationSchema.parse({ sendAmount: numericAmount });
+      const schema = createTransferCalculationSchema(fromCurrency);
+      schema.parse({ sendAmount: numericAmount });
       setValidationError(null);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -117,8 +115,8 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
         },
         body: JSON.stringify({
           sendAmount: numericAmount,
-          sendCurrency: 'USD',
-          receiveCurrency: 'EUR'
+          sendCurrency: fromCurrency,
+          receiveCurrency: toCurrency
         }),
       });
 
@@ -139,17 +137,17 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
     }
   };
 
-  // Effect to calculate transfer when amount changes
+  // Effect to calculate transfer when amount or currencies change
   useEffect(() => {
-    // Only calculate if the amount has been changed from the initial value
-    if (debouncedSendAmount && debouncedSendAmount !== '100') {
-      calculateTransfer(debouncedSendAmount);
+    // Calculate when amount or currencies change
+    if (debouncedSendAmount && debouncedSendAmount !== '0' && debouncedSendAmount !== '') {
+      calculateTransfer(debouncedSendAmount, debouncedSendCurrency, debouncedReceiveCurrency);
     }
-  }, [debouncedSendAmount]);
+  }, [debouncedSendAmount, debouncedSendCurrency, debouncedReceiveCurrency]);
 
   // Handle amount input change
   const handleAmountChange = (value: string) => {
-    const formatted = formatNumberInput(value);
+    const formatted = formatNumberInput(value, sendCurrency);
     setSendAmount(formatted);
   };
 
@@ -182,31 +180,93 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Send Amount Input */}
-        <div className="space-y-2">
-          <Label htmlFor="send-amount" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            You send (USD)
-          </Label>
-          <div className="relative">
-            <Input
-              id="send-amount"
-              type="text"
-              placeholder="100.00"
-              value={sendAmount}
-              onChange={(e) => handleAmountChange(e.target.value)}
-              className={`text-lg font-medium ${validationError ? 'border-red-500' : ''}`}
-            />
-            <div className="absolute inset-y-0 right-3 flex items-center">
-              <span className="text-sm text-muted-foreground font-medium">USD</span>
+        {/* Send Amount and Currency */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              You send
+            </Label>
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Input
+                id="send-amount"
+                type="text"
+                placeholder={SUPPORTED_CURRENCIES[sendCurrency].decimalPlaces === 0 ? "1000" : "100.00"}
+                value={sendAmount}
+                onChange={(e) => handleAmountChange(e.target.value)}
+                className={`text-lg font-medium ${validationError ? 'border-red-500' : ''}`}
+              />
+            </div>
+            <div className="w-32">
+              <Select value={sendCurrency} onValueChange={(value) => setSendCurrency(value as SendCurrency)}>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SEND_CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>
+                      <div className="flex items-center gap-2">
+                        <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                        <span>{currency}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
+          
           {validationError && (
             <p className="text-sm text-red-500 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
               {validationError}
             </p>
           )}
+        </div>
+
+        {/* Currency Exchange Arrow */}
+        <div className="flex justify-center">
+          <div className="bg-gray-100 rounded-full p-2">
+            <ArrowRightLeft className="h-4 w-4 text-gray-600" />
+          </div>
+        </div>
+
+        {/* Receive Currency */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center gap-2">
+              <Euro className="h-4 w-4" />
+              Recipient gets
+            </Label>
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <div className="h-10 px-3 py-2 border border-input bg-gray-50 rounded-md flex items-center text-lg font-medium text-muted-foreground">
+                {calculation ? formatCurrency(calculation.receiveAmount, receiveCurrency) : '---'}
+              </div>
+            </div>
+            <div className="w-32">
+              <Select value={receiveCurrency} onValueChange={(value) => setReceiveCurrency(value as ReceiveCurrency)}>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RECEIVE_CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>
+                      <div className="flex items-center gap-2">
+                        <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                        <span>{currency}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         {/* Calculation Results */}
@@ -233,12 +293,12 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Euro className="h-4 w-4 text-green-600" />
+                  <span className="text-lg">{SUPPORTED_CURRENCIES[receiveCurrency].flag}</span>
                   <span className="text-sm font-medium text-green-700">Recipient gets</span>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-green-700">
-                    {formatCurrency(calculation.receiveAmount, 'EUR')}
+                    {formatCurrency(calculation.receiveAmount, receiveCurrency)}
                   </div>
                 </div>
               </div>
@@ -250,7 +310,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
                 <span className="text-sm text-muted-foreground">Exchange rate</span>
                 <div className="text-right">
                   <div className="text-sm font-medium">
-                    1 USD = {calculation.exchangeRate.toFixed(4)} EUR
+                    1 {sendCurrency} = {calculation.exchangeRate.toFixed(SUPPORTED_CURRENCIES[receiveCurrency].decimalPlaces === 0 ? 0 : 4)} {receiveCurrency}
                   </div>
                   {isRateExpiringSoon && (
                     <div className="text-xs text-amber-600 flex items-center gap-1">
@@ -264,7 +324,7 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Total fees</span>
                 <span className="text-sm font-medium">
-                  {formatCurrency(calculation.fees, 'USD')}
+                  {formatCurrency(calculation.fees, sendCurrency)}
                 </span>
               </div>
 
@@ -272,22 +332,22 @@ export function TransferCalculator({ onContinue }: TransferCalculatorProps) {
               <div className="space-y-1 pl-4 border-l-2 border-gray-100">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Card processing</span>
-                  <span>{formatCurrency(calculation.breakdown.fees.cardProcessing, 'USD')}</span>
+                  <span>{formatCurrency(calculation.breakdown.fees.cardProcessing, sendCurrency)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Transfer fee</span>
-                  <span>{formatCurrency(calculation.breakdown.fees.transfer, 'USD')}</span>
+                  <span>{formatCurrency(calculation.breakdown.fees.transfer, sendCurrency)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Payout fee</span>
-                  <span>{formatCurrency(calculation.breakdown.fees.payout, 'USD')}</span>
+                  <span>{formatCurrency(calculation.breakdown.fees.payout, sendCurrency)}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-2 border-t">
                 <span className="text-sm font-medium">Total to pay</span>
                 <span className="text-lg font-bold">
-                  {formatCurrency(calculation.sendAmount + calculation.fees, 'USD')}
+                  {formatCurrency(calculation.sendAmount + calculation.fees, sendCurrency)}
                 </span>
               </div>
 

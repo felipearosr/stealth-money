@@ -436,8 +436,8 @@ router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: 
         // Validate request body
         const calculateSchema = z.object({
             sendAmount: z.number().min(0.01).max(50000),
-            sendCurrency: z.literal('USD'),
-            receiveCurrency: z.literal('EUR')
+            sendCurrency: z.enum(['USD']), // Currently only USD supported for sending
+            receiveCurrency: z.enum(['EUR', 'CLP', 'MXN', 'GBP']) // Multiple receive currencies
         });
 
         const validatedData = calculateSchema.parse(req.body);
@@ -457,6 +457,8 @@ router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: 
         const response = {
             sendAmount: calculation.sendAmount,
             receiveAmount: calculation.receiveAmount,
+            sendCurrency: validatedData.sendCurrency,
+            receiveCurrency: validatedData.receiveCurrency,
             exchangeRate: calculation.exchangeRate,
             fees: calculation.fees.total,
             rateValidUntil: calculation.rateValidUntil.toISOString(),
@@ -470,7 +472,11 @@ router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: 
                 },
                 netAmountUSD: calculation.breakdown.netAmountUSD,
                 exchangeRate: calculation.breakdown.exchangeRate,
-                receiveAmountEUR: calculation.breakdown.finalAmountEUR
+                grossAmountReceive: calculation.breakdown.grossAmountReceive,
+                transferFee: calculation.breakdown.transferFee,
+                payoutFee: calculation.breakdown.payoutFee,
+                finalAmountReceive: calculation.breakdown.finalAmountReceive,
+                receiveAmount: calculation.breakdown.finalAmountReceive
             },
             estimatedArrival: calculation.estimatedArrival,
             rateId: calculation.rateId

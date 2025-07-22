@@ -79,6 +79,8 @@ describe('POST /api/transfers/calculate', () => {
       expect(response.body).toMatchObject({
         sendAmount: 100,
         receiveAmount: 79.36,
+        sendCurrency: 'USD',
+        receiveCurrency: 'EUR',
         exchangeRate: 0.85,
         fees: 6.20,
         breakdown: {
@@ -91,7 +93,7 @@ describe('POST /api/transfers/calculate', () => {
           },
           netAmountUSD: 96.80,
           exchangeRate: 0.85,
-          receiveAmountEUR: 79.36
+          receiveAmount: 79.36
         },
         estimatedArrival: {
           min: 2,
@@ -219,7 +221,7 @@ describe('POST /api/transfers/calculate', () => {
         expect.arrayContaining([
           expect.objectContaining({
             field: 'sendCurrency',
-            message: 'Invalid literal value, expected "USD"'
+            message: "Invalid enum value. Expected 'USD', received 'GBP'"
           })
         ])
       );
@@ -229,7 +231,7 @@ describe('POST /api/transfers/calculate', () => {
       const requestBody = {
         sendAmount: 100,
         sendCurrency: 'USD',
-        receiveCurrency: 'GBP'
+        receiveCurrency: 'JPY' // Use a currency that's definitely not supported
       };
 
       const response = await request(app)
@@ -241,7 +243,7 @@ describe('POST /api/transfers/calculate', () => {
         expect.arrayContaining([
           expect.objectContaining({
             field: 'receiveCurrency',
-            message: 'Invalid literal value, expected "EUR"'
+            message: expect.stringContaining('Invalid enum value')
           })
         ])
       );
@@ -376,7 +378,7 @@ describe('POST /api/transfers/calculate', () => {
       expect(response.body.breakdown.fees).toHaveProperty('total');
       expect(response.body.breakdown).toHaveProperty('netAmountUSD');
       expect(response.body.breakdown).toHaveProperty('exchangeRate');
-      expect(response.body.breakdown).toHaveProperty('receiveAmountEUR');
+      expect(response.body.breakdown).toHaveProperty('receiveAmount');
 
       // Verify estimatedArrival structure
       expect(response.body.estimatedArrival).toHaveProperty('min');

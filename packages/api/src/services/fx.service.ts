@@ -5,7 +5,7 @@ import { CircleService } from './circle.service';
  */
 export interface ExchangeRateRequest {
   fromCurrency: 'USD';
-  toCurrency: 'EUR';
+  toCurrency: 'EUR' | 'CLP' | 'MXN' | 'GBP';
   amount?: number;
 }
 
@@ -35,7 +35,7 @@ export interface ExchangeRateResponse {
  */
 export interface RateLockRequest {
   fromCurrency: 'USD';
-  toCurrency: 'EUR';
+  toCurrency: 'EUR' | 'CLP' | 'MXN' | 'GBP';
   amount: number;
   lockDurationMinutes?: number;
 }
@@ -66,7 +66,7 @@ export interface LockedRateResponse {
 export interface CalculateTransferRequest {
   sendAmount: number;
   sendCurrency: 'USD';
-  receiveCurrency: 'EUR';
+  receiveCurrency: 'EUR' | 'CLP' | 'MXN' | 'GBP';
   includeFeesInCalculation?: boolean;
 }
 
@@ -95,10 +95,11 @@ export interface TransferCalculationResponse {
     cardProcessingFee: number;
     netAmountUSD: number;
     exchangeRate: number;
-    grossAmountEUR: number;
+    grossAmountReceive: number;
     transferFee: number;
     payoutFee: number;
-    finalAmountEUR: number;
+    finalAmountReceive: number;
+    receiveAmount: number;
   };
 }
 
@@ -113,7 +114,13 @@ export class FXService extends CircleService {
   private readonly DEFAULT_LOCK_DURATION_MINUTES = 10;
   private readonly FALLBACK_RATES: Record<string, number> = {
     'USD-EUR': 0.85,
-    'EUR-USD': 1.18
+    'USD-CLP': 950.0,
+    'USD-MXN': 18.5,
+    'USD-GBP': 0.78,
+    'EUR-USD': 1.18,
+    'CLP-USD': 0.00105,
+    'MXN-USD': 0.054,
+    'GBP-USD': 1.28
   };
 
   /**
@@ -228,7 +235,7 @@ export class FXService extends CircleService {
 
       return {
         sendAmount: request.sendAmount,
-        receiveAmount: breakdown.finalAmountEUR,
+        receiveAmount: breakdown.finalAmountReceive,
         exchangeRate: rateResponse.rate,
         fees,
         rateId: rateResponse.rateId,
@@ -430,20 +437,21 @@ export class FXService extends CircleService {
     const sendAmountUSD = sendAmount;
     const cardProcessingFee = fees.cardProcessing;
     const netAmountUSD = sendAmountUSD - cardProcessingFee;
-    const grossAmountEUR = netAmountUSD * exchangeRate;
-    const transferFee = fees.transfer * exchangeRate; // Convert to EUR
+    const grossAmountReceive = netAmountUSD * exchangeRate;
+    const transferFee = fees.transfer * exchangeRate; // Convert to receive currency
     const payoutFee = fees.payout;
-    const finalAmountEUR = grossAmountEUR - transferFee - payoutFee;
+    const finalAmountReceive = grossAmountReceive - transferFee - payoutFee;
 
     return {
       sendAmountUSD: Math.round(sendAmountUSD * 100) / 100,
       cardProcessingFee: Math.round(cardProcessingFee * 100) / 100,
       netAmountUSD: Math.round(netAmountUSD * 100) / 100,
       exchangeRate: Math.round(exchangeRate * 10000) / 10000,
-      grossAmountEUR: Math.round(grossAmountEUR * 100) / 100,
+      grossAmountReceive: Math.round(grossAmountReceive * 100) / 100,
       transferFee: Math.round(transferFee * 100) / 100,
       payoutFee: Math.round(payoutFee * 100) / 100,
-      finalAmountEUR: Math.round(finalAmountEUR * 100) / 100
+      finalAmountReceive: Math.round(finalAmountReceive * 100) / 100,
+      receiveAmount: Math.round(finalAmountReceive * 100) / 100 // Add this for API compatibility
     };
   }
 

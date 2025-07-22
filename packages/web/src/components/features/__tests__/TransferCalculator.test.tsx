@@ -25,14 +25,20 @@ describe('TransferCalculator', () => {
     
     expect(screen.getByText('Transfer Calculator')).toBeInTheDocument()
     expect(screen.getByText('Calculate how much your recipient will receive')).toBeInTheDocument()
-    expect(screen.getByLabelText(/You send \(USD\)/)).toBeInTheDocument()
-    expect(screen.getByDisplayValue('100')).toBeInTheDocument()
+    expect(screen.getByText('You send')).toBeInTheDocument()
+    expect(screen.getByText('Recipient gets')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('100.00')).toBeInTheDocument()
+    // Check for currency selectors
+    expect(screen.getByText('🇺🇸')).toBeInTheDocument() // USD flag
+    expect(screen.getByText('🇪🇺')).toBeInTheDocument() // EUR flag
+    // Should show empty recipient amount initially
+    expect(screen.getByText('---')).toBeInTheDocument()
   })
 
   it('validates amount input correctly', async () => {
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     
     // Test invalid amount (too small)
     await userEvent.clear(amountInput)
@@ -54,7 +60,7 @@ describe('TransferCalculator', () => {
   it('formats number input correctly', async () => {
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     
     // Test that non-numeric characters are removed
     await userEvent.clear(amountInput)
@@ -79,6 +85,8 @@ describe('TransferCalculator', () => {
     const mockResponse = {
       sendAmount: 100,
       receiveAmount: 85.50,
+      sendCurrency: 'USD',
+      receiveCurrency: 'EUR',
       exchangeRate: 0.855,
       fees: 5.50,
       rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
@@ -92,7 +100,7 @@ describe('TransferCalculator', () => {
         },
         netAmountUSD: 94.50,
         exchangeRate: 0.855,
-        receiveAmountEUR: 85.50
+        receiveAmount: 85.50
       },
       estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       rateId: 'rate_123'
@@ -105,7 +113,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '200') // Use a different amount to avoid conflicts with default
 
@@ -128,7 +136,7 @@ describe('TransferCalculator', () => {
 
     // Check that results are displayed
     await waitFor(() => {
-      expect(screen.getByText('€85.50')).toBeInTheDocument()
+      expect(screen.getAllByText('€85.50')).toHaveLength(2) // One in recipient gets, one in breakdown
       expect(screen.getByText('1 USD = 0.8550 EUR')).toBeInTheDocument()
       expect(screen.getByText('$5.50')).toBeInTheDocument()
     })
@@ -160,7 +168,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '200')
 
@@ -175,7 +183,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -193,7 +201,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -207,6 +215,8 @@ describe('TransferCalculator', () => {
     const mockResponse = {
       sendAmount: 100,
       receiveAmount: 85.50,
+      sendCurrency: 'USD',
+      receiveCurrency: 'EUR',
       exchangeRate: 0.855,
       fees: 5.50,
       rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
@@ -220,7 +230,7 @@ describe('TransferCalculator', () => {
         },
         netAmountUSD: 94.50,
         exchangeRate: 0.855,
-        receiveAmountEUR: 85.50
+        receiveAmount: 85.50
       },
       estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       rateId: 'rate_123'
@@ -233,7 +243,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -249,6 +259,8 @@ describe('TransferCalculator', () => {
     const mockResponse = {
       sendAmount: 100,
       receiveAmount: 85.50,
+      sendCurrency: 'USD',
+      receiveCurrency: 'EUR',
       exchangeRate: 0.855,
       fees: 5.50,
       rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
@@ -262,7 +274,7 @@ describe('TransferCalculator', () => {
         },
         netAmountUSD: 94.50,
         exchangeRate: 0.855,
-        receiveAmountEUR: 85.50
+        receiveAmount: 85.50
       },
       estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       rateId: 'rate_123'
@@ -275,7 +287,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator onContinue={mockOnContinue} />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -299,6 +311,8 @@ describe('TransferCalculator', () => {
     const mockResponse = {
       sendAmount: 100,
       receiveAmount: 85.50,
+      sendCurrency: 'USD',
+      receiveCurrency: 'EUR',
       exchangeRate: 0.855,
       fees: 5.50,
       rateValidUntil: new Date(Date.now() + 1 * 60 * 1000).toISOString(), // Expires in 1 minute
@@ -312,7 +326,7 @@ describe('TransferCalculator', () => {
         },
         netAmountUSD: 94.50,
         exchangeRate: 0.855,
-        receiveAmountEUR: 85.50
+        receiveAmount: 85.50
       },
       estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       rateId: 'rate_123'
@@ -325,7 +339,7 @@ describe('TransferCalculator', () => {
 
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     await userEvent.clear(amountInput)
     await userEvent.type(amountInput, '100')
 
@@ -337,7 +351,7 @@ describe('TransferCalculator', () => {
   it('does not call API for empty or zero amounts', async () => {
     render(<TransferCalculator />)
     
-    const amountInput = screen.getByLabelText(/You send \(USD\)/)
+    const amountInput = screen.getByPlaceholderText('100.00')
     
     // Clear the input (empty) - this should not trigger API call
     await userEvent.clear(amountInput)
