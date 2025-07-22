@@ -1,4 +1,5 @@
 import { CircleWalletService, CreateWalletRequest, CreateTransferRequest } from '../circle-wallet.service';
+import { CircleError, CircleErrorCode } from '../../utils/circle-error-handler';
 
 // Mock the Circle SDK
 jest.mock('@circle-fin/circle-sdk', () => ({
@@ -78,6 +79,48 @@ describe('CircleWalletService', () => {
         userId: 'user-123'
       });
     });
+
+    it('should retry on network errors', async () => {
+      const mockCreateWallet = jest.spyOn(walletService as any, 'mockCreateWallet')
+        .mockRejectedValueOnce({ code: 'ETIMEDOUT', message: 'Request timeout' })
+        .mockResolvedValueOnce({ 
+          data: { 
+            walletId: 'wallet-123', 
+            entityId: 'entity-123',
+            state: 'LIVE',
+            createDate: new Date().toISOString(),
+            updateDate: new Date().toISOString()
+          } 
+        });
+
+      const result = await walletService.createWallet(mockWalletRequest);
+      
+      expect(result).toBeDefined();
+      expect(result.walletId).toBe('wallet-123');
+      expect(mockCreateWallet).toHaveBeenCalledTimes(2);
+      
+      mockCreateWallet.mockRestore();
+    });
+
+    it('should handle wallet creation failures', async () => {
+      const mockCreateWallet = jest.spyOn(walletService as any, 'mockCreateWallet')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'wallet_creation_failed', 
+              message: 'Failed to create wallet' 
+            } 
+          } 
+        });
+
+      await expect(walletService.createWallet(mockWalletRequest))
+        .rejects.toThrow(CircleError);
+      
+      // Since this is an unknown error, it should retry up to 3 times
+      expect(mockCreateWallet).toHaveBeenCalledTimes(3);
+      
+      mockCreateWallet.mockRestore();
+    }, 10000); // 10 second timeout for retry test
   });
 
   describe('getWallet', () => {
@@ -113,6 +156,63 @@ describe('CircleWalletService', () => {
       });
       expect(result.id).toMatch(/^transfer-/);
       expect(result.createDate).toBeDefined();
+    });
+
+    it('should validate transfer request and throw CircleError', async () => {
+      const invalidRequest = { ...mockTransferRequest, sourceWalletId: '' };
+
+      await expect(walletService.createTransfer(invalidRequest))
+        .rejects.toThrow(CircleError);
+      
+      try {
+        await walletService.createTransfer(invalidRequest);
+      } catch (error) {
+        expect(error).toBeInstanceOf(CircleError);
+        const circleError = error as CircleError;
+        expect(circleError.code).toBe(CircleErrorCode.VALIDATION_ERROR);
+        expect(circleError.retryable).toBe(false);
+      }
+    });
+
+    it('should handle insufficient wallet balance error', async () => {
+      const mockCreateTransfer = jest.spyOn(walletService as any, 'mockCreateTransfer')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'insufficient_balance', 
+              message: 'Insufficient balance in wallet' 
+            } 
+          } 
+        });
+
+      await expect(walletService.createTransfer(mockTransferRequest))
+        .rejects.toThrow(CircleError);
+      
+      // The error is correctly handled as a wallet error and should not be retried
+      expect(mockCreateTransfer).toHaveBeenCalledTimes(1);
+      
+      mockCreateTransfer.mockRestore();
+    });
+
+    it('should handle wallet not found error', async () => {
+      const mockCreateTransfer = jest.spyOn(walletService as any, 'mockCreateTransfer')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'wallet_not_found', 
+              message: 'Source wallet not found' 
+            } 
+          } 
+        });
+
+      await expect(walletService.createTransfer(mockTransferRequest))
+        .rejects.toThrow(CircleError);
+      
+      // Since wallet_not_found is handled as a wallet error, it should be recognized correctly
+      // But if it's not being mapped correctly, it will be treated as unknown and retried
+      expect(mockCreateTransfer).toHaveBeenCalledTimes(1);
+      
+      mockCreateTransfer.mockRestore();
     });
   });
 

@@ -1,4 +1,5 @@
 import { CirclePayoutService, CreatePayoutRequest, BankAccount } from '../circle-payout.service';
+import { CircleError, CircleErrorCode } from '../../utils/circle-error-handler';
 
 // Mock the Circle SDK
 jest.mock('@circle-fin/circle-sdk', () => ({
@@ -74,14 +75,120 @@ describe('CirclePayoutService', () => {
       expect(result.updateDate).toBeDefined();
     });
 
-    it('should validate bank account before processing', async () => {
+    it('should validate bank account before processing and throw CircleError', async () => {
       const invalidRequest = {
         ...mockPayoutRequest,
         bankAccount: { ...mockBankAccount, iban: 'INVALID' }
       };
 
       await expect(payoutService.createPayout(invalidRequest))
-        .rejects.toThrow('Invalid IBAN format');
+        .rejects.toThrow(CircleError);
+      
+      try {
+        await payoutService.createPayout(invalidRequest);
+      } catch (error) {
+        expect(error).toBeInstanceOf(CircleError);
+        const circleError = error as CircleError;
+        expect(circleError.code).toBe(CircleErrorCode.VALIDATION_ERROR);
+        expect(circleError.retryable).toBe(false);
+      }
+    });
+
+    it('should retry on network errors', async () => {
+      const mockCreatePayout = jest.spyOn(payoutService as any, 'mockCreatePayout')
+        .mockRejectedValueOnce({ code: 'ENOTFOUND', message: 'DNS lookup failed' })
+        .mockResolvedValueOnce({ 
+          data: { 
+            id: 'payout-123', 
+            status: 'pending',
+            sourceWalletId: 'wallet-123',
+            amount: { amount: '100', currency: 'EUR' },
+            createDate: new Date().toISOString(),
+            updateDate: new Date().toISOString()
+          } 
+        });
+
+      const result = await payoutService.createPayout(mockPayoutRequest);
+      
+      expect(result).toBeDefined();
+      expect(result.id).toBe('payout-123');
+      expect(mockCreatePayout).toHaveBeenCalledTimes(2);
+      
+      mockCreatePayout.mockRestore();
+    });
+
+    it('should handle invalid bank details error', async () => {
+      const mockCreatePayout = jest.spyOn(payoutService as any, 'mockCreatePayout')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'invalid_iban', 
+              message: 'IBAN format is invalid' 
+            } 
+          } 
+        });
+
+      await expect(payoutService.createPayout(mockPayoutRequest))
+        .rejects.toThrow(CircleError);
+      
+      try {
+        await payoutService.createPayout(mockPayoutRequest);
+      } catch (error) {
+        expect(error).toBeInstanceOf(CircleError);
+        const circleError = error as CircleError;
+        expect(circleError.code).toBe(CircleErrorCode.INVALID_BANK_DETAILS);
+        expect(circleError.retryable).toBe(false);
+        expect(circleError.userMessage).toContain('bank account details are invalid');
+      }
+      
+      mockCreatePayout.mockRestore();
+    });
+
+    it('should handle bank rejection error', async () => {
+      const mockCreatePayout = jest.spyOn(payoutService as any, 'mockCreatePayout')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'bank_rejected', 
+              message: 'Bank rejected the transfer' 
+            } 
+          } 
+        });
+
+      await expect(payoutService.createPayout(mockPayoutRequest))
+        .rejects.toThrow(CircleError);
+      
+      // Since bank rejection errors are retryable, it should retry up to 3 times
+      expect(mockCreatePayout).toHaveBeenCalledTimes(3);
+      
+      mockCreatePayout.mockRestore();
+    }, 10000); // 10 second timeout for retry test
+
+    it('should handle compliance hold error', async () => {
+      const mockCreatePayout = jest.spyOn(payoutService as any, 'mockCreatePayout')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'compliance_hold', 
+              message: 'Transfer under compliance review' 
+            } 
+          } 
+        });
+
+      await expect(payoutService.createPayout(mockPayoutRequest))
+        .rejects.toThrow(CircleError);
+      
+      try {
+        await payoutService.createPayout(mockPayoutRequest);
+      } catch (error) {
+        expect(error).toBeInstanceOf(CircleError);
+        const circleError = error as CircleError;
+        expect(circleError.code).toBe(CircleErrorCode.COMPLIANCE_HOLD);
+        expect(circleError.retryable).toBe(false);
+        expect(circleError.userMessage).toContain('under review for compliance');
+      }
+      
+      mockCreatePayout.mockRestore();
     });
   });
 

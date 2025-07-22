@@ -1,4 +1,5 @@
 import { CirclePaymentService, CardDetails, CreatePaymentRequest } from '../circle-payment.service';
+import { CircleError, CircleErrorCode } from '../../utils/circle-error-handler';
 
 // Mock the Circle SDK
 jest.mock('@circle-fin/circle-sdk', () => ({
@@ -75,15 +76,113 @@ describe('CirclePaymentService', () => {
       expect(result.updateDate).toBeDefined();
     });
 
-    it('should validate card details before processing', async () => {
+    it('should validate card details before processing and throw CircleError', async () => {
       const invalidRequest = {
         ...mockPaymentRequest,
         cardDetails: { ...mockCardDetails, number: '123' }
       };
 
       await expect(paymentService.createPayment(invalidRequest))
-        .rejects.toThrow('Invalid card number');
+        .rejects.toThrow(CircleError);
+      
+      try {
+        await paymentService.createPayment(invalidRequest);
+      } catch (error) {
+        expect(error).toBeInstanceOf(CircleError);
+        const circleError = error as CircleError;
+        expect(circleError.code).toBe(CircleErrorCode.VALIDATION_ERROR);
+        expect(circleError.retryable).toBe(false);
+      }
     });
+
+    it('should retry on network errors', async () => {
+      // Mock the service to simulate network error on first call, success on second
+      const mockCreatePayment = jest.spyOn(paymentService as any, 'mockCreatePayment')
+        .mockRejectedValueOnce({ code: 'ECONNREFUSED', message: 'Connection refused' })
+        .mockResolvedValueOnce({ 
+          data: { 
+            id: 'payment-123', 
+            status: 'pending', 
+            amount: { amount: '100', currency: 'USD' },
+            createDate: new Date().toISOString(),
+            updateDate: new Date().toISOString()
+          } 
+        });
+
+      const result = await paymentService.createPayment(mockPaymentRequest);
+      
+      expect(result).toBeDefined();
+      expect(result.id).toBe('payment-123');
+      expect(mockCreatePayment).toHaveBeenCalledTimes(2);
+      
+      mockCreatePayment.mockRestore();
+    });
+
+    it('should not retry on card declined errors', async () => {
+      const mockCreatePayment = jest.spyOn(paymentService as any, 'mockCreatePayment')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'payment_declined', 
+              message: 'Card declined by issuer' 
+            } 
+          } 
+        });
+
+      await expect(paymentService.createPayment(mockPaymentRequest))
+        .rejects.toThrow(CircleError);
+      
+      // The mock should only be called once since card declined errors are not retryable
+      expect(mockCreatePayment).toHaveBeenCalledTimes(1);
+      mockCreatePayment.mockRestore();
+    });
+
+    it('should handle insufficient funds error', async () => {
+      const mockCreatePayment = jest.spyOn(paymentService as any, 'mockCreatePayment')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'insufficient_funds', 
+              message: 'Insufficient funds on card' 
+            } 
+          } 
+        });
+
+      await expect(paymentService.createPayment(mockPaymentRequest))
+        .rejects.toThrow(CircleError);
+      
+      try {
+        await paymentService.createPayment(mockPaymentRequest);
+      } catch (error) {
+        expect(error).toBeInstanceOf(CircleError);
+        const circleError = error as CircleError;
+        expect(circleError.code).toBe(CircleErrorCode.INSUFFICIENT_FUNDS);
+        expect(circleError.retryable).toBe(false);
+        expect(circleError.userMessage).toContain('insufficient funds');
+      }
+      
+      mockCreatePayment.mockRestore();
+    });
+
+    it('should handle 3D Secure authentication failures', async () => {
+      const mockCreatePayment = jest.spyOn(paymentService as any, 'mockCreatePayment')
+        .mockRejectedValue({ 
+          response: { 
+            data: { 
+              code: 'three_d_secure_failed', 
+              message: '3D Secure authentication failed' 
+            } 
+          } 
+        });
+
+      await expect(paymentService.createPayment(mockPaymentRequest))
+        .rejects.toThrow(CircleError);
+      
+      // Since 3D Secure failures are retryable, it should retry up to 3 times
+      expect(mockCreatePayment).toHaveBeenCalledTimes(3);
+      
+      mockCreatePayment.mockRestore();
+    }, 10000); // 10 second timeout for retry test
   });
 
   describe('getPaymentStatus', () => {

@@ -1,5 +1,6 @@
 import { Circle, CircleEnvironments } from '@circle-fin/circle-sdk';
 import { circleConfig } from '../config/circle.config';
+import { CircleErrorHandler } from '../utils/circle-error-handler';
 
 /**
  * Base Circle service class that provides configured Circle API client
@@ -71,15 +72,9 @@ export class CircleService {
   }
 
   /**
-   * Handle Circle API errors with consistent error formatting
+   * Handle Circle API errors with comprehensive error handling
    */
   protected handleCircleError(error: any, operation: string): never {
-    console.error(`Circle API error during ${operation}:`, error);
-    
-    if (error.response?.data) {
-      throw new Error(`Circle API ${operation} failed: ${error.response.data.message || error.message}`);
-    }
-    
-    throw new Error(`Circle API ${operation} failed: ${error.message}`);
+    return CircleErrorHandler.handleError(error, operation);
   }
 }

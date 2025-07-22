@@ -1,4 +1,5 @@
 import { CircleService } from './circle.service';
+import { CircleRetryHandler } from '../utils/circle-error-handler';
 
 /**
  * Interface for bank account details
@@ -78,54 +79,62 @@ export class CirclePayoutService extends CircleService {
    * Create a payout from wallet to EUR bank account
    */
   async createPayout(request: CreatePayoutRequest): Promise<PayoutResponse> {
-    try {
-      this.validatePayoutRequest(request);
-      
-      const idempotencyKey = this.generateIdempotencyKey('payout');
-      
-      const payoutRequest = {
-        idempotencyKey,
-        source: {
-          type: 'wallet' as const,
-          id: request.sourceWalletId
-        },
-        destination: {
-          type: 'wire' as const,
-          beneficiary: {
-            name: request.bankAccount.accountHolderName,
-            address1: request.bankAccount.address?.line1 || request.bankAccount.city || '',
-            address2: request.bankAccount.address?.line2,
-            city: request.bankAccount.address?.city || request.bankAccount.city || '',
-            postalCode: request.bankAccount.address?.postalCode || '',
-            country: request.bankAccount.country
-          },
-          beneficiaryBank: {
-            name: request.bankAccount.bankName,
-            swiftCode: request.bankAccount.bic,
-            routingNumber: request.bankAccount.iban,
-            accountNumber: request.bankAccount.iban,
-            country: request.bankAccount.country
+    return CircleRetryHandler.withRetry(
+      async () => {
+        try {
+          this.validatePayoutRequest(request);
+          
+          const idempotencyKey = this.generateIdempotencyKey('payout');
+          
+          const payoutRequest = {
+            idempotencyKey,
+            source: {
+              type: 'wallet' as const,
+              id: request.sourceWalletId
+            },
+            destination: {
+              type: 'wire' as const,
+              beneficiary: {
+                name: request.bankAccount.accountHolderName,
+                address1: request.bankAccount.address?.line1 || request.bankAccount.city || '',
+                address2: request.bankAccount.address?.line2,
+                city: request.bankAccount.address?.city || request.bankAccount.city || '',
+                postalCode: request.bankAccount.address?.postalCode || '',
+                country: request.bankAccount.country
+              },
+              beneficiaryBank: {
+                name: request.bankAccount.bankName,
+                swiftCode: request.bankAccount.bic,
+                routingNumber: request.bankAccount.iban,
+                accountNumber: request.bankAccount.iban,
+                country: request.bankAccount.country
+              }
+            },
+            amount: {
+              amount: request.amount,
+              currency: request.currency
+            },
+            description: request.description || 'International transfer payout',
+            metadata: request.metadata || {}
+          };
+
+          // Mock API call - in real implementation this would call Circle API
+          const response = await this.mockCreatePayout(payoutRequest);
+          
+          if (!response.data) {
+            throw new Error('No payout data received from Circle API');
           }
-        },
-        amount: {
-          amount: request.amount,
-          currency: request.currency
-        },
-        description: request.description || 'International transfer payout',
-        metadata: request.metadata || {}
-      };
 
-      // Mock API call - in real implementation this would call Circle API
-      const response = await this.mockCreatePayout(payoutRequest);
-      
-      if (!response.data) {
-        throw new Error('No payout data received from Circle API');
-      }
-
-      return this.formatPayoutResponse(response.data);
-    } catch (error) {
-      this.handleCircleError(error, 'payout creation');
-    }
+          return this.formatPayoutResponse(response.data);
+        } catch (error) {
+          this.handleCircleError(error, 'payout creation');
+        }
+      },
+      'payout creation',
+      3,
+      2000, // 2s base delay for payouts
+      15000 // 15s max delay
+    );
   }
 
   /**

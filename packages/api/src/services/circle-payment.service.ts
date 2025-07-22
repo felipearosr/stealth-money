@@ -1,4 +1,5 @@
 import { CircleService } from './circle.service';
+import { CircleRetryHandler } from '../utils/circle-error-handler';
 
 /**
  * Interface for card details used in payment processing
@@ -64,44 +65,52 @@ export class CirclePaymentService extends CircleService {
    * Converts USD from card to USDC in merchant wallet
    */
   async createPayment(request: CreatePaymentRequest): Promise<PaymentResponse> {
-    try {
-      this.validateCardDetails(request.cardDetails);
-      
-      const idempotencyKey = this.generateIdempotencyKey('payment');
-      
-      // Simplified API call structure for testing
-      const paymentRequest = {
-        idempotencyKey,
-        amount: {
-          amount: request.amount.toString(),
-          currency: request.currency
-        },
-        source: {
-          type: 'card' as const,
-          card: {
-            number: request.cardDetails.number,
-            cvv: request.cardDetails.cvv,
-            expMonth: parseInt(request.cardDetails.expiry.month),
-            expYear: parseInt(request.cardDetails.expiry.year)
-          },
-          billingDetails: request.cardDetails.billingDetails
-        },
-        verification: 'cvv' as const,
-        description: request.description || 'International transfer payment',
-        metadata: request.metadata || {}
-      };
+    return CircleRetryHandler.withRetry(
+      async () => {
+        try {
+          this.validateCardDetails(request.cardDetails);
+          
+          const idempotencyKey = this.generateIdempotencyKey('payment');
+          
+          // Simplified API call structure for testing
+          const paymentRequest = {
+            idempotencyKey,
+            amount: {
+              amount: request.amount.toString(),
+              currency: request.currency
+            },
+            source: {
+              type: 'card' as const,
+              card: {
+                number: request.cardDetails.number,
+                cvv: request.cardDetails.cvv,
+                expMonth: parseInt(request.cardDetails.expiry.month),
+                expYear: parseInt(request.cardDetails.expiry.year)
+              },
+              billingDetails: request.cardDetails.billingDetails
+            },
+            verification: 'cvv' as const,
+            description: request.description || 'International transfer payment',
+            metadata: request.metadata || {}
+          };
 
-      // Mock API call - in real implementation this would call Circle API
-      const response = await this.mockCreatePayment(paymentRequest);
-      
-      if (!response.data) {
-        throw new Error('No payment data received from Circle API');
-      }
+          // Mock API call - in real implementation this would call Circle API
+          const response = await this.mockCreatePayment(paymentRequest);
+          
+          if (!response.data) {
+            throw new Error('No payment data received from Circle API');
+          }
 
-      return this.formatPaymentResponse(response.data);
-    } catch (error) {
-      this.handleCircleError(error, 'payment creation');
-    }
+          return this.formatPaymentResponse(response.data);
+        } catch (error) {
+          this.handleCircleError(error, 'payment creation');
+        }
+      },
+      'payment creation',
+      3, // max retries
+      1000, // base delay 1s
+      10000 // max delay 10s
+    );
   }
 
   /**

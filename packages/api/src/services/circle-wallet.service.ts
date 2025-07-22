@@ -1,4 +1,5 @@
 import { CircleService } from './circle.service';
+import { CircleRetryHandler } from '../utils/circle-error-handler';
 
 /**
  * Interface for wallet creation request
@@ -86,30 +87,38 @@ export class CircleWalletService extends CircleService {
    * Create a new programmable wallet
    */
   async createWallet(request: CreateWalletRequest): Promise<WalletResponse> {
-    try {
-      const idempotencyKey = this.generateIdempotencyKey('wallet');
-      
-      const walletRequest = {
-        idempotencyKey,
-        entitySecretCiphertext: await this.generateEntitySecret(),
-        description: request.description || `Wallet for user ${request.userId}`,
-        metadata: {
-          ...request.metadata,
-          userId: request.userId
+    return CircleRetryHandler.withRetry(
+      async () => {
+        try {
+          const idempotencyKey = this.generateIdempotencyKey('wallet');
+          
+          const walletRequest = {
+            idempotencyKey,
+            entitySecretCiphertext: await this.generateEntitySecret(),
+            description: request.description || `Wallet for user ${request.userId}`,
+            metadata: {
+              ...request.metadata,
+              userId: request.userId
+            }
+          };
+
+          // Mock API call - in real implementation this would call Circle API
+          const response = await this.mockCreateWallet(walletRequest);
+          
+          if (!response.data) {
+            throw new Error('No wallet data received from Circle API');
+          }
+
+          return this.formatWalletResponse(response.data, request.userId);
+        } catch (error) {
+          this.handleCircleError(error, 'wallet creation');
         }
-      };
-
-      // Mock API call - in real implementation this would call Circle API
-      const response = await this.mockCreateWallet(walletRequest);
-      
-      if (!response.data) {
-        throw new Error('No wallet data received from Circle API');
-      }
-
-      return this.formatWalletResponse(response.data, request.userId);
-    } catch (error) {
-      this.handleCircleError(error, 'wallet creation');
-    }
+      },
+      'wallet creation',
+      3,
+      1000,
+      10000
+    );
   }
 
   /**
