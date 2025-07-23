@@ -61,15 +61,27 @@ interface TransferCalculatorProps {
   onContinue?: (data: {
     sendAmount: number;
     receiveAmount: number;
+    sendCurrency: string;
+    receiveCurrency: string;
     exchangeRate: number;
     fees: number;
     rateId: string;
+    rateValidUntil: string;
     calculatorMode: CalculatorMode;
+    breakdown: any;
+    estimatedArrival: string;
   }) => void;
   isNavigating?: boolean;
+  showTitle?: boolean;
+  publicMode?: boolean;
 }
 
-export function TransferCalculator({ onContinue, isNavigating = false }: TransferCalculatorProps) {
+export function TransferCalculator({ 
+  onContinue, 
+  isNavigating = false, 
+  showTitle = true, 
+  publicMode = false 
+}: TransferCalculatorProps) {
   // Component state
   const [calculatorMode, setCalculatorMode] = useState<CalculatorMode>('send');
   const [inputAmount, setInputAmount] = useState<string>('');
@@ -239,10 +251,15 @@ export function TransferCalculator({ onContinue, isNavigating = false }: Transfe
       onContinue({
         sendAmount: calculation.sendAmount,
         receiveAmount: calculation.receiveAmount,
+        sendCurrency: sendCurrency,
+        receiveCurrency: receiveCurrency,
         exchangeRate: calculation.exchangeRate,
         fees: calculation.fees,
         rateId: calculation.rateId,
+        rateValidUntil: calculation.rateValidUntil,
         calculatorMode: calculatorMode,
+        breakdown: calculation.breakdown,
+        estimatedArrival: calculation.estimatedArrival
       });
     }
   };
@@ -253,15 +270,17 @@ export function TransferCalculator({ onContinue, isNavigating = false }: Transfe
 
   return (
     <Card className="w-full max-w-lg mx-auto">
-      <CardHeader className="text-center">
-        <CardTitle className="flex items-center justify-center gap-2">
-          <Calculator className="h-5 w-5" />
-          Transfer Calculator
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Calculate how much your recipient will receive
-        </p>
-      </CardHeader>
+      {showTitle && (
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2">
+            <Calculator className="h-5 w-5" />
+            Transfer Calculator
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Calculate how much your recipient will receive
+          </p>
+        </CardHeader>
+      )}
       <CardContent className="space-y-6">
         {/* Calculator Mode Switcher */}
         <div className="flex items-center justify-center">

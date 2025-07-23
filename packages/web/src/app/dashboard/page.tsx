@@ -148,7 +148,7 @@ export default function DashboardPage() {
                     <h3 className="text-lg font-semibold mb-2">Send to User</h3>
                     <p className="text-gray-600">Send money directly to another registered user.</p>
                   </div>
-                  <Link href="/transfer/user">
+                  <Link href="/transfer/process">
                     <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                       <Plus className="h-4 w-4 mr-2" />
                       Send to User
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                     <h3 className="text-lg font-semibold mb-2">Send to Bank</h3>
                     <p className="text-gray-600">Send money to any bank account worldwide.</p>
                   </div>
-                  <Link href="/">
+                  <Link href="/transfer/process">
                     <Button variant="outline" className="w-full">
                       <Plus className="h-4 w-4 mr-2" />
                       Send to Bank

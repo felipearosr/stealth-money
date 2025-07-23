@@ -1,6 +1,6 @@
 "use client";
 
-import { TransferFlowContainer } from "@/components/features/TransferFlowContainer";
+import { PublicTransferCalculator } from "@/components/features/PublicTransferCalculator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navigation } from "@/components/ui/navigation";
@@ -69,7 +69,19 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                onClick={() => {
+                  // Scroll to calculator or navigate directly to transfer process
+                  const calculator = document.querySelector('#calculator');
+                  if (calculator) {
+                    calculator.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    window.location.href = '/transfer/process';
+                  }
+                }}
+              >
                 Start Transfer
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -92,12 +104,12 @@ export default function Home() {
           </div>
 
           {/* Right Content - Transfer Calculator */}
-          <div className="lg:pl-8">
+          <div className="lg:pl-8" id="calculator">
             <div className="relative">
               {/* Background decoration */}
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl"></div>
               <div className="relative">
-                <TransferFlowContainer />
+                <PublicTransferCalculator />
               </div>
             </div>
           </div>
