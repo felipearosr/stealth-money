@@ -24,7 +24,7 @@ const recipientInfoSchema = z.object({
     bic: z.string().min(8, 'BIC must be at least 8 characters').max(11, 'BIC cannot exceed 11 characters'),
     bankName: z.string().min(2, 'Bank name must be at least 2 characters').max(100, 'Bank name cannot exceed 100 characters'),
     accountHolderName: z.string().min(2, 'Account holder name must be at least 2 characters').max(100, 'Account holder name cannot exceed 100 characters'),
-    country: z.literal('DE', { errorMap: () => ({ message: 'Only German bank accounts are supported' }) })
+    country: z.literal('DE').refine(() => true, { message: 'Only German bank accounts are supported' })
   })
 });
 

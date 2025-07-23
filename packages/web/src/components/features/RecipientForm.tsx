@@ -37,9 +37,20 @@ interface RecipientFormProps {
     recipientAmount: number;
   };
   onBack: () => void;
+  onContinue?: (recipientData: {
+    name: string;
+    email: string;
+    bankAccount: {
+      iban: string;
+      bic: string;
+      bankName: string;
+      accountHolderName: string;
+      country: 'DE';
+    };
+  }) => void;
 }
 
-export function RecipientForm({ transferData, onBack }: RecipientFormProps) {
+export function RecipientForm({ transferData, onBack, onContinue }: RecipientFormProps) {
   const router = useRouter();
   
   // Form state
@@ -68,7 +79,50 @@ export function RecipientForm({ transferData, onBack }: RecipientFormProps) {
     setValidationErrors({});
     setError(null);
 
-    // Prepare form data
+    // For now, we'll simplify to only support bank account transfers to match the design
+    // This aligns with the current PaymentForm which expects IBAN/BIC format
+    if (payoutMethod !== 'bank_account') {
+      setError('Currently only bank account transfers are supported. Please select bank account.');
+      return;
+    }
+
+    // Validate required fields for bank account
+    if (!recipientName || !recipientEmail || !bankName || !accountNumber || !routingNumber) {
+      setError('Please fill in all required fields for bank account transfer.');
+      return;
+    }
+
+    // If onContinue callback is provided, use the new flow
+    if (onContinue) {
+      setIsLoading(true);
+      
+      try {
+        // For the new flow, we need to format the data to match the expected RecipientInfo interface
+        // Convert the generic bank account fields to IBAN/BIC format
+        // This is a temporary mapping until we support multiple bank account types
+        const recipientData = {
+          name: recipientName,
+          email: recipientEmail,
+          bankAccount: {
+            iban: accountNumber, // Temporary mapping
+            bic: routingNumber, // Temporary mapping
+            bankName: bankName,
+            accountHolderName: recipientName,
+            country: 'DE' as const,
+          }
+        };
+        
+        onContinue(recipientData);
+      } catch (err) {
+        setError('Failed to process recipient information. Please try again.');
+        console.error('Recipient processing error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // Legacy flow - keep for backward compatibility
     const formData = {
       recipientName,
       recipientEmail,
