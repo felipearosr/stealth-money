@@ -35,7 +35,8 @@ describe('TransferService', () => {
     bic: 'COBADEFFXXX',
     bankName: 'Commerzbank',
     accountHolderName: 'Jane Smith',
-    country: 'DE'
+    country: 'DE',
+    currency: 'EUR'
   };
 
   const mockTransferRequest: CreateTransferRequest = {
@@ -201,7 +202,15 @@ describe('TransferService', () => {
         amount: '85',
         currency: 'EUR',
         sourceWalletId: expect.any(String),
-        bankAccount: mockBankAccount,
+        bankAccount: {
+          iban: mockBankAccount.iban,
+          bic: mockBankAccount.bic,
+          bankName: mockBankAccount.bankName,
+          accountHolderName: mockBankAccount.accountHolderName,
+          country: mockBankAccount.country,
+          city: undefined,
+          address: undefined
+        },
         description: expect.any(String),
         metadata: expect.objectContaining({ transferId: expect.any(String) })
       });

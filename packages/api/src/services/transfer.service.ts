@@ -19,13 +19,56 @@ export enum TransferStatus {
  */
 export interface CreateTransferRequest {
   sendAmount: number;
-  sendCurrency: 'USD';
-  receiveCurrency: 'EUR';
+  sendCurrency: string;
+  receiveCurrency: string;
   cardDetails: CardDetails;
   recipientInfo: RecipientInfo;
   userId?: string;
   exchangeRate?: number;
   metadata?: Record<string, any>;
+}
+
+/**
+ * Enhanced bank account interface supporting multiple account types
+ */
+export interface EnhancedBankAccount {
+  // European bank account (IBAN/BIC)
+  iban?: string;
+  bic?: string;
+  // UK bank account
+  sortCode?: string;
+  // Swiss bank account
+  // Canadian bank account
+  transitNumber?: string;
+  institutionNumber?: string;
+  // Australian bank account
+  bsb?: string;
+  // Japanese bank account
+  bankCode?: string;
+  branchCode?: string;
+  accountType?: 'ordinary' | 'current' | 'checking' | 'savings';
+  // Mexican bank account (CLABE)
+  clabe?: string;
+  // Chilean bank account
+  rut?: string;
+  // Brazilian bank account
+  agencyCode?: string;
+  // Generic fields
+  accountNumber?: string;
+  routingNumber?: string;
+  swiftCode?: string;
+  bankName: string;
+  accountHolderName: string;
+  country: string;
+  currency: string;
+  city?: string;
+  address?: {
+    line1: string;
+    line2?: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
 }
 
 /**
@@ -35,7 +78,7 @@ export interface RecipientInfo {
   name: string;
   email: string;
   phone?: string;
-  bankAccount: BankAccount;
+  bankAccount: EnhancedBankAccount;
 }
 
 /**
@@ -335,11 +378,22 @@ export class TransferService {
         throw new Error('Recipient wallet ID not found');
       }
 
+      // Convert EnhancedBankAccount to BankAccount for Circle API
+      const bankAccount: BankAccount = {
+        iban: transfer.recipientInfo.bankAccount.iban || '',
+        bic: transfer.recipientInfo.bankAccount.bic || '',
+        bankName: transfer.recipientInfo.bankAccount.bankName,
+        accountHolderName: transfer.recipientInfo.bankAccount.accountHolderName,
+        country: transfer.recipientInfo.bankAccount.country,
+        city: transfer.recipientInfo.bankAccount.city,
+        address: transfer.recipientInfo.bankAccount.address
+      };
+
       const payout = await this.payoutService.createPayout({
         amount: transfer.receiveAmount.toString(),
         currency: 'EUR',
         sourceWalletId: transfer.recipientWalletId,
-        bankAccount: transfer.recipientInfo.bankAccount,
+        bankAccount,
         description: `Payout for transfer ${transfer.id}`,
         metadata: { transferId: transfer.id }
       });

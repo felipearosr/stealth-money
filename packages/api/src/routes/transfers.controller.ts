@@ -269,12 +269,17 @@ router.get('/transfers/:id/status', generalRateLimit, async (req: Request, res: 
     }
 });
 
-// Transfer creation endpoint - Task 4.2
+// Transfer creation endpoint - Enhanced for multi-currency support
 router.post('/transfers/create', transferCreationRateLimit, async (req: Request, res: Response) => {
     try {
-        // Validate request body
+        // Import currency configuration service
+        const { CurrencyConfigService } = await import('../services/currency-config.service');
+
+        // Enhanced validation schema for multi-currency support
         const createTransferSchema = z.object({
-            sendAmount: z.number().min(0.01).max(50000),
+            sendAmount: z.number().min(0.01),
+            sendCurrency: z.string().length(3).regex(/^[A-Z]{3}$/).default('USD'),
+            receiveCurrency: z.string().length(3).regex(/^[A-Z]{3}$/),
             cardDetails: z.object({
                 number: z.string().min(13).max(19),
                 expiryMonth: z.number().min(1).max(12),
@@ -284,19 +289,151 @@ router.post('/transfers/create', transferCreationRateLimit, async (req: Request,
             recipientInfo: z.object({
                 name: z.string().min(2).max(100),
                 email: z.string().email(),
-                bankAccount: z.object({
-                    iban: z.string().min(15).max(34),
-                    bic: z.string().min(8).max(11),
-                    bankName: z.string().min(2).max(100),
-                    accountHolderName: z.string().min(2).max(100),
-                    country: z.literal('DE')
-                })
+                bankAccount: z.union([
+                    // European bank account (IBAN/BIC) - supports all EUR countries
+                    z.object({
+                        iban: z.string().min(15).max(34),
+                        bic: z.string().min(8).max(11),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.enum(['DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'PT', 'FI', 'IE', 'LU', 'SI', 'SK', 'EE', 'LV', 'LT', 'MT', 'CY']),
+                        currency: z.literal('EUR')
+                    }),
+                    // UK bank account
+                    z.object({
+                        sortCode: z.string().length(6),
+                        accountNumber: z.string().min(8).max(8),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('GB'),
+                        currency: z.literal('GBP')
+                    }),
+                    // Swiss bank account
+                    z.object({
+                        iban: z.string().min(21).max(21), // Swiss IBAN is always 21 characters
+                        bic: z.string().min(8).max(11),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('CH'),
+                        currency: z.literal('CHF')
+                    }),
+                    // Canadian bank account
+                    z.object({
+                        transitNumber: z.string().length(5),
+                        institutionNumber: z.string().length(3),
+                        accountNumber: z.string().min(7).max(12),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('CA'),
+                        currency: z.literal('CAD')
+                    }),
+                    // Australian bank account
+                    z.object({
+                        bsb: z.string().length(6),
+                        accountNumber: z.string().min(6).max(10),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('AU'),
+                        currency: z.literal('AUD')
+                    }),
+                    // Japanese bank account
+                    z.object({
+                        bankCode: z.string().length(4),
+                        branchCode: z.string().length(3),
+                        accountNumber: z.string().min(7).max(8),
+                        accountType: z.enum(['ordinary', 'current']),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('JP'),
+                        currency: z.literal('JPY')
+                    }),
+                    // Mexican bank account (CLABE)
+                    z.object({
+                        clabe: z.string().length(18),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('MX'),
+                        currency: z.literal('MXN')
+                    }),
+                    // Chilean bank account
+                    z.object({
+                        rut: z.string().min(8).max(12),
+                        bankCode: z.string().min(3).max(4),
+                        accountNumber: z.string().min(8).max(20),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('CL'),
+                        currency: z.literal('CLP')
+                    }),
+                    // Brazilian bank account
+                    z.object({
+                        bankCode: z.string().length(3),
+                        agencyCode: z.string().min(4).max(5),
+                        accountNumber: z.string().min(8).max(13),
+                        accountType: z.enum(['checking', 'savings']),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.literal('BR'),
+                        currency: z.literal('BRL')
+                    }),
+                    // Generic bank account for other currencies
+                    z.object({
+                        accountNumber: z.string().min(8).max(34),
+                        routingNumber: z.string().min(8).max(11).optional(),
+                        swiftCode: z.string().min(8).max(11).optional(),
+                        bankName: z.string().min(2).max(100),
+                        accountHolderName: z.string().min(2).max(100),
+                        country: z.string().length(2),
+                        currency: z.enum(['SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'ARS', 'COP', 'PEN', 'CNY', 'INR', 'KRW', 'SGD', 'THB', 'MYR', 'IDR', 'PHP', 'VND', 'ZAR', 'TRY'])
+                    })
+                ])
             }),
             rateId: z.string().optional() // Optional locked rate ID
         });
 
         const validatedData = createTransferSchema.parse(req.body);
-        const { sendAmount, cardDetails, recipientInfo, rateId } = validatedData;
+        const { sendAmount, sendCurrency, receiveCurrency, cardDetails, recipientInfo, rateId } = validatedData;
+
+        // Validate currencies using CurrencyConfigService
+        if (!CurrencyConfigService.isSendCurrencySupported(sendCurrency)) {
+            return res.status(400).json({
+                error: 'UNSUPPORTED_SEND_CURRENCY',
+                message: `Send currency ${sendCurrency} is not supported`,
+                supportedSendCurrencies: CurrencyConfigService.getSendCurrencies()
+            });
+        }
+
+        if (!CurrencyConfigService.isReceiveCurrencySupported(receiveCurrency)) {
+            return res.status(400).json({
+                error: 'UNSUPPORTED_RECEIVE_CURRENCY',
+                message: `Receive currency ${receiveCurrency} is not supported`,
+                supportedReceiveCurrencies: CurrencyConfigService.getReceiveCurrencies()
+            });
+        }
+
+        // Validate currency pair and amount
+        const validationError = CurrencyConfigService.validateCurrencyPair(
+            sendCurrency,
+            receiveCurrency,
+            sendAmount
+        );
+
+        if (validationError) {
+            return res.status(400).json({
+                error: 'VALIDATION_FAILED',
+                message: validationError,
+                retryable: false
+            });
+        }
+
+        // Validate that recipient bank account currency matches receive currency
+        if (recipientInfo.bankAccount.currency !== receiveCurrency) {
+            return res.status(400).json({
+                error: 'CURRENCY_MISMATCH',
+                message: `Recipient bank account currency (${recipientInfo.bankAccount.currency}) must match receive currency (${receiveCurrency})`,
+                retryable: false
+            });
+        }
 
         // Get user ID from authenticated request (optional for now)
         const userId = (req as any).userId || 'anonymous-user';
@@ -333,20 +470,62 @@ router.post('/transfers/create', transferCreationRateLimit, async (req: Request,
                 fees: lockedRate.fees
             };
         } else {
-            // Calculate fresh rate
+            // Calculate fresh rate with proper currency support
             calculation = await fxService.calculateTransfer({
                 sendAmount,
-                sendCurrency: 'USD',
-                receiveCurrency: 'EUR'
+                sendCurrency,
+                receiveCurrency
             });
             exchangeRate = calculation.exchangeRate;
         }
 
-        // Create transfer record in database
+        // Prepare payout details based on bank account type
+        let payoutDetails: any;
+        const bankAccount = recipientInfo.bankAccount;
+
+        if ('iban' in bankAccount) {
+            // European bank account
+            payoutDetails = {
+                iban: bankAccount.iban,
+                bic: bankAccount.bic,
+                bankName: bankAccount.bankName,
+                accountHolderName: bankAccount.accountHolderName,
+                country: bankAccount.country
+            };
+        } else if ('sortCode' in bankAccount) {
+            // UK bank account
+            payoutDetails = {
+                sortCode: bankAccount.sortCode,
+                accountNumber: bankAccount.accountNumber,
+                bankName: bankAccount.bankName,
+                accountHolderName: bankAccount.accountHolderName,
+                country: bankAccount.country
+            };
+        } else if ('clabe' in bankAccount) {
+            // Mexican bank account
+            payoutDetails = {
+                clabe: bankAccount.clabe,
+                bankName: bankAccount.bankName,
+                accountHolderName: bankAccount.accountHolderName,
+                country: bankAccount.country
+            };
+        } else if ('rut' in bankAccount) {
+            // Chilean bank account
+            payoutDetails = {
+                rut: bankAccount.rut,
+                bankCode: bankAccount.bankCode,
+                accountNumber: bankAccount.accountNumber,
+                bankName: bankAccount.bankName,
+                accountHolderName: bankAccount.accountHolderName,
+                country: bankAccount.country
+            };
+        }
+
+        // Create transfer record in database with multi-currency support
         const transferRecord = await dbService.createTransaction({
             amount: sendAmount,
-            sourceCurrency: 'USD',
-            destCurrency: 'EUR',
+            sourceCurrency: sendCurrency,
+            destCurrency: receiveCurrency,
             exchangeRate,
             recipientAmount: calculation.receiveAmount,
             recipientUserId: recipientInfo.email,
@@ -354,13 +533,7 @@ router.post('/transfers/create', transferCreationRateLimit, async (req: Request,
             recipientEmail: recipientInfo.email,
             recipientName: recipientInfo.name,
             payoutMethod: 'bank_account',
-            payoutDetails: {
-                iban: recipientInfo.bankAccount.iban,
-                bic: recipientInfo.bankAccount.bic,
-                bankName: recipientInfo.bankAccount.bankName,
-                accountHolderName: recipientInfo.bankAccount.accountHolderName,
-                country: recipientInfo.bankAccount.country
-            }
+            payoutDetails
         });
 
         // Transform card details to match CirclePaymentService format
@@ -380,11 +553,11 @@ router.post('/transfers/create', transferCreationRateLimit, async (req: Request,
             }
         };
 
-        // Process the transfer using TransferService
+        // Process the transfer using TransferService with proper currency support
         const result = await transferService.createTransfer({
             sendAmount,
-            sendCurrency: 'USD',
-            receiveCurrency: 'EUR',
+            sendCurrency,
+            receiveCurrency,
             cardDetails: transformedCardDetails,
             recipientInfo,
             exchangeRate
@@ -430,18 +603,54 @@ router.post('/transfers/create', transferCreationRateLimit, async (req: Request,
     }
 });
 
-// Transfer calculation endpoint - Task 4.1
+// Transfer calculation endpoint - Enhanced for multi-currency support
 router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: Response) => {
     try {
-        // Validate request body
+        // Import currency configuration service
+        const { CurrencyConfigService } = await import('../services/currency-config.service');
+
+        // Validate request body with dynamic currency support
         const calculateSchema = z.object({
-            sendAmount: z.number().min(0.01).max(50000),
-            sendCurrency: z.enum(['USD']), // Currently only USD supported for sending
-            receiveCurrency: z.enum(['EUR', 'CLP', 'MXN', 'GBP']) // Multiple receive currencies
+            sendAmount: z.number().min(0.01),
+            sendCurrency: z.string().length(3).regex(/^[A-Z]{3}$/),
+            receiveCurrency: z.string().length(3).regex(/^[A-Z]{3}$/),
+            calculatorMode: z.enum(['send', 'receive']).optional().default('send')
         });
 
         const validatedData = calculateSchema.parse(req.body);
-        const { sendAmount, sendCurrency, receiveCurrency } = validatedData;
+        const { sendAmount, sendCurrency, receiveCurrency, calculatorMode } = validatedData;
+
+        // Validate currencies using CurrencyConfigService
+        if (!CurrencyConfigService.isSendCurrencySupported(sendCurrency)) {
+            return res.status(400).json({
+                error: 'UNSUPPORTED_SEND_CURRENCY',
+                message: `Send currency ${sendCurrency} is not supported`,
+                supportedSendCurrencies: CurrencyConfigService.getSendCurrencies()
+            });
+        }
+
+        if (!CurrencyConfigService.isReceiveCurrencySupported(receiveCurrency)) {
+            return res.status(400).json({
+                error: 'UNSUPPORTED_RECEIVE_CURRENCY',
+                message: `Receive currency ${receiveCurrency} is not supported`,
+                supportedReceiveCurrencies: CurrencyConfigService.getReceiveCurrencies()
+            });
+        }
+
+        // Validate currency pair and amount
+        const validationError = CurrencyConfigService.validateCurrencyPair(
+            sendCurrency,
+            receiveCurrency,
+            sendAmount
+        );
+
+        if (validationError) {
+            return res.status(400).json({
+                error: 'VALIDATION_FAILED',
+                message: validationError,
+                retryable: false
+            });
+        }
 
         // Use the FXService instance
         const fxServiceInstance = new FXService();
@@ -453,12 +662,16 @@ router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: 
             receiveCurrency
         });
 
+        // Get currency pair configuration for additional metadata
+        const currencyPair = CurrencyConfigService.getCurrencyPair(sendCurrency, receiveCurrency);
+
         // Format response according to design document
         const response = {
             sendAmount: calculation.sendAmount,
             receiveAmount: calculation.receiveAmount,
             sendCurrency: validatedData.sendCurrency,
             receiveCurrency: validatedData.receiveCurrency,
+            calculatorMode: calculatorMode,
             exchangeRate: calculation.exchangeRate,
             fees: calculation.fees.total,
             rateValidUntil: calculation.rateValidUntil.toISOString(),
@@ -479,14 +692,19 @@ router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: 
                 receiveAmount: calculation.breakdown.finalAmountReceive
             },
             estimatedArrival: calculation.estimatedArrival,
-            rateId: calculation.rateId
+            rateId: calculation.rateId,
+            currencyPair: currencyPair ? {
+                minAmount: currencyPair.minAmount,
+                maxAmount: currencyPair.maxAmount,
+                estimatedArrival: currencyPair.estimatedArrival
+            } : undefined
         };
 
         res.json(response);
     } catch (error) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({
-                error: 'Invalid request',
+                error: 'INVALID_REQUEST',
                 message: 'Request validation failed',
                 details: error.errors.map(err => ({
                     field: err.path.join('.'),
@@ -501,6 +719,174 @@ router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: 
             message: 'Failed to calculate transfer',
             details: error instanceof Error ? error.message : 'Unknown error',
             retryable: true
+        });
+    }
+});
+
+
+// Lock exchange rate for a specific duration
+router.post('/rates/lock', generalRateLimit, async (req: Request, res: Response) => {
+    try {
+        // Validation schema for rate locking
+        const lockRateSchema = z.object({
+            fromCurrency: z.string().length(3).regex(/^[A-Z]{3}$/),
+            toCurrency: z.string().length(3).regex(/^[A-Z]{3}$/),
+            amount: z.number().min(0.01),
+            lockDurationMinutes: z.number().min(1).max(60).optional().default(10)
+        });
+
+        const validatedData = lockRateSchema.parse(req.body);
+        const { fromCurrency, toCurrency, amount, lockDurationMinutes } = validatedData;
+
+        // Import currency configuration service
+        const { CurrencyConfigService } = await import('../services/currency-config.service');
+
+        // Validate currency pair
+        const validationError = CurrencyConfigService.validateCurrencyPair(
+            fromCurrency,
+            toCurrency,
+            amount
+        );
+
+        if (validationError) {
+            return res.status(400).json({
+                error: 'VALIDATION_FAILED',
+                message: validationError,
+                retryable: false
+            });
+        }
+
+        // Lock the rate using FX service
+        const fxServiceInstance = new FXService();
+        const lockedRate = await fxServiceInstance.lockExchangeRate({
+            fromCurrency,
+            toCurrency,
+            amount,
+            lockDurationMinutes
+        });
+
+        res.json({
+            rateId: lockedRate.rateId,
+            fromCurrency: lockedRate.fromCurrency,
+            toCurrency: lockedRate.toCurrency,
+            rate: lockedRate.rate,
+            amount: lockedRate.amount,
+            convertedAmount: lockedRate.convertedAmount,
+            fees: lockedRate.fees,
+            lockedAt: lockedRate.lockedAt.toISOString(),
+            expiresAt: lockedRate.expiresAt.toISOString(),
+            isLocked: lockedRate.isLocked
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({
+                error: 'VALIDATION_FAILED',
+                message: 'Request validation failed',
+                details: error.errors.map(err => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                })),
+                retryable: false
+            });
+        }
+
+        console.error('Rate locking error:', error);
+        res.status(500).json({
+            error: 'RATE_LOCK_FAILED',
+            message: 'Failed to lock exchange rate',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            retryable: true
+        });
+    }
+});
+
+// Get locked rate by ID
+router.get('/rates/locked/:rateId', generalRateLimit, async (req: Request, res: Response) => {
+    try {
+        const { rateId } = req.params;
+
+        if (!rateId || rateId.length < 10) {
+            return res.status(400).json({
+                error: 'INVALID_RATE_ID',
+                message: 'Invalid rate ID format'
+            });
+        }
+
+        const fxServiceInstance = new FXService();
+        const lockedRate = await fxServiceInstance.getLockedRate(rateId);
+
+        if (!lockedRate) {
+            return res.status(404).json({
+                error: 'RATE_NOT_FOUND',
+                message: 'Locked rate not found or has expired'
+            });
+        }
+
+        res.json({
+            rateId: lockedRate.rateId,
+            fromCurrency: lockedRate.fromCurrency,
+            toCurrency: lockedRate.toCurrency,
+            rate: lockedRate.rate,
+            amount: lockedRate.amount,
+            convertedAmount: lockedRate.convertedAmount,
+            fees: lockedRate.fees,
+            lockedAt: lockedRate.lockedAt.toISOString(),
+            expiresAt: lockedRate.expiresAt.toISOString(),
+            isLocked: lockedRate.isLocked
+        });
+    } catch (error) {
+        console.error('Get locked rate error:', error);
+        res.status(500).json({
+            error: 'RATE_FETCH_FAILED',
+            message: 'Failed to fetch locked rate',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+// Get rate history for analytics
+router.get('/rates/history/:fromCurrency/:toCurrency', generalRateLimit, async (req: Request, res: Response) => {
+    try {
+        const { fromCurrency, toCurrency } = req.params;
+        const hours = parseInt(req.query.hours as string) || 24;
+
+        if (!fromCurrency || !toCurrency || fromCurrency.length !== 3 || toCurrency.length !== 3) {
+            return res.status(400).json({
+                error: 'INVALID_CURRENCIES',
+                message: 'Invalid currency codes. Both must be 3 characters.'
+            });
+        }
+
+        if (hours < 1 || hours > 168) { // Max 1 week
+            return res.status(400).json({
+                error: 'INVALID_HOURS',
+                message: 'Hours must be between 1 and 168 (1 week)'
+            });
+        }
+
+        const fxServiceInstance = new FXService();
+        const history = await fxServiceInstance.getRateHistory(
+            fromCurrency.toUpperCase(),
+            toCurrency.toUpperCase(),
+            hours
+        );
+
+        res.json({
+            fromCurrency: fromCurrency.toUpperCase(),
+            toCurrency: toCurrency.toUpperCase(),
+            hours,
+            history: history.map(entry => ({
+                rate: entry.rate,
+                timestamp: entry.timestamp.toISOString()
+            })),
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Rate history error:', error);
+        res.status(500).json({
+            error: 'HISTORY_FETCH_FAILED',
+            message: 'Failed to fetch rate history',
+            details: error instanceof Error ? error.message : 'Unknown error'
         });
     }
 });

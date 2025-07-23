@@ -1,11 +1,12 @@
 import { CircleService } from './circle.service';
+import { CurrencyConfigService } from './currency-config.service';
 
 /**
  * Interface for exchange rate request
  */
 export interface ExchangeRateRequest {
-  fromCurrency: 'USD';
-  toCurrency: 'EUR' | 'CLP' | 'MXN' | 'GBP';
+  fromCurrency: string;
+  toCurrency: string;
   amount?: number;
 }
 
@@ -34,8 +35,8 @@ export interface ExchangeRateResponse {
  * Interface for rate lock request
  */
 export interface RateLockRequest {
-  fromCurrency: 'USD';
-  toCurrency: 'EUR' | 'CLP' | 'MXN' | 'GBP';
+  fromCurrency: string;
+  toCurrency: string;
   amount: number;
   lockDurationMinutes?: number;
 }
@@ -65,8 +66,8 @@ export interface LockedRateResponse {
  */
 export interface CalculateTransferRequest {
   sendAmount: number;
-  sendCurrency: 'USD';
-  receiveCurrency: 'EUR' | 'CLP' | 'MXN' | 'GBP';
+  sendCurrency: string;
+  receiveCurrency: string;
   includeFeesInCalculation?: boolean;
 }
 
@@ -113,14 +114,97 @@ export class FXService extends CircleService {
   private readonly CACHE_DURATION_MS = 30000; // 30 seconds
   private readonly DEFAULT_LOCK_DURATION_MINUTES = 10;
   private readonly FALLBACK_RATES: Record<string, number> = {
+    // USD to other currencies
     'USD-EUR': 0.85,
     'USD-CLP': 950.0,
     'USD-MXN': 18.5,
     'USD-GBP': 0.78,
+    'USD-CAD': 1.35,
+    'USD-AUD': 1.52,
+    'USD-JPY': 150.0,
+    'USD-CHF': 0.88,
+    'USD-SEK': 10.8,
+    'USD-NOK': 10.9,
+    'USD-DKK': 6.8,
+    'USD-PLN': 4.1,
+    'USD-CZK': 23.5,
+    'USD-HUF': 360.0,
+    'USD-RON': 4.6,
+    'USD-BGN': 1.8,
+    'USD-HRK': 6.9,
+    'USD-RSD': 108.0,
+    'USD-TRY': 28.5,
+    'USD-ZAR': 18.8,
+    'USD-BRL': 5.1,
+    'USD-ARS': 350.0,
+    'USD-COP': 4100.0,
+    'USD-PEN': 3.7,
+    'USD-UYU': 39.0,
+    'USD-BOB': 6.9,
+    'USD-PYG': 7300.0,
+    'USD-VES': 36.0,
+    'USD-CNY': 7.2,
+    'USD-INR': 83.0,
+    'USD-KRW': 1320.0,
+    'USD-SGD': 1.35,
+    'USD-THB': 35.5,
+    'USD-MYR': 4.7,
+    'USD-IDR': 15800.0,
+    'USD-PHP': 56.0,
+    'USD-VND': 24500.0,
+    
+    // Reverse rates (other currencies to USD)
     'EUR-USD': 1.18,
     'CLP-USD': 0.00105,
     'MXN-USD': 0.054,
-    'GBP-USD': 1.28
+    'GBP-USD': 1.28,
+    'CAD-USD': 0.74,
+    'AUD-USD': 0.66,
+    'JPY-USD': 0.0067,
+    'CHF-USD': 1.14,
+    'SEK-USD': 0.093,
+    'NOK-USD': 0.092,
+    'DKK-USD': 0.147,
+    'PLN-USD': 0.244,
+    'CZK-USD': 0.043,
+    'HUF-USD': 0.0028,
+    'RON-USD': 0.217,
+    'BGN-USD': 0.556,
+    'HRK-USD': 0.145,
+    'RSD-USD': 0.0093,
+    'TRY-USD': 0.035,
+    'ZAR-USD': 0.053,
+    'BRL-USD': 0.196,
+    'ARS-USD': 0.0029,
+    'COP-USD': 0.000244,
+    'PEN-USD': 0.270,
+    'UYU-USD': 0.026,
+    'BOB-USD': 0.145,
+    'PYG-USD': 0.000137,
+    'VES-USD': 0.028,
+    'CNY-USD': 0.139,
+    'INR-USD': 0.012,
+    'KRW-USD': 0.000758,
+    'SGD-USD': 0.741,
+    'THB-USD': 0.028,
+    'MYR-USD': 0.213,
+    'IDR-USD': 0.000063,
+    'PHP-USD': 0.018,
+    'VND-USD': 0.000041,
+    
+    // Cross rates (non-USD pairs) - calculated from USD rates
+    'EUR-GBP': 0.664,
+    'EUR-CLP': 1117.6,
+    'EUR-MXN': 21.8,
+    'GBP-EUR': 1.506,
+    'GBP-CLP': 1217.9,
+    'GBP-MXN': 23.7,
+    'CLP-EUR': 0.000895,
+    'CLP-GBP': 0.000821,
+    'CLP-MXN': 0.0195,
+    'MXN-EUR': 0.046,
+    'MXN-GBP': 0.042,
+    'MXN-CLP': 51.4
   };
 
   /**
@@ -220,6 +304,23 @@ export class FXService extends CircleService {
    */
   async calculateTransfer(request: CalculateTransferRequest): Promise<TransferCalculationResponse> {
     try {
+      // Validate currency pair using CurrencyConfigService
+      const validationError = CurrencyConfigService.validateCurrencyPair(
+        request.sendCurrency,
+        request.receiveCurrency,
+        request.sendAmount
+      );
+      
+      if (validationError) {
+        throw new Error(validationError);
+      }
+
+      // Get currency pair configuration for estimated arrival
+      const currencyPair = CurrencyConfigService.getCurrencyPair(
+        request.sendCurrency,
+        request.receiveCurrency
+      );
+
       // Get current exchange rate
       const rateResponse = await this.getExchangeRate({
         fromCurrency: request.sendCurrency,
@@ -227,8 +328,8 @@ export class FXService extends CircleService {
         amount: request.sendAmount
       });
 
-      // Calculate all fees
-      const fees = this.calculateAllFees(request.sendAmount);
+      // Calculate all fees based on destination currency
+      const fees = this.calculateAllFees(request.sendAmount, request.receiveCurrency);
       
       // Calculate breakdown
       const breakdown = this.calculateTransferBreakdown(request.sendAmount, rateResponse.rate, fees);
@@ -240,9 +341,9 @@ export class FXService extends CircleService {
         fees,
         rateId: rateResponse.rateId,
         rateValidUntil: rateResponse.validUntil,
-        estimatedArrival: {
-          min: 2,
-          max: 5,
+        estimatedArrival: currencyPair?.estimatedArrival || {
+          min: 5,
+          max: 15,
           unit: 'minutes'
         },
         breakdown
@@ -257,8 +358,8 @@ export class FXService extends CircleService {
    * Get real-time rate updates (for WebSocket or polling)
    */
   async getRateUpdates(
-    fromCurrency: 'USD',
-    toCurrency: 'EUR',
+    fromCurrency: string,
+    toCurrency: string,
     callback: (rate: ExchangeRateResponse) => void,
     intervalMs: number = 5000
   ): Promise<() => void> {
@@ -278,7 +379,7 @@ export class FXService extends CircleService {
   /**
    * Validate if a rate is still valid and within acceptable variance
    */
-  async validateRate(rateId: string, expectedRate: number, maxVariancePercent: number = 2): Promise<boolean> {
+  async validateRate(rateId: string, expectedRate: number, maxVariancePercent: number = 2, fromCurrency: string = 'USD', toCurrency: string = 'EUR'): Promise<boolean> {
     try {
       // Check if it's a locked rate first
       const lockedRate = await this.getLockedRate(rateId);
@@ -287,7 +388,7 @@ export class FXService extends CircleService {
       }
 
       // For non-locked rates, get current rate and compare
-      const currentRate = await this.getExchangeRate({ fromCurrency: 'USD', toCurrency: 'EUR' });
+      const currentRate = await this.getExchangeRate({ fromCurrency, toCurrency });
       return Math.abs(currentRate.rate - expectedRate) / expectedRate <= maxVariancePercent / 100;
     } catch (error) {
       console.error('Error validating rate:', error);
@@ -299,14 +400,15 @@ export class FXService extends CircleService {
    * Get rate history for analytics (simplified implementation)
    */
   async getRateHistory(
-    fromCurrency: 'USD',
-    toCurrency: 'EUR',
+    fromCurrency: string,
+    toCurrency: string,
     hours: number = 24
   ): Promise<Array<{ rate: number; timestamp: Date }>> {
     // In a real implementation, this would fetch from a database or external service
     // For now, return mock data
     const history: Array<{ rate: number; timestamp: Date }> = [];
-    const baseRate = this.FALLBACK_RATES['USD-EUR'];
+    const rateKey = `${fromCurrency}-${toCurrency}`;
+    const baseRate = this.FALLBACK_RATES[rateKey] || 1.0;
     
     for (let i = hours; i >= 0; i--) {
       const timestamp = new Date(Date.now() - i * 60 * 60 * 1000);
@@ -405,9 +507,9 @@ export class FXService extends CircleService {
   }
 
   /**
-   * Calculate all transfer fees
+   * Calculate all transfer fees based on destination currency
    */
-  private calculateAllFees(amount: number): {
+  private calculateAllFees(amount: number, destinationCurrency?: string): {
     cardProcessing: number;
     transfer: number;
     payout: number;
@@ -415,7 +517,112 @@ export class FXService extends CircleService {
   } {
     const cardProcessing = Math.round((amount * 0.029 + 0.30) * 100) / 100; // 2.9% + $0.30
     const transfer = Math.round((amount * 0.005) * 100) / 100; // 0.5% transfer fee
-    const payout = 2.50; // Fixed EUR payout fee
+    
+    // Different payout fees based on destination currency and region
+    let payout: number;
+    switch (destinationCurrency) {
+      // European currencies
+      case 'EUR':
+        payout = 2.50; // €2.50 for EUR transfers
+        break;
+      case 'GBP':
+        payout = 2.00; // £2.00 for GBP transfers
+        break;
+      case 'CHF':
+        payout = 2.20; // CHF 2.20 for Swiss transfers
+        break;
+      case 'SEK':
+        payout = 25.0; // SEK 25 for Swedish transfers
+        break;
+      case 'NOK':
+        payout = 26.0; // NOK 26 for Norwegian transfers
+        break;
+      case 'DKK':
+        payout = 17.0; // DKK 17 for Danish transfers
+        break;
+      case 'PLN':
+        payout = 10.0; // PLN 10 for Polish transfers
+        break;
+      case 'CZK':
+        payout = 58.0; // CZK 58 for Czech transfers
+        break;
+      case 'HUF':
+        payout = 900.0; // HUF 900 for Hungarian transfers
+        break;
+      
+      // North American currencies
+      case 'CAD':
+        payout = 3.25; // CAD 3.25 for Canadian transfers
+        break;
+      
+      // Asia-Pacific currencies
+      case 'AUD':
+        payout = 3.80; // AUD 3.80 for Australian transfers
+        break;
+      case 'JPY':
+        payout = 375.0; // JPY 375 for Japanese transfers
+        break;
+      case 'SGD':
+        payout = 3.40; // SGD 3.40 for Singapore transfers
+        break;
+      case 'CNY':
+        payout = 18.0; // CNY 18 for Chinese transfers
+        break;
+      case 'INR':
+        payout = 208.0; // INR 208 for Indian transfers
+        break;
+      case 'KRW':
+        payout = 3300.0; // KRW 3300 for Korean transfers
+        break;
+      case 'THB':
+        payout = 89.0; // THB 89 for Thai transfers
+        break;
+      case 'MYR':
+        payout = 11.8; // MYR 11.8 for Malaysian transfers
+        break;
+      case 'IDR':
+        payout = 39500.0; // IDR 39500 for Indonesian transfers
+        break;
+      case 'PHP':
+        payout = 140.0; // PHP 140 for Philippine transfers
+        break;
+      case 'VND':
+        payout = 61250.0; // VND 61250 for Vietnamese transfers
+        break;
+      
+      // Latin American currencies
+      case 'MXN':
+        payout = 45.0; // MXN 45 for Mexican transfers
+        break;
+      case 'BRL':
+        payout = 12.8; // BRL 12.8 for Brazilian transfers
+        break;
+      case 'ARS':
+        payout = 875.0; // ARS 875 for Argentine transfers
+        break;
+      case 'COP':
+        payout = 10250.0; // COP 10250 for Colombian transfers
+        break;
+      case 'PEN':
+        payout = 9.3; // PEN 9.3 for Peruvian transfers
+        break;
+      case 'CLP':
+        payout = 2000.0; // CLP 2000 for Chilean transfers
+        break;
+      
+      // Other currencies
+      case 'ZAR':
+        payout = 47.0; // ZAR 47 for South African transfers
+        break;
+      case 'TRY':
+        payout = 71.3; // TRY 71.3 for Turkish transfers
+        break;
+      
+      default:
+        payout = 2.50; // Default to EUR equivalent fee
+        break;
+    }
+    
     const total = cardProcessing + transfer + payout;
 
     return {
@@ -547,8 +754,8 @@ export class FXService extends CircleService {
    */
   async getRate(fromCurrency: string, toCurrency: string): Promise<number> {
     const response = await this.getExchangeRate({
-      fromCurrency: fromCurrency as 'USD',
-      toCurrency: toCurrency as 'EUR'
+      fromCurrency,
+      toCurrency
     });
     return response.rate;
   }

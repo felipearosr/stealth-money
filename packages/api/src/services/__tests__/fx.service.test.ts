@@ -227,8 +227,8 @@ describe('FXService', () => {
       expect(breakdown.sendAmountUSD).toBe(100);
       expect(breakdown.cardProcessingFee).toBeGreaterThan(0);
       expect(breakdown.netAmountUSD).toBe(breakdown.sendAmountUSD - breakdown.cardProcessingFee);
-      expect(breakdown.grossAmountEUR).toBeCloseTo(breakdown.netAmountUSD * breakdown.exchangeRate, 2);
-      expect(breakdown.finalAmountEUR).toBe(result.receiveAmount);
+      expect(breakdown.grossAmountReceive).toBeCloseTo(breakdown.netAmountUSD * breakdown.exchangeRate, 2);
+      expect(breakdown.finalAmountReceive).toBe(result.receiveAmount);
     });
 
     it('should handle different send amounts correctly', async () => {
@@ -459,17 +459,17 @@ describe('FXService', () => {
       expect(result.convertedAmount).toBe(0);
     });
 
-    it('should handle very large amounts', async () => {
+    it('should handle large amounts within limits', async () => {
       const request: CalculateTransferRequest = {
-        sendAmount: 1000000,
+        sendAmount: 45000, // Within USD limit
         sendCurrency: 'USD',
         receiveCurrency: 'EUR'
       };
 
       const result = await fxService.calculateTransfer(request);
-      expect(result.sendAmount).toBe(1000000);
+      expect(result.sendAmount).toBe(45000);
       expect(result.receiveAmount).toBeGreaterThan(0);
-      expect(result.breakdown.finalAmountEUR).toBeGreaterThan(0);
+      expect(result.breakdown.finalAmountReceive).toBeGreaterThan(0);
     });
 
     it('should clean up expired locked rates', async () => {

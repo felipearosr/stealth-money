@@ -9,6 +9,7 @@ import cors from 'cors';
 import transferRoutes from './routes/transfers.controller';
 import webhookRoutes from './routes/webhooks.controller';
 import accountRoutes from './routes/account.controller';
+import currencyRoutes from './routes/currencies.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 import { 
   helmetConfig, 
@@ -204,6 +205,9 @@ app.use('/api/webhooks', webhookRoutes);
 
 // Wire up the account routes with /api prefix
 app.use('/api', accountRoutes);
+
+// Wire up the currency routes with /api prefix
+app.use('/api/currencies', currencyRoutes);
 
 // Error logging middleware
 app.use(errorLogger);

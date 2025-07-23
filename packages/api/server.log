@@ -1,0 +1,58 @@
+
+> api@1.0.0 dev
+> ts-node-dev --respawn src/index.ts
+
+[INFO] 23:31:01 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.8.3)
+[dotenv@17.2.0] injecting env (22) from .env (tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`)
+[dotenv@17.2.0] injecting env (0) from .env (tip: ⚙️  override existing env vars with { override: true })
+Circle API configured for sandbox environment
+🧪 Running in Circle SANDBOX environment
+🔍 Database URL check: configured
+✅ Database pool initialized
+🧪 Blockchain service initialized in MOCK mode
+🔍 Stripe Secret Key check: sk_test_51RlJ5n...
+🔍 Secret Key starts with sk_: true
+🔍 Secret Key length: 107
+✅ Stripe service initialized
+🔍 Stripe Secret Key check: sk_test_51RlJ5n...
+🔍 Secret Key starts with sk_: true
+🔍 Secret Key length: 107
+✅ Stripe service initialized
+🔍 Database URL check: configured
+✅ Database pool initialized
+🧪 Blockchain service initialized in MOCK mode
+🔍 Stripe Secret Key check: sk_test_51RlJ5n...
+🔍 Secret Key starts with sk_: true
+🔍 Secret Key length: 107
+✅ Stripe service initialized
+🔍 Database URL check: configured
+✅ Database pool initialized
+🔍 Database URL check: configured
+✅ Database pool initialized
+[32minfo[39m: Starting Stealth Money API {"blockchainMode":"mock","nodeEnv":"development","port":4000,"service":"stealth-money-api","timestamp":"2025-07-23T03:31:03.926Z"}
+🔍 Database URL check: configured
+✅ Database pool initialized
+🔌 Testing database connection...
+✅ Database connection successful: { now: 2025-07-23T03:31:04.294Z }
+📊 Initializing database tables...
+✅ Added user_id column to transactions table
+✅ Added recipient_user_id column to transactions table
+✅ Added circle_payment_id column to transactions table
+✅ Added circle_transfer_id column to transactions table
+✅ Added circle_payout_id column to transactions table
+✅ Database table created/verified
+✅ Database ready!
+🚀 API server running on http://0.0.0.0:4000
+📍 Health check: http://0.0.0.0:4000/health
+🧪 Test endpoint: http://0.0.0.0:4000/test
+❌ Server error: Error: listen EADDRINUSE: address already in use 0.0.0.0:4000
+    at Server.setupListenHandle [as _listen2] (node:net:1937:16)
+    at listenInCluster (node:net:1994:12)
+    at node:net:2203:7
+    at processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 4000
+}
