@@ -6,6 +6,7 @@ import { RecipientForm } from "./RecipientForm";
 import { PaymentForm } from "./PaymentForm";
 import { TransferStatus } from "./TransferStatus";
 import { ProgressIndicator } from "./ProgressIndicator";
+import OnboardingGate from "./OnboardingGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
@@ -378,84 +379,86 @@ export function TransferFlowContainer({
   };
 
   return (
-    <div className={`w-full max-w-4xl mx-auto space-y-6 ${className}`}>
-      {/* Progress Indicator */}
-      <ProgressIndicator
-        currentStep={state.currentStep}
-        completedSteps={state.completedSteps}
-        onStepClick={(step) => {
-          // Only allow navigation to completed steps or the current step
-          if (state.completedSteps.includes(step as TransferFlowStep) || step === state.currentStep) {
-            goToStep(step as TransferFlowStep);
-          }
-        }}
-      />
-      
-      {/* Back Button (except for calculator and status steps) */}
-      {state.canGoBack && state.currentStep !== 'status' && (
-        <div className="flex justify-start">
-          <Button
-            variant="outline"
-            onClick={goBack}
-            disabled={state.isLoading}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-        </div>
-      )}
-      
-      {/* Global Error Display */}
-      {state.error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="h-4 w-4" />
-              <span className="font-medium">Error</span>
-            </div>
-            <p className="text-red-600 mt-1">{state.error}</p>
+    <OnboardingGate requireVerification={false}>
+      <div className={`w-full max-w-4xl mx-auto space-y-6 ${className}`}>
+        {/* Progress Indicator */}
+        <ProgressIndicator
+          currentStep={state.currentStep}
+          completedSteps={state.completedSteps}
+          onStepClick={(step) => {
+            // Only allow navigation to completed steps or the current step
+            if (state.completedSteps.includes(step as TransferFlowStep) || step === state.currentStep) {
+              goToStep(step as TransferFlowStep);
+            }
+          }}
+        />
+        
+        {/* Back Button (except for calculator and status steps) */}
+        {state.canGoBack && state.currentStep !== 'status' && (
+          <div className="flex justify-start">
             <Button
               variant="outline"
-              size="sm"
-              onClick={() => updateState({ error: null })}
-              className="mt-2"
+              onClick={goBack}
+              disabled={state.isLoading}
+              className="flex items-center gap-2"
             >
-              Dismiss
+              <ArrowLeft className="h-4 w-4" />
+              Back
             </Button>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Step Content */}
-      <div className="relative">
-        {state.isLoading && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Processing...</p>
-            </div>
           </div>
         )}
         
-        {renderStepContent()}
-      </div>
-      
-      {/* Debug Info (only in development) */}
-      {process.env.NODE_ENV === 'development' && (
-        <Card className="border-gray-200 bg-gray-50">
-          <CardContent className="py-4">
-            <h4 className="font-medium text-gray-700 mb-2">Debug Info</h4>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div>Current Step: {state.currentStep}</div>
-              <div>Completed Steps: {state.completedSteps.join(', ') || 'None'}</div>
-              <div>Has Transfer Data: {state.transferData ? 'Yes' : 'No'}</div>
-              <div>Has Recipient Data: {state.recipientData ? 'Yes' : 'No'}</div>
-              <div>Transfer ID: {state.transferId || 'None'}</div>
+        {/* Global Error Display */}
+        {state.error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <span className="font-medium">Error</span>
+              </div>
+              <p className="text-red-600 mt-1">{state.error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateState({ error: null })}
+                className="mt-2"
+              >
+                Dismiss
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Step Content */}
+        <div className="relative">
+          {state.isLoading && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Processing...</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          )}
+          
+          {renderStepContent()}
+        </div>
+        
+        {/* Debug Info (only in development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="border-gray-200 bg-gray-50">
+            <CardContent className="py-4">
+              <h4 className="font-medium text-gray-700 mb-2">Debug Info</h4>
+              <div className="text-xs text-gray-600 space-y-1">
+                <div>Current Step: {state.currentStep}</div>
+                <div>Completed Steps: {state.completedSteps.join(', ') || 'None'}</div>
+                <div>Has Transfer Data: {state.transferData ? 'Yes' : 'No'}</div>
+                <div>Has Recipient Data: {state.recipientData ? 'Yes' : 'No'}</div>
+                <div>Transfer ID: {state.transferId || 'None'}</div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </OnboardingGate>
   );
 }

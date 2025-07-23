@@ -10,6 +10,7 @@ import transferRoutes from './routes/transfers.controller';
 import webhookRoutes from './routes/webhooks.controller';
 import accountRoutes from './routes/account.controller';
 import currencyRoutes from './routes/currencies.controller';
+import userRoutes from './routes/users.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 import { 
   helmetConfig, 
@@ -208,6 +209,9 @@ app.use('/api', accountRoutes);
 
 // Wire up the currency routes with /api prefix
 app.use('/api/currencies', currencyRoutes);
+
+// Wire up the user routes with /api prefix
+app.use('/api/users', userRoutes);
 
 // Error logging middleware
 app.use(errorLogger);

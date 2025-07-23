@@ -14,9 +14,135 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id                    String   @id // Clerk user ID
+  email                 String   @unique
+  firstName             String?
+  lastName              String?
+  phone                 String?
+  isVerified            Boolean  @default(false)
+  isDiscoverable        Boolean  @default(true) // Privacy control for user search
+  
+  // Bank accounts owned by this user
+  bankAccounts          BankAccount[]
+  
+  // Transactions sent by this user
+  sentTransactions      Transaction[] @relation("SentTransactions")
+  
+  // Transactions received by this user
+  receivedTransactions  Transaction[] @relation("ReceivedTransactions")
+  
+  // Recipients saved by this user
+  savedRecipients       SavedRecipient[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([email])
+}
+
+model BankAccount {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Account identification
+  accountName           String   // User-friendly name for the account
+  currency              String   // ISO currency code (USD, EUR, CLP, MXN, GBP)
+  country               String   // ISO country code
+  
+  // Account details (varies by currency/country)
+  // European accounts (EUR)
+  iban                  String?
+  bic                   String?
+  
+  // US accounts (USD)
+  routingNumber         String?
+  accountNumber         String?
+  
+  // Chilean accounts (CLP)
+  rut                   String?
+  bankCode              String?
+  
+  // Mexican accounts (MXN)
+  clabe                 String?
+  
+  // UK accounts (GBP)
+  sortCode              String?
+  ukAccountNumber       String?
+  
+  // Common fields
+  bankName              String
+  accountHolderName     String
+  accountType           String?  // checking, savings
+  
+  // Verification status
+  isVerified            Boolean  @default(false)
+  verificationMethod    String?  // micro_deposits, instant, manual
+  verificationData      Json?    // Store verification-specific data
+  
+  // Status
+  isActive              Boolean  @default(true)
+  isPrimary             Boolean  @default(false) // Primary account for this currency
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([currency])
+  @@unique([userId, currency, isPrimary], name: "unique_primary_per_currency")
+}
+
+model SavedRecipient {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Recipient information
+  name                  String
+  email                 String
+  phone                 String?
+  
+  // Bank account information
+  currency              String   // ISO currency code
+  country               String   // ISO country code
+  
+  // Account details (same structure as BankAccount)
+  iban                  String?
+  bic                   String?
+  routingNumber         String?
+  accountNumber         String?
+  rut                   String?
+  bankCode              String?
+  clabe                 String?
+  sortCode              String?
+  ukAccountNumber       String?
+  
+  bankName              String
+  accountHolderName     String
+  accountType           String?
+  
+  // Usage tracking
+  isDefault             Boolean  @default(false)
+  lastUsedAt            DateTime?
+  transferCount         Int      @default(0)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([email])
+}
+
 model Transaction {
   id                    String   @id @default(cuid())
-  userId                String?  // Clerk user ID - nullable for backward compatibility
+  userId                String?  // Sender user ID - nullable for backward compatibility
+  recipientUserId       String?  // Recipient user ID for user-to-user transfers
+  
+  // Relations
+  sender                User?    @relation("SentTransactions", fields: [userId], references: [id])
+  recipient             User?    @relation("ReceivedTransactions", fields: [recipientUserId], references: [id])
+  
   amount                Float
   sourceCurrency        String
   destCurrency          String
@@ -26,7 +152,12 @@ model Transaction {
   stripePaymentIntentId String?  @unique // To link with Stripe
   blockchainTxHash      String?  @unique // To link with the on-chain tx
   
-  // Recipient Information
+  // Circle integration IDs
+  circlePaymentId       String?  @unique
+  circleTransferId      String?  @unique
+  circlePayoutId        String?  @unique
+  
+  // Recipient Information (for external transfers or backward compatibility)
   recipientName         String?
   recipientEmail        String?
   recipientPhone        String?
@@ -37,4 +168,6 @@ model Transaction {
   updatedAt             DateTime @updatedAt
   
   @@index([userId]) // Index for efficient user-specific queries
+  @@index([recipientUserId])
+  @@index([recipientEmail])
 }
