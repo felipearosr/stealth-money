@@ -15,55 +15,89 @@ interface OnboardingGateProps {
   children: React.ReactNode;
   requireVerification?: boolean;
   onOnboardingComplete?: () => void;
+  skipCheckOnPublicPages?: boolean;
 }
 
 export default function OnboardingGate({ 
   children, 
   requireVerification = false,
-  onOnboardingComplete 
+  onOnboardingComplete,
+  skipCheckOnPublicPages = false
 }: OnboardingGateProps) {
   const [loading, setLoading] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
 
   useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
+    if (skipCheckOnPublicPages) {
+      setLoading(false);
+      setNeedsOnboarding(false);
+    } else {
+      checkOnboardingStatus();
+    }
+  }, [skipCheckOnPublicPages]);
 
   const checkOnboardingStatus = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/users/me/bank-accounts', {
-        headers: {
-          'Content-Type': 'application/json',
-          // Add authorization header if needed
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const accounts = data.bankAccounts || [];
-        setBankAccounts(accounts);
-        
-        // Check if user needs onboarding
-        const hasAccounts = accounts.length > 0;
-        const hasVerifiedAccount = accounts.some((account: BankAccount) => account.isVerified);
-        
-        if (requireVerification) {
-          setNeedsOnboarding(!hasVerifiedAccount);
-        } else {
-          setNeedsOnboarding(!hasAccounts);
-        }
-      } else if (response.status === 401) {
-        // User not authenticated, let them proceed (auth will be handled elsewhere)
+      
+      // Check if API is available and if we're on the client side
+      if (typeof window === 'undefined') {
         setNeedsOnboarding(false);
-      } else {
-        console.error('Failed to check onboarding status');
-        setNeedsOnboarding(false); // Don't block if we can't check
+        return;
+      }
+
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      
+      // Add a timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
+      try {
+        const response = await fetch(`${API_URL}/api/users/me/bank-accounts`, {
+          headers: {
+            'Content-Type': 'application/json',
+            // Add authorization header if needed
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          const accounts = data.bankAccounts || [];
+          setBankAccounts(accounts);
+          
+          // Check if user needs onboarding
+          const hasAccounts = accounts.length > 0;
+          const hasVerifiedAccount = accounts.some((account: BankAccount) => account.isVerified);
+          
+          if (requireVerification) {
+            setNeedsOnboarding(!hasVerifiedAccount);
+          } else {
+            setNeedsOnboarding(!hasAccounts);
+          }
+        } else if (response.status === 401) {
+          // User not authenticated, let them proceed (auth will be handled elsewhere)
+          setNeedsOnboarding(false);
+        } else {
+          // API error - don't block user, just log the issue
+          console.warn('Onboarding status check failed:', response.status, response.statusText);
+          setNeedsOnboarding(false);
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        throw fetchError;
       }
     } catch (error) {
-      console.error('Error checking onboarding status:', error);
-      setNeedsOnboarding(false); // Don't block if we can't check
+      // Network error or API not available - don't block user
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('Onboarding status check timed out (API may be slow or unavailable)');
+      } else {
+        console.warn('Onboarding status check error (API may not be running):', error);
+      }
+      setNeedsOnboarding(false);
     } finally {
       setLoading(false);
     }

@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { TransferCalculator } from "./TransferCalculator";
 import { RecipientForm } from "./RecipientForm";
-import { PaymentForm } from "./PaymentForm";
+import { PaymentForm, EnhancedPaymentForm } from "./PaymentForm";
 import { TransferStatus } from "./TransferStatus";
 import { ProgressIndicator } from "./ProgressIndicator";
 import OnboardingGate from "./OnboardingGate";
@@ -13,6 +13,32 @@ import { ArrowLeft, AlertCircle } from "lucide-react";
 
 // Types for transfer flow state
 export type TransferFlowStep = 'calculator' | 'recipient' | 'payment' | 'status';
+
+// User-to-user transfer types
+interface UserProfile {
+  id: string;
+  email: string;
+  username?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  fullName: string;
+  profileImageUrl?: string;
+  isVerified: boolean;
+  supportedCurrencies: string[];
+}
+
+interface VerifiedPaymentMethod {
+  id: string;
+  type: 'bank_account' | 'mobile_wallet' | 'debit_card';
+  currency: string;
+  bankName?: string;
+  accountType?: string;
+  lastFourDigits?: string;
+  isDefault: boolean;
+  verifiedAt: string;
+  country: string;
+}
 
 export interface TransferCalculationData {
   sendAmount: number;
@@ -55,6 +81,10 @@ export interface TransferFlowState {
   currentStep: TransferFlowStep;
   transferData: TransferCalculationData | null;
   recipientData: RecipientInfo | null;
+  // User-to-user transfer data
+  recipientUser: UserProfile | null;
+  selectedPaymentMethod: VerifiedPaymentMethod | null;
+  transferType: 'legacy' | 'user_to_user';
   transferId: string | null;
   completedSteps: TransferFlowStep[];
   canGoBack: boolean;
@@ -66,12 +96,19 @@ interface TransferFlowContainerProps {
   initialStep?: TransferFlowStep;
   onComplete?: (transferId: string) => void;
   className?: string;
+  // User-to-user transfer props
+  recipientUser?: UserProfile;
+  selectedPaymentMethod?: VerifiedPaymentMethod;
+  transferType?: 'legacy' | 'user_to_user';
 }
 
 export function TransferFlowContainer({ 
   initialStep = 'calculator', 
   onComplete,
-  className = ""
+  className = "",
+  recipientUser,
+  selectedPaymentMethod,
+  transferType = 'legacy'
 }: TransferFlowContainerProps) {
   
   // Transfer flow state
@@ -79,6 +116,9 @@ export function TransferFlowContainer({
     currentStep: initialStep,
     transferData: null,
     recipientData: null,
+    recipientUser: recipientUser || null,
+    selectedPaymentMethod: selectedPaymentMethod || null,
+    transferType,
     transferId: null,
     completedSteps: [],
     canGoBack: false,
@@ -247,6 +287,38 @@ export function TransferFlowContainer({
     }
   }, [state.transferData, state.recipientData, updateState, markStepCompleted, goToStep, onComplete]);
 
+  // Handle user-to-user payment success
+  const handleUserToUserPaymentSuccess = useCallback((transferId: string) => {
+    // Mark payment step as completed
+    markStepCompleted('payment');
+    
+    // Update state with transfer ID and move to status
+    updateState({ 
+      transferId,
+      isLoading: false 
+    });
+    
+    goToStep('status');
+    
+    // Call completion callback if provided
+    if (onComplete) {
+      onComplete(transferId);
+    }
+  }, [markStepCompleted, updateState, goToStep, onComplete]);
+
+  // Handle payment errors
+  const handlePaymentError = useCallback((error: string) => {
+    updateState({ 
+      error,
+      isLoading: false 
+    });
+  }, [updateState]);
+
+  // Handle payment back navigation
+  const handlePaymentBack = useCallback(() => {
+    goBack();
+  }, [goBack]);
+
 
 
   const handleStatusRefresh = useCallback(() => {
@@ -309,17 +381,50 @@ export function TransferFlowContainer({
         );
       
       case 'payment':
-        if (!state.transferData || !state.recipientData) {
+        if (!state.transferData) {
           return (
             <Card className="w-full max-w-lg mx-auto">
               <CardContent className="py-8 text-center">
                 <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-red-700 mb-2">Missing Required Data</h3>
                 <p className="text-red-600 mb-4">
-                  Please complete the calculator and recipient steps first.
+                  Please complete the calculator step first.
                 </p>
                 <Button onClick={() => goToStep('calculator')} variant="outline">
                   Start Over
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        }
+        
+        // Use enhanced form for user-to-user transfers
+        if (state.transferType === 'user_to_user' && state.recipientUser && state.selectedPaymentMethod) {
+          return (
+            <EnhancedPaymentForm
+              transferData={state.transferData}
+              recipientUser={state.recipientUser}
+              selectedPaymentMethod={state.selectedPaymentMethod}
+              onSuccess={handleUserToUserPaymentSuccess}
+              onBack={handlePaymentBack}
+              onError={handlePaymentError}
+              isLoading={state.isLoading}
+            />
+          );
+        }
+        
+        // Use legacy form for traditional transfers
+        if (!state.recipientData) {
+          return (
+            <Card className="w-full max-w-lg mx-auto">
+              <CardContent className="py-8 text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-red-700 mb-2">Missing Recipient Data</h3>
+                <p className="text-red-600 mb-4">
+                  Please complete the recipient step first.
+                </p>
+                <Button onClick={() => goToStep('recipient')} variant="outline">
+                  Go to Recipient Step
                 </Button>
               </CardContent>
             </Card>
@@ -379,7 +484,7 @@ export function TransferFlowContainer({
   };
 
   return (
-    <OnboardingGate requireVerification={false}>
+    <OnboardingGate requireVerification={false} skipCheckOnPublicPages={true}>
       <div className={`w-full max-w-4xl mx-auto space-y-6 ${className}`}>
         {/* Progress Indicator */}
         <ProgressIndicator
@@ -453,6 +558,9 @@ export function TransferFlowContainer({
                 <div>Completed Steps: {state.completedSteps.join(', ') || 'None'}</div>
                 <div>Has Transfer Data: {state.transferData ? 'Yes' : 'No'}</div>
                 <div>Has Recipient Data: {state.recipientData ? 'Yes' : 'No'}</div>
+                <div>Transfer Type: {state.transferType}</div>
+                <div>Has Recipient User: {state.recipientUser ? 'Yes' : 'No'}</div>
+                <div>Has Payment Method: {state.selectedPaymentMethod ? 'Yes' : 'No'}</div>
                 <div>Transfer ID: {state.transferId || 'None'}</div>
               </div>
             </CardContent>

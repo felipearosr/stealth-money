@@ -3162,22 +3162,8 @@ const cardDetailsSchema = __TURBOPACK__imported__module__$5b$project$5d2f$packag
     expiryYear: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].number().min(new Date().getFullYear(), 'Card has expired').max(new Date().getFullYear() + 20, 'Invalid year'),
     cvv: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(3, 'CVV must be at least 3 digits').max(4, 'CVV cannot exceed 4 digits')
 });
-const recipientInfoSchema = __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
-    name: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(2, 'Name must be at least 2 characters').max(100, 'Name cannot exceed 100 characters'),
-    email: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().email('Invalid email address'),
-    bankAccount: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
-        iban: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(15, 'IBAN must be at least 15 characters').max(34, 'IBAN cannot exceed 34 characters'),
-        bic: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(8, 'BIC must be at least 8 characters').max(11, 'BIC cannot exceed 11 characters'),
-        bankName: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(2, 'Bank name must be at least 2 characters').max(100, 'Bank name cannot exceed 100 characters'),
-        accountHolderName: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(2, 'Account holder name must be at least 2 characters').max(100, 'Account holder name cannot exceed 100 characters'),
-        country: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].literal('DE').refine(()=>true, {
-            message: 'Only German bank accounts are supported'
-        })
-    })
-});
-const paymentFormSchema = __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
-    cardDetails: cardDetailsSchema,
-    recipientInfo: recipientInfoSchema
+const userToUserPaymentFormSchema = __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
+    cardDetails: cardDetailsSchema
 });
 function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, onSubmit, isLoading = false }) {
     _s();
@@ -3286,7 +3272,24 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                     }
                 }
             };
-            paymentFormSchema.parse(formData);
+            // For legacy form, validate both card details and recipient info
+            const legacyPaymentFormSchema = __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
+                cardDetails: cardDetailsSchema,
+                recipientInfo: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
+                    name: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(2, 'Name must be at least 2 characters').max(100, 'Name cannot exceed 100 characters'),
+                    email: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().email('Invalid email address'),
+                    bankAccount: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].object({
+                        iban: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(15, 'IBAN must be at least 15 characters').max(34, 'IBAN cannot exceed 34 characters'),
+                        bic: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(8, 'BIC must be at least 8 characters').max(11, 'BIC cannot exceed 11 characters'),
+                        bankName: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(2, 'Bank name must be at least 2 characters').max(100, 'Bank name cannot exceed 100 characters'),
+                        accountHolderName: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].string().min(2, 'Account holder name must be at least 2 characters').max(100, 'Account holder name cannot exceed 100 characters'),
+                        country: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$node_modules$2f$zod$2f$v4$2f$classic$2f$external$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].literal('DE').refine(()=>true, {
+                            message: 'Only German bank accounts are supported'
+                        })
+                    })
+                })
+            });
+            legacyPaymentFormSchema.parse(formData);
             // Call onSubmit with validated data
             onSubmit(formData);
         } catch (err) {
@@ -3315,14 +3318,14 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                 className: "h-5 w-5"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                lineNumber: 217,
+                                lineNumber: 288,
                                 columnNumber: 11
                             }, this),
                             "Complete Your Transfer"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                        lineNumber: 216,
+                        lineNumber: 287,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3335,7 +3338,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         children: "You send:"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 222,
+                                        lineNumber: 293,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3347,13 +3350,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 223,
+                                        lineNumber: 294,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                lineNumber: 221,
+                                lineNumber: 292,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3363,7 +3366,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         children: "Fees:"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 226,
+                                        lineNumber: 297,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3375,13 +3378,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 227,
+                                        lineNumber: 298,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                lineNumber: 225,
+                                lineNumber: 296,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3391,7 +3394,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         children: "Total to pay:"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 230,
+                                        lineNumber: 301,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3403,13 +3406,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 231,
+                                        lineNumber: 302,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                lineNumber: 229,
+                                lineNumber: 300,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3419,7 +3422,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         children: "Recipient gets:"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 234,
+                                        lineNumber: 305,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3431,25 +3434,25 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 235,
+                                        lineNumber: 306,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                lineNumber: 233,
+                                lineNumber: 304,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                        lineNumber: 220,
+                        lineNumber: 291,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                lineNumber: 215,
+                lineNumber: 286,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -3467,7 +3470,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 244,
+                                            lineNumber: 315,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -3475,13 +3478,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                             children: "Payment Details"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 245,
+                                            lineNumber: 316,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 243,
+                                    lineNumber: 314,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3494,7 +3497,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: "Card Number"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 250,
+                                                    lineNumber: 321,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3507,7 +3510,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     maxLength: 19
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 251,
+                                                    lineNumber: 322,
                                                     columnNumber: 17
                                                 }, this),
                                                 validationErrors['cardDetails.number'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3517,20 +3520,20 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             className: "h-3 w-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 262,
+                                                            lineNumber: 333,
                                                             columnNumber: 21
                                                         }, this),
                                                         validationErrors['cardDetails.number']
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 261,
+                                                    lineNumber: 332,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 249,
+                                            lineNumber: 320,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3543,7 +3546,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: "Month"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 270,
+                                                            lineNumber: 341,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3557,7 +3560,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             className: validationErrors['cardDetails.expiryMonth'] ? 'border-red-500' : ''
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 271,
+                                                            lineNumber: 342,
                                                             columnNumber: 19
                                                         }, this),
                                                         validationErrors['cardDetails.expiryMonth'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3565,13 +3568,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: validationErrors['cardDetails.expiryMonth']
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 282,
+                                                            lineNumber: 353,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 269,
+                                                    lineNumber: 340,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3581,7 +3584,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: "Year"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 287,
+                                                            lineNumber: 358,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3595,7 +3598,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             className: validationErrors['cardDetails.expiryYear'] ? 'border-red-500' : ''
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 288,
+                                                            lineNumber: 359,
                                                             columnNumber: 19
                                                         }, this),
                                                         validationErrors['cardDetails.expiryYear'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3603,13 +3606,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: validationErrors['cardDetails.expiryYear']
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 299,
+                                                            lineNumber: 370,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 286,
+                                                    lineNumber: 357,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3619,7 +3622,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: "CVV"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 304,
+                                                            lineNumber: 375,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3632,7 +3635,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             className: validationErrors['cardDetails.cvv'] ? 'border-red-500' : ''
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 305,
+                                                            lineNumber: 376,
                                                             columnNumber: 19
                                                         }, this),
                                                         validationErrors['cardDetails.cvv'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3640,31 +3643,31 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: validationErrors['cardDetails.cvv']
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 315,
+                                                            lineNumber: 386,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 303,
+                                                    lineNumber: 374,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 268,
+                                            lineNumber: 339,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 248,
+                                    lineNumber: 319,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                            lineNumber: 242,
+                            lineNumber: 313,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3677,7 +3680,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 325,
+                                            lineNumber: 396,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -3685,13 +3688,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                             children: "Recipient Information"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 326,
+                                            lineNumber: 397,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 324,
+                                    lineNumber: 395,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3704,7 +3707,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: "Full Name"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 331,
+                                                    lineNumber: 402,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3716,7 +3719,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     className: validationErrors['recipientInfo.name'] ? 'border-red-500' : ''
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 332,
+                                                    lineNumber: 403,
                                                     columnNumber: 17
                                                 }, this),
                                                 validationErrors['recipientInfo.name'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3724,13 +3727,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: validationErrors['recipientInfo.name']
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 341,
+                                                    lineNumber: 412,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 330,
+                                            lineNumber: 401,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3740,7 +3743,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: "Email Address"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 346,
+                                                    lineNumber: 417,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3752,7 +3755,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     className: validationErrors['recipientInfo.email'] ? 'border-red-500' : ''
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 347,
+                                                    lineNumber: 418,
                                                     columnNumber: 17
                                                 }, this),
                                                 validationErrors['recipientInfo.email'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3760,25 +3763,25 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: validationErrors['recipientInfo.email']
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 356,
+                                                    lineNumber: 427,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 345,
+                                            lineNumber: 416,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 329,
+                                    lineNumber: 400,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                            lineNumber: 323,
+                            lineNumber: 394,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3791,7 +3794,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 365,
+                                            lineNumber: 436,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -3799,13 +3802,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                             children: "Bank Account Details (Germany)"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 366,
+                                            lineNumber: 437,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 364,
+                                    lineNumber: 435,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3818,7 +3821,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: "IBAN"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 371,
+                                                    lineNumber: 442,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3830,7 +3833,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     className: validationErrors['recipientInfo.bankAccount.iban'] ? 'border-red-500' : ''
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 372,
+                                                    lineNumber: 443,
                                                     columnNumber: 17
                                                 }, this),
                                                 validationErrors['recipientInfo.bankAccount.iban'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3838,13 +3841,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: validationErrors['recipientInfo.bankAccount.iban']
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 381,
+                                                    lineNumber: 452,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 370,
+                                            lineNumber: 441,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3857,7 +3860,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: "BIC/SWIFT Code"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 387,
+                                                            lineNumber: 458,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3869,7 +3872,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             className: validationErrors['recipientInfo.bankAccount.bic'] ? 'border-red-500' : ''
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 388,
+                                                            lineNumber: 459,
                                                             columnNumber: 19
                                                         }, this),
                                                         validationErrors['recipientInfo.bankAccount.bic'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3877,13 +3880,13 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: validationErrors['recipientInfo.bankAccount.bic']
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 397,
+                                                            lineNumber: 468,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 386,
+                                                    lineNumber: 457,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3893,7 +3896,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: "Bank Name"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 402,
+                                                            lineNumber: 473,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3905,7 +3908,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             className: validationErrors['recipientInfo.bankAccount.bankName'] ? 'border-red-500' : ''
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 403,
+                                                            lineNumber: 474,
                                                             columnNumber: 19
                                                         }, this),
                                                         validationErrors['recipientInfo.bankAccount.bankName'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3913,19 +3916,19 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                             children: validationErrors['recipientInfo.bankAccount.bankName']
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                            lineNumber: 412,
+                                                            lineNumber: 483,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 401,
+                                                    lineNumber: 472,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 385,
+                                            lineNumber: 456,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3935,7 +3938,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: "Account Holder Name"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 418,
+                                                    lineNumber: 489,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -3947,7 +3950,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     className: validationErrors['recipientInfo.bankAccount.accountHolderName'] ? 'border-red-500' : ''
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 419,
+                                                    lineNumber: 490,
                                                     columnNumber: 17
                                                 }, this),
                                                 validationErrors['recipientInfo.bankAccount.accountHolderName'] && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3955,25 +3958,25 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                                     children: validationErrors['recipientInfo.bankAccount.accountHolderName']
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                                    lineNumber: 428,
+                                                    lineNumber: 499,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                            lineNumber: 417,
+                                            lineNumber: 488,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 369,
+                                    lineNumber: 440,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                            lineNumber: 363,
+                            lineNumber: 434,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -3987,7 +3990,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                         className: "mr-2 h-4 w-4 animate-spin"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                        lineNumber: 443,
+                                        lineNumber: 514,
                                         columnNumber: 17
                                     }, this),
                                     "Processing Transfer..."
@@ -3995,7 +3998,7 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                             }, void 0, true) : `Send ${sendAmount.toFixed(2)} USD`
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                            lineNumber: 435,
+                            lineNumber: 506,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4005,37 +4008,37 @@ function PaymentForm({ sendAmount, receiveAmount, exchangeRate, fees, rateId, on
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 453,
+                                    lineNumber: 524,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: "Secured by Circle • PCI DSS Compliant"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                                    lineNumber: 454,
+                                    lineNumber: 525,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                            lineNumber: 452,
+                            lineNumber: 523,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                    lineNumber: 240,
+                    lineNumber: 311,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-                lineNumber: 239,
+                lineNumber: 310,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/packages/web/src/components/features/PaymentForm.tsx",
-        lineNumber: 214,
+        lineNumber: 285,
         columnNumber: 5
     }, this);
 }
