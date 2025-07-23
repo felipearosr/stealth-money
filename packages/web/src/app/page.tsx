@@ -1,6 +1,6 @@
 "use client";
 
-import { TransferCalculator } from "@/components/features/TransferCalculator";
+import { TransferFlowContainer } from "@/components/features/TransferFlowContainer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navigation } from "@/components/ui/navigation";
@@ -97,7 +97,7 @@ export default function Home() {
               {/* Background decoration */}
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl"></div>
               <div className="relative">
-                <TransferCalculator />
+                <TransferFlowContainer />
               </div>
             </div>
           </div>
