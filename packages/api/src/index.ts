@@ -11,6 +11,7 @@ import webhookRoutes from './routes/webhooks.controller';
 import accountRoutes from './routes/account.controller';
 import currencyRoutes from './routes/currencies.controller';
 import userRoutes from './routes/users.controller';
+import verificationRoutes from './routes/verification.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 import { 
   helmetConfig, 
@@ -212,6 +213,8 @@ app.use('/api/currencies', currencyRoutes);
 
 // Wire up the user routes with /api prefix
 app.use('/api/users', userRoutes);
+// Wire up the verification routes with /api prefix
+app.use('/api', verificationRoutes);
 
 // Error logging middleware
 app.use(errorLogger);

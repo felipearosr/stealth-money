@@ -35,13 +35,13 @@ async function testAPI() {
     
     // Update the transaction status
     await dbService.updateTransactionStatus(testTransaction.id, 'COMPLETED', {
-      paymentId: 'test_payment_123'
+      stripePaymentIntentId: 'test_payment_123'
     });
     
     console.log(`✅ Transaction status updated to COMPLETED`);
     
     // Retrieve the transaction
-    const retrieved = await dbService.getTransaction(testTransaction.id);
+    const retrieved = await dbService.getTransactionById(testTransaction.id);
     console.log(`✅ Transaction retrieved: Status = ${retrieved?.status}`);
     
   } catch (error) {

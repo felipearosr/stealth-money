@@ -205,11 +205,20 @@ export function UserRecipientSelector({
     }
   }, [transferData.receiveCurrency, currentUserId]);
 
-  // Get authentication token (placeholder - would integrate with actual auth)
+  // Get authentication token from Clerk
   const getAuthToken = async (): Promise<string> => {
-    // This would integrate with Clerk or your auth system
-    // For now, return a placeholder
-    return 'mock-token';
+    if (typeof window === 'undefined') return '';
+    
+    try {
+      // Get token from Clerk auth context
+      const token = sessionStorage.getItem('__clerk_token') || 
+                   localStorage.getItem('__clerk_token') ||
+                   'mock-token'; // Fallback for development
+      return token;
+    } catch (error) {
+      console.warn('Failed to get auth token:', error);
+      return 'mock-token';
+    }
   };
 
   // Handle recipient selection

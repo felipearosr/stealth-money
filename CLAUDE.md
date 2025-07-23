@@ -60,18 +60,24 @@ This is a monorepo with three main packages:
 - **Authentication**: Clerk JWT-based auth with `AuthenticatedRequest` interface
 - **Error Handling**: Centralized error handler with structured responses including request IDs
 - **Mock/Real Modes**: Services support both mock and real implementations (e.g., blockchain, payments)
+- **Intelligent Search**: Auto-detects email, phone, or username queries for user search
+- **Bank Account Verification**: Multi-method verification (micro-deposits, instant verification)
 
 #### Frontend
 - **Component Organization**: Feature components in `/components/features/`, UI components in `/components/ui/`
 - **API Integration**: Centralized client in `/lib/api.ts` with consistent error handling
 - **State Management**: React hooks for local state, SWR for server state
 - **Authentication**: Clerk integration with protected routes via middleware
+- **Onboarding Flow**: Mandatory bank account verification before transfers
+- **Transfer Types**: Support for both user-to-user and traditional bank transfers
 
 #### Database
 - **Prisma ORM**: Schema in `packages/api/prisma/schema.prisma`
 - **Models**: User, BankAccount, SavedRecipient, Transaction
 - **Multi-currency**: Support for USD, EUR, CLP, MXN, GBP
 - **Relationships**: User owns BankAccounts and Transactions
+- **Verification Tracking**: Bank account verification status, methods, and failure counts
+- **User Discovery**: Username support and discoverability controls
 
 #### Testing Strategy
 - **Unit Tests**: Jest with mocks for external services
@@ -85,7 +91,9 @@ This is a monorepo with three main packages:
 2. **Database Changes**: Modify schema.prisma → run `prisma generate` → run `prisma db push`
 3. **API Development**: Create controller → implement service → add tests → test with Postman/curl
 4. **Frontend Development**: Create component → integrate with API → add to page → test UI
-5. **Testing**: Write tests alongside code → run tests before committing
+5. **User Onboarding**: Users must complete bank account verification before transfers
+6. **Transfer Flow**: 4-step process (Calculator → Recipient → Payment → Status)
+7. **Testing**: Write tests alongside code → run tests before committing
 
 ### Important Conventions
 
@@ -113,3 +121,19 @@ This is a monorepo with three main packages:
 - **Update Database Schema**: Modify schema.prisma → generate → push → update related services
 - **Debug API Issues**: Check logs → verify auth → validate input → check database state
 - **Test Payment Flow**: Use Stripe test cards → monitor webhook events → check transaction records
+- **Add User Transfer**: Complete onboarding → use intelligent search → select recipient → authorize payment
+- **Bank Account Verification**: Add account → choose verification method → complete verification flow
+
+### Key User Flows
+
+#### Mandatory Onboarding Flow
+1. **Account Creation**: User registers via Clerk authentication
+2. **Bank Account Addition**: User adds bank account with currency-specific details
+3. **Account Verification**: User verifies ownership via micro-deposits or instant verification
+4. **Transfer Enablement**: Only verified users can send/receive money
+
+#### 4-Step User-to-User Transfer
+1. **Calculator**: Define transfer amount and currencies with real-time rates
+2. **Recipient**: Search users by email/username/phone with intelligent detection
+3. **Payment**: Confirm transfer details and authorize with verified payment method
+4. **Status**: Real-time transfer tracking with completion confirmation

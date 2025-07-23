@@ -676,20 +676,20 @@ router.post('/transfers/calculate', generalRateLimit, async (req: Request, res: 
             fees: calculation.fees.total,
             rateValidUntil: calculation.rateValidUntil.toISOString(),
             breakdown: {
-                sendAmountUSD: calculation.breakdown.sendAmountUSD,
+                sendAmountUSD: calculation.breakdown.sendAmountUSD || 0,
                 fees: {
-                    cardProcessing: calculation.fees.cardProcessing,
-                    transfer: calculation.fees.transfer,
-                    payout: calculation.fees.payout,
-                    total: calculation.fees.total
+                    cardProcessing: calculation.fees.cardProcessing || 0,
+                    transfer: calculation.fees.transfer || 0,
+                    payout: calculation.fees.payout || 0,
+                    total: calculation.fees.total || 0
                 },
-                netAmountUSD: calculation.breakdown.netAmountUSD,
-                exchangeRate: calculation.breakdown.exchangeRate,
-                grossAmountReceive: calculation.breakdown.grossAmountReceive,
-                transferFee: calculation.breakdown.transferFee,
-                payoutFee: calculation.breakdown.payoutFee,
-                finalAmountReceive: calculation.breakdown.finalAmountReceive,
-                receiveAmount: calculation.breakdown.finalAmountReceive
+                netAmountUSD: calculation.breakdown.netAmountUSD || 0,
+                exchangeRate: calculation.breakdown.exchangeRate || 0,
+                grossAmountReceive: calculation.breakdown.grossAmountReceive || 0,
+                transferFee: calculation.breakdown.transferFee || 0,
+                payoutFee: calculation.breakdown.payoutFee || 0,
+                finalAmountReceive: calculation.breakdown.finalAmountReceive || 0,
+                receiveAmount: calculation.breakdown.finalAmountReceive || calculation.breakdown.receiveAmount || calculation.receiveAmount || 0
             },
             estimatedArrival: calculation.estimatedArrival,
             rateId: calculation.rateId,

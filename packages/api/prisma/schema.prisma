@@ -20,8 +20,11 @@ model User {
   firstName             String?
   lastName              String?
   phone                 String?
+  username              String?  @unique // Optional username for discoverability
   isVerified            Boolean  @default(false)
   isDiscoverable        Boolean  @default(true) // Privacy control for user search
+  onboardingCompleted   Boolean  @default(false) // Has completed initial onboarding
+  hasVerifiedAccount    Boolean  @default(false) // Computed field for quick checks
   
   // Bank accounts owned by this user
   bankAccounts          BankAccount[]
@@ -78,8 +81,11 @@ model BankAccount {
   
   // Verification status
   isVerified            Boolean  @default(false)
-  verificationMethod    String?  // micro_deposits, instant, manual
+  verificationMethod    String?  // micro_deposits, instant, manual, plaid
   verificationData      Json?    // Store verification-specific data
+  verificationStartedAt DateTime?
+  verifiedAt            DateTime?
+  verificationFailures  Int      @default(0)
   
   // Status
   isActive              Boolean  @default(true)

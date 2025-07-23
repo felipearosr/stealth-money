@@ -484,7 +484,11 @@ export function TransferFlowContainer({
   };
 
   return (
-    <OnboardingGate requireVerification={false} skipCheckOnPublicPages={true}>
+    <OnboardingGate 
+      requireVerification={false} 
+      skipCheckOnPublicPages={false}
+      blockTransfersUntilVerified={true}
+    >
       <div className={`w-full max-w-4xl mx-auto space-y-6 ${className}`}>
         {/* Progress Indicator */}
         <ProgressIndicator

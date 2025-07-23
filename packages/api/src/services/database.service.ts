@@ -108,6 +108,160 @@ export class DatabaseService {
     });
   }
 
+  // Intelligent user search - automatically detects email, phone, or username
+  async intelligentUserSearch(query: string, limit: number = 10, currency?: string): Promise<any[]> {
+    const trimmedQuery = query.trim();
+    
+    // Detect query type
+    const isEmail = trimmedQuery.includes('@');
+    const isPhone = /^[\+]?[\d\s\-\(\)]+$/.test(trimmedQuery);
+    const isUsername = !isEmail && !isPhone;
+
+    // Build search conditions based on query type
+    let searchConditions: any[] = [];
+
+    if (isEmail) {
+      // Prioritize exact email match, then partial
+      searchConditions = [
+        { email: { equals: trimmedQuery, mode: 'insensitive' } },
+        { email: { contains: trimmedQuery, mode: 'insensitive' } }
+      ];
+    } else if (isPhone) {
+      // Search phone number (clean formatting)
+      const cleanPhone = trimmedQuery.replace(/[\s\-\(\)]/g, '');
+      searchConditions = [
+        { phone: { contains: cleanPhone } },
+        { phone: { contains: trimmedQuery } }
+      ];
+    } else {
+      // Username/name search - search across username, firstName, lastName
+      searchConditions = [
+        { username: { equals: trimmedQuery, mode: 'insensitive' } },
+        { username: { contains: trimmedQuery, mode: 'insensitive' } },
+        { firstName: { contains: trimmedQuery, mode: 'insensitive' } },
+        { lastName: { contains: trimmedQuery, mode: 'insensitive' } },
+        // Also search email for usernames that might be part of email
+        { email: { contains: trimmedQuery, mode: 'insensitive' } }
+      ];
+    }
+
+    // Base query conditions
+    const baseWhere = {
+      AND: [
+        { isDiscoverable: true },
+        {
+          OR: searchConditions
+        }
+      ]
+    };
+
+    // Enhanced query with currency filtering if provided
+    let orderBy: any[] = [
+      { isVerified: 'desc' },  // Verified users first
+      { createdAt: 'desc' }
+    ];
+
+    // If currency is specified, prioritize users who support that currency
+    if (currency) {
+      const usersWithCurrency = await this.prisma.user.findMany({
+        where: {
+          ...baseWhere,
+          bankAccounts: {
+            some: {
+              currency: currency,
+              isActive: true,
+              isVerified: true
+            }
+          }
+        },
+        include: {
+          bankAccounts: {
+            where: { 
+              isActive: true,
+              isVerified: true 
+            },
+            select: {
+              id: true,
+              currency: true,
+              country: true,
+              isPrimary: true,
+              bankName: true,
+              accountType: true,
+              accountNumber: true,
+              isVerified: true,
+              createdAt: true
+            }
+          }
+        },
+        take: limit,
+        orderBy
+      });
+
+      // Get remaining users if we haven't hit the limit
+      const remainingLimit = limit - usersWithCurrency.length;
+      if (remainingLimit > 0) {
+        const userIds = usersWithCurrency.map(u => u.id);
+        const otherUsers = await this.prisma.user.findMany({
+          where: {
+            ...baseWhere,
+            id: { notIn: userIds }
+          },
+          include: {
+            bankAccounts: {
+              where: { 
+                isActive: true,
+                isVerified: true 
+              },
+              select: {
+                id: true,
+                currency: true,
+                country: true,
+                isPrimary: true,
+                bankName: true,
+                accountType: true,
+                accountNumber: true,
+                isVerified: true,
+                createdAt: true
+              }
+            }
+          },
+          take: remainingLimit,
+          orderBy
+        });
+
+        return [...usersWithCurrency, ...otherUsers];
+      }
+
+      return usersWithCurrency;
+    }
+
+    // Standard search without currency filtering
+    return this.prisma.user.findMany({
+      where: baseWhere,
+      include: {
+        bankAccounts: {
+          where: { 
+            isActive: true,
+            isVerified: true 
+          },
+          select: {
+            id: true,
+            currency: true,
+            country: true,
+            isPrimary: true,
+            bankName: true,
+            accountType: true,
+            accountNumber: true,
+            verifiedAt: true,
+            createdAt: true
+          }
+        }
+      },
+      take: limit,
+      orderBy
+    });
+  }
+
   // Bank account management
   async createBankAccount(data: {
     userId: string;

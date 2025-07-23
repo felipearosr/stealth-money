@@ -16,13 +16,15 @@ interface OnboardingGateProps {
   requireVerification?: boolean;
   onOnboardingComplete?: () => void;
   skipCheckOnPublicPages?: boolean;
+  blockTransfersUntilVerified?: boolean; // New prop to enforce verification for transfers
 }
 
 export default function OnboardingGate({ 
   children, 
   requireVerification = false,
   onOnboardingComplete,
-  skipCheckOnPublicPages = false
+  skipCheckOnPublicPages = false,
+  blockTransfersUntilVerified = false
 }: OnboardingGateProps) {
   const [loading, setLoading] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -73,7 +75,8 @@ export default function OnboardingGate({
           const hasAccounts = accounts.length > 0;
           const hasVerifiedAccount = accounts.some((account: BankAccount) => account.isVerified);
           
-          if (requireVerification) {
+          // For transfer flows, always require verified accounts
+          if (requireVerification || blockTransfersUntilVerified) {
             setNeedsOnboarding(!hasVerifiedAccount);
           } else {
             setNeedsOnboarding(!hasAccounts);
@@ -111,7 +114,10 @@ export default function OnboardingGate({
   };
 
   const handleSkip = () => {
-    setNeedsOnboarding(false);
+    // Only allow skipping if not required for transfers
+    if (!blockTransfersUntilVerified) {
+      setNeedsOnboarding(false);
+    }
   };
 
   if (loading) {
@@ -129,8 +135,8 @@ export default function OnboardingGate({
     return (
       <BankAccountOnboarding
         onComplete={handleOnboardingComplete}
-        onSkip={!requireVerification ? handleSkip : undefined}
-        requireVerification={requireVerification}
+        onSkip={(!requireVerification && !blockTransfersUntilVerified) ? handleSkip : undefined}
+        requireVerification={requireVerification || blockTransfersUntilVerified}
       />
     );
   }

@@ -163,7 +163,7 @@ const sanitizeInput = (req, res, next) => {
         if (obj && typeof obj === 'object') {
             const sanitized = {};
             for (const key in obj) {
-                if (obj.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
                     sanitized[key] = sanitize(obj[key]);
                 }
             }

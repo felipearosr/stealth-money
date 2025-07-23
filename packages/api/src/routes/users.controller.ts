@@ -64,10 +64,10 @@ function validateBankAccountData(currency: string, data: any): { isValid: boolea
   return { isValid: errors.length === 0, errors };
 }
 
-// GET /api/users/search - Search for users by email/username/phone
+// GET /api/users/search - Intelligent search for users by email/username/phone
 router.get('/search', optionalAuth, async (req: Request, res: Response) => {
   try {
-    const { q: query, limit = '10' } = req.query;
+    const { q: query, limit = '10', currency } = req.query;
     
     if (!query || typeof query !== 'string' || query.trim().length < 2) {
       return res.status(400).json({
@@ -77,21 +77,38 @@ router.get('/search', optionalAuth, async (req: Request, res: Response) => {
     }
 
     const searchLimit = Math.min(parseInt(limit as string) || 10, 50);
+    const searchQuery = query.trim();
     
-    const users = await dbService.searchUsers(query.trim(), searchLimit);
+    // Intelligent search: automatically detect if it's email, phone, or username
+    const users = await dbService.intelligentUserSearch(searchQuery, searchLimit, currency as string);
     
-    // Transform the response to include supported currencies and verification status
-    const searchResults = users.map(user => ({
+    // Transform the response to include supported currencies and payment methods
+    const searchResults = users.map((user: any) => ({
       id: user.id,
       email: user.email,
+      username: user.username,
+      phone: user.phone,
       firstName: user.firstName,
       lastName: user.lastName,
-      name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email,
+      fullName: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email,
       isVerified: user.isVerified,
-      supportedCurrencies: (user.bankAccounts || []).map((account: any) => account.currency),
-      primaryCurrencies: (user.bankAccounts || [])
-        .filter((account: any) => account.isPrimary)
-        .map((account: any) => account.currency)
+      supportedCurrencies: (user.bankAccounts || [])
+        .filter((account: any) => account.isVerified && account.isActive)
+        .map((account: any) => account.currency),
+      verifiedPaymentMethods: (user.bankAccounts || [])
+        .filter((account: any) => account.isVerified && account.isActive)
+        .map((account: any) => ({
+          id: account.id,
+          type: 'bank_account',
+          currency: account.currency,
+          bankName: account.bankName,
+          accountType: account.accountType,
+          lastFourDigits: account.accountNumber ? account.accountNumber.slice(-4) : undefined,
+          isDefault: account.isPrimary,
+          verifiedAt: account.createdAt,
+          country: account.country
+        })),
+      createdAt: user.createdAt
     }));
 
     logger.info('User search completed', {

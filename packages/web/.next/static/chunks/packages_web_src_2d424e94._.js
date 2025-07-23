@@ -8312,7 +8312,7 @@ var _s = __turbopack_context__.k.signature();
 'use client';
 ;
 ;
-function OnboardingGate({ children, requireVerification = false, onOnboardingComplete, skipCheckOnPublicPages = false }) {
+function OnboardingGate({ children, requireVerification = false, onOnboardingComplete, skipCheckOnPublicPages = false, blockTransfersUntilVerified = false }) {
     _s();
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     const [needsOnboarding, setNeedsOnboarding] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -8355,7 +8355,8 @@ function OnboardingGate({ children, requireVerification = false, onOnboardingCom
                     // Check if user needs onboarding
                     const hasAccounts = accounts.length > 0;
                     const hasVerifiedAccount = accounts.some((account)=>account.isVerified);
-                    if (requireVerification) {
+                    // For transfer flows, always require verified accounts
+                    if (requireVerification || blockTransfersUntilVerified) {
                         setNeedsOnboarding(!hasVerifiedAccount);
                     } else {
                         setNeedsOnboarding(!hasAccounts);
@@ -8391,7 +8392,10 @@ function OnboardingGate({ children, requireVerification = false, onOnboardingCom
         }
     };
     const handleSkip = ()=>{
-        setNeedsOnboarding(false);
+        // Only allow skipping if not required for transfers
+        if (!blockTransfersUntilVerified) {
+            setNeedsOnboarding(false);
+        }
     };
     if (loading) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8403,7 +8407,7 @@ function OnboardingGate({ children, requireVerification = false, onOnboardingCom
                         className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"
                     }, void 0, false, {
                         fileName: "[project]/packages/web/src/components/features/OnboardingGate.tsx",
-                        lineNumber: 121,
+                        lineNumber: 127,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8411,29 +8415,29 @@ function OnboardingGate({ children, requireVerification = false, onOnboardingCom
                         children: "Checking account status..."
                     }, void 0, false, {
                         fileName: "[project]/packages/web/src/components/features/OnboardingGate.tsx",
-                        lineNumber: 122,
+                        lineNumber: 128,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/packages/web/src/components/features/OnboardingGate.tsx",
-                lineNumber: 120,
+                lineNumber: 126,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/packages/web/src/components/features/OnboardingGate.tsx",
-            lineNumber: 119,
+            lineNumber: 125,
             columnNumber: 7
         }, this);
     }
     if (needsOnboarding) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$features$2f$BankAccountOnboarding$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             onComplete: handleOnboardingComplete,
-            onSkip: !requireVerification ? handleSkip : undefined,
-            requireVerification: requireVerification
+            onSkip: !requireVerification && !blockTransfersUntilVerified ? handleSkip : undefined,
+            requireVerification: requireVerification || blockTransfersUntilVerified
         }, void 0, false, {
             fileName: "[project]/packages/web/src/components/features/OnboardingGate.tsx",
-            lineNumber: 130,
+            lineNumber: 136,
             columnNumber: 7
         }, this);
     }
@@ -9073,7 +9077,8 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$features$2f$OnboardingGate$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         requireVerification: false,
-        skipCheckOnPublicPages: true,
+        skipCheckOnPublicPages: false,
+        blockTransfersUntilVerified: true,
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: `w-full max-w-4xl mx-auto space-y-6 ${className}`,
             children: [
@@ -9088,7 +9093,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                     }
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                    lineNumber: 490,
+                    lineNumber: 494,
                     columnNumber: 9
                 }, this),
                 state.canGoBack && state.currentStep !== 'status' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9103,19 +9108,19 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                lineNumber: 510,
+                                lineNumber: 514,
                                 columnNumber: 15
                             }, this),
                             "Back"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                        lineNumber: 504,
+                        lineNumber: 508,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                    lineNumber: 503,
+                    lineNumber: 507,
                     columnNumber: 11
                 }, this),
                 state.error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -9130,7 +9135,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 521,
+                                        lineNumber: 525,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9138,13 +9143,13 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         children: "Error"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 522,
+                                        lineNumber: 526,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                lineNumber: 520,
+                                lineNumber: 524,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9152,7 +9157,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                 children: state.error
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                lineNumber: 524,
+                                lineNumber: 528,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -9165,18 +9170,18 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                 children: "Dismiss"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                lineNumber: 525,
+                                lineNumber: 529,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                        lineNumber: 519,
+                        lineNumber: 523,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                    lineNumber: 518,
+                    lineNumber: 522,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9191,7 +9196,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         className: "animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 542,
+                                        lineNumber: 546,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9199,25 +9204,25 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         children: "Processing..."
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 543,
+                                        lineNumber: 547,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                lineNumber: 541,
+                                lineNumber: 545,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                            lineNumber: 540,
+                            lineNumber: 544,
                             columnNumber: 13
                         }, this),
                         renderStepContent()
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                    lineNumber: 538,
+                    lineNumber: 542,
                     columnNumber: 9
                 }, this),
                 ("TURBOPACK compile-time value", "development") === 'development' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -9230,7 +9235,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                 children: "Debug Info"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                lineNumber: 555,
+                                lineNumber: 559,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9243,7 +9248,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 557,
+                                        lineNumber: 561,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9253,7 +9258,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 558,
+                                        lineNumber: 562,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9263,7 +9268,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 559,
+                                        lineNumber: 563,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9273,7 +9278,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 560,
+                                        lineNumber: 564,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9283,7 +9288,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 561,
+                                        lineNumber: 565,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9293,7 +9298,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 562,
+                                        lineNumber: 566,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9303,7 +9308,7 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 563,
+                                        lineNumber: 567,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9313,30 +9318,30 @@ function TransferFlowContainer({ initialStep = 'calculator', onComplete, classNa
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                        lineNumber: 564,
+                                        lineNumber: 568,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                                lineNumber: 556,
+                                lineNumber: 560,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                        lineNumber: 554,
+                        lineNumber: 558,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-                    lineNumber: 553,
+                    lineNumber: 557,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/web/src/components/features/TransferFlowContainer.tsx",
-            lineNumber: 488,
+            lineNumber: 492,
             columnNumber: 7
         }, this)
     }, void 0, false, {

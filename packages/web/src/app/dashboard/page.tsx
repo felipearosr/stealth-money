@@ -140,22 +140,41 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Send Money</h3>
-                  <p className="text-gray-600">Create a new transfer to send money globally.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Send to User</h3>
+                    <p className="text-gray-600">Send money directly to another registered user.</p>
+                  </div>
+                  <Link href="/transfer/user">
+                    <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Send to User
+                    </Button>
+                  </Link>
                 </div>
-                <Link href="/">
-                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Transfer
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Send to Bank</h3>
+                    <p className="text-gray-600">Send money to any bank account worldwide.</p>
+                  </div>
+                  <Link href="/">
+                    <Button variant="outline" className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Send to Bank
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Transactions */}

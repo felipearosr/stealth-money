@@ -46,6 +46,8 @@ const transfers_controller_1 = __importDefault(require("./routes/transfers.contr
 const webhooks_controller_1 = __importDefault(require("./routes/webhooks.controller"));
 const account_controller_1 = __importDefault(require("./routes/account.controller"));
 const currencies_controller_1 = __importDefault(require("./routes/currencies.controller"));
+const users_controller_1 = __importDefault(require("./routes/users.controller"));
+const verification_controller_1 = __importDefault(require("./routes/verification.controller"));
 const database_simple_service_1 = require("./services/database-simple.service");
 const security_middleware_1 = require("./middleware/security.middleware");
 const logging_middleware_1 = require("./middleware/logging.middleware");
@@ -211,6 +213,10 @@ app.use('/api/webhooks', webhooks_controller_1.default);
 app.use('/api', account_controller_1.default);
 // Wire up the currency routes with /api prefix
 app.use('/api/currencies', currencies_controller_1.default);
+// Wire up the user routes with /api prefix
+app.use('/api/users', users_controller_1.default);
+// Wire up the verification routes with /api prefix
+app.use('/api', verification_controller_1.default);
 // Error logging middleware
 app.use(logging_middleware_1.errorLogger);
 // Global error handling middleware
