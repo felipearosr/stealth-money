@@ -32,22 +32,22 @@ export function VideoModal({ isOpen, onClose, videoId }: VideoModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
+      {/* Backdrop with blur */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-75 transition-opacity"
+        className="fixed inset-0 bg-black/30 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="relative w-full max-w-4xl">
+        <div className="relative w-full max-w-6xl">
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+            className="absolute -top-14 right-0 text-white hover:text-gray-300 transition-colors"
             aria-label="Close video"
           >
-            <X className="h-8 w-8" />
+            <X className="h-10 w-10" />
           </button>
 
           {/* YouTube iframe */}
