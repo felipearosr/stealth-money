@@ -12,7 +12,11 @@ export enum TransferStatusEnum {
   TRANSFERRING = 'transferring',
   PAYING_OUT = 'paying_out',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
+  // Chilean-specific statuses
+  CHILEAN_BANK_PROCESSING = 'chilean_bank_processing',
+  CHILEAN_VERIFICATION_PENDING = 'chilean_verification_pending',
+  CHILEAN_MICRODEPOSIT_SENT = 'chilean_microdeposit_sent'
 }
 
 export interface TransferEvent {
@@ -33,6 +37,8 @@ export interface TransferStatusData {
   receiveAmount: number;
   exchangeRate: number;
   fees: number;
+  sendCurrency?: string;
+  receiveCurrency?: string;
   estimatedCompletion?: string;
   completedAt?: string;
   lastUpdated: string;
@@ -142,6 +148,13 @@ export function TransferStatus({
         return { color: 'text-green-600', bgColor: 'bg-green-50', icon: CheckCircle, label: 'Completed' };
       case TransferStatusEnum.FAILED:
         return { color: 'text-red-600', bgColor: 'bg-red-50', icon: AlertCircle, label: 'Failed' };
+      // Chilean-specific statuses
+      case TransferStatusEnum.CHILEAN_BANK_PROCESSING:
+        return { color: 'text-blue-600', bgColor: 'bg-blue-50', icon: RefreshCw, label: 'Processing Chilean Bank Transfer' };
+      case TransferStatusEnum.CHILEAN_VERIFICATION_PENDING:
+        return { color: 'text-yellow-600', bgColor: 'bg-yellow-50', icon: Clock, label: 'Awaiting Bank Verification' };
+      case TransferStatusEnum.CHILEAN_MICRODEPOSIT_SENT:
+        return { color: 'text-purple-600', bgColor: 'bg-purple-50', icon: ArrowRight, label: 'Microdeposits Sent' };
       default:
         return { color: 'text-gray-600', bgColor: 'bg-gray-50', icon: Clock, label: 'Unknown' };
     }
@@ -176,6 +189,13 @@ export function TransferStatus({
         return 100;
       case TransferStatusEnum.FAILED:
         return 0;
+      // Chilean-specific progress
+      case TransferStatusEnum.CHILEAN_BANK_PROCESSING:
+        return 50;
+      case TransferStatusEnum.CHILEAN_VERIFICATION_PENDING:
+        return 30;
+      case TransferStatusEnum.CHILEAN_MICRODEPOSIT_SENT:
+        return 70;
       default:
         return 0;
     }
@@ -298,19 +318,24 @@ export function TransferStatus({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
           <div>
             <p className="text-sm text-muted-foreground">You sent</p>
-            <p className="font-semibold">{formatCurrency(transferData.sendAmount, 'USD')}</p>
+            <p className="font-semibold">{formatCurrency(transferData.sendAmount, transferData.sendCurrency || 'USD')}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Recipient gets</p>
-            <p className="font-semibold text-green-600">{formatCurrency(transferData.receiveAmount, 'EUR')}</p>
+            <p className="font-semibold text-green-600">{formatCurrency(transferData.receiveAmount, transferData.receiveCurrency || 'EUR')}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Exchange rate</p>
-            <p className="font-semibold">1 USD = {transferData.exchangeRate.toFixed(4)} EUR</p>
+            <p className="font-semibold">
+              {transferData.sendCurrency === transferData.receiveCurrency ? 
+                '1:1 (Same currency)' : 
+                `1 ${transferData.sendCurrency || 'USD'} = ${transferData.exchangeRate.toFixed(4)} ${transferData.receiveCurrency || 'EUR'}`
+              }
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Fees</p>
-            <p className="font-semibold">{formatCurrency(transferData.fees, 'USD')}</p>
+            <p className="font-semibold">{formatCurrency(transferData.fees, transferData.sendCurrency || 'USD')}</p>
           </div>
         </div>
 

@@ -109,6 +109,33 @@ interface EnhancedPaymentFormProps {
   isLoading?: boolean;
 }
 
+// Chilean-specific interfaces
+interface ChileanBankAccount {
+  id: string;
+  accountName: string;
+  bankName: string;
+  bankCode: string;
+  accountNumber: string;
+  rut: string;
+  accountHolderName: string;
+  accountType: 'checking' | 'savings' | 'vista' | 'rut';
+  isVerified: boolean;
+  isPrimary: boolean;
+  currency: 'CLP';
+  country: 'CL';
+}
+
+interface ChileanTransferData extends TransferCalculationData {
+  sendCurrency: 'CLP';
+  receiveCurrency: 'CLP';
+}
+
+interface ChileanUserProfile extends UserProfile {
+  country: 'CL';
+  rut?: string;
+  supportedCurrencies: ['CLP'];
+}
+
 // Legacy props for backward compatibility
 interface PaymentFormProps {
   sendAmount: number;
@@ -269,6 +296,9 @@ export function PaymentForm({
     return 'mock-token';
   };
 
+  // Detect if this is a Chilean transfer
+  const isChileanTransfer = effectiveTransferData.sendCurrency === 'CLP' && effectiveTransferData.receiveCurrency === 'CLP';
+
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -288,23 +318,38 @@ export function PaymentForm({
 
         userToUserPaymentFormSchema.parse(formData);
 
-        // Create transfer with user-to-user data
+        // Determine the appropriate API endpoint based on transfer type
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        const response = await fetch(`${API_URL}/api/transfers/create-user-to-user`, {
+        const endpoint = isChileanTransfer 
+          ? `${API_URL}/api/transfers/create-chilean-user-transfer`
+          : `${API_URL}/api/transfers/create-user-to-user`;
+
+        const requestBody = isChileanTransfer ? {
+          sendAmount: effectiveTransferData.sendAmount,
+          sendCurrency: effectiveTransferData.sendCurrency,
+          receiveCurrency: effectiveTransferData.receiveCurrency,
+          rateId: effectiveTransferData.rateId,
+          cardDetails: formData.cardDetails,
+          recipientUserId: recipientUser!.id,
+          recipientPaymentMethodId: selectedPaymentMethod!.id,
+          transferType: 'chilean_user_to_user'
+        } : {
+          sendAmount: effectiveTransferData.sendAmount,
+          sendCurrency: effectiveTransferData.sendCurrency,
+          receiveCurrency: effectiveTransferData.receiveCurrency,
+          rateId: effectiveTransferData.rateId,
+          cardDetails: formData.cardDetails,
+          recipientUserId: recipientUser!.id,
+          recipientPaymentMethodId: selectedPaymentMethod!.id,
+        };
+
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${await getAuthToken()}`,
           },
-          body: JSON.stringify({
-            sendAmount: effectiveTransferData.sendAmount,
-            sendCurrency: effectiveTransferData.sendCurrency,
-            receiveCurrency: effectiveTransferData.receiveCurrency,
-            rateId: effectiveTransferData.rateId,
-            cardDetails: formData.cardDetails,
-            recipientUserId: recipientUser!.id,
-            recipientPaymentMethodId: selectedPaymentMethod!.id,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
