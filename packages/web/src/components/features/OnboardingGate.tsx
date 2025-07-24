@@ -8,6 +8,7 @@ import BankAccountOnboardingV2 from './BankAccountOnboardingV2';
 interface BankAccount {
   id: string;
   currency: string;
+  country: string;
   isVerified: boolean;
   isActive: boolean;
 }
@@ -18,6 +19,7 @@ interface OnboardingGateProps {
   onOnboardingComplete?: () => void;
   skipCheckOnPublicPages?: boolean;
   blockTransfersUntilVerified?: boolean; // New prop to enforce verification for transfers
+  requireChileanVerification?: boolean; // New prop to specifically require Chilean bank verification
 }
 
 export default function OnboardingGate({ 
@@ -25,7 +27,8 @@ export default function OnboardingGate({
   requireVerification = false,
   onOnboardingComplete,
   skipCheckOnPublicPages = false,
-  blockTransfersUntilVerified = false
+  blockTransfersUntilVerified = false,
+  requireChileanVerification = false
 }: OnboardingGateProps) {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -88,11 +91,20 @@ export default function OnboardingGate({
           // Check if user needs onboarding
           const hasAccounts = accountsArray.length > 0;
           const hasVerifiedAccount = accountsArray.some((account: BankAccount) => account.isVerified);
+          const hasVerifiedChileanAccount = accountsArray.some((account: BankAccount) => 
+            account.isVerified && account.country === 'CL' && account.currency === 'CLP'
+          );
           
-          console.log('OnboardingGate: Has accounts:', hasAccounts, 'Has verified:', hasVerifiedAccount);
+          console.log('OnboardingGate: Has accounts:', hasAccounts, 'Has verified:', hasVerifiedAccount, 'Has verified Chilean:', hasVerifiedChileanAccount);
           
+          // Chilean-specific verification requirements
+          if (requireChileanVerification) {
+            const needsOnboarding = !hasVerifiedChileanAccount;
+            console.log('OnboardingGate: Chilean flow - needs onboarding:', needsOnboarding);
+            setNeedsOnboarding(needsOnboarding);
+          }
           // For transfer flows, always require verified accounts
-          if (requireVerification || blockTransfersUntilVerified) {
+          else if (requireVerification || blockTransfersUntilVerified) {
             const needsOnboarding = !hasVerifiedAccount;
             console.log('OnboardingGate: Transfer flow - needs onboarding:', needsOnboarding);
             setNeedsOnboarding(needsOnboarding);
@@ -142,8 +154,8 @@ export default function OnboardingGate({
   };
 
   const handleSkip = () => {
-    // Only allow skipping if not required for transfers
-    if (!blockTransfersUntilVerified) {
+    // Only allow skipping if not required for transfers or Chilean verification
+    if (!blockTransfersUntilVerified && !requireChileanVerification) {
       setNeedsOnboarding(false);
     }
   };
@@ -163,8 +175,9 @@ export default function OnboardingGate({
     return (
       <BankAccountOnboardingV2
         onComplete={handleOnboardingComplete}
-        onSkip={(!requireVerification && !blockTransfersUntilVerified) ? handleSkip : undefined}
-        requireVerification={requireVerification || blockTransfersUntilVerified}
+        onSkip={(!requireVerification && !blockTransfersUntilVerified && !requireChileanVerification) ? handleSkip : undefined}
+        requireVerification={requireVerification || blockTransfersUntilVerified || requireChileanVerification}
+        requireChileanVerification={requireChileanVerification}
         onAccountAdded={handleAccountAdded}
       />
     );

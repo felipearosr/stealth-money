@@ -66,6 +66,7 @@ interface BankAccountOnboardingV2Props {
   onComplete?: () => void;
   onSkip?: () => void;
   requireVerification?: boolean;
+  requireChileanVerification?: boolean; // New prop to specifically require Chilean bank verification
   onAccountAdded?: () => void; // New callback for when account is added (not necessarily verified)
 }
 
@@ -73,6 +74,7 @@ export default function BankAccountOnboardingV2({
   onComplete, 
   onSkip, 
   requireVerification = false,
+  requireChileanVerification = false,
   onAccountAdded
 }: BankAccountOnboardingV2Props) {
   const { getToken } = useAuth();
@@ -128,7 +130,12 @@ export default function BankAccountOnboardingV2({
 
   useEffect(() => {
     fetchBankAccounts();
-  }, []);
+    
+    // If Chilean verification is required, default to Chile
+    if (requireChileanVerification && !selectedCountry) {
+      handleCountryChange('CL');
+    }
+  }, [requireChileanVerification]);
 
   // Handle country selection
   const handleCountryChange = (countryCode: string) => {
@@ -418,7 +425,13 @@ export default function BankAccountOnboardingV2({
   };
 
   const hasVerifiedAccount = Array.isArray(bankAccounts) && bankAccounts.some(acc => acc.isVerified);
+  const hasVerifiedChileanAccount = Array.isArray(bankAccounts) && bankAccounts.some(acc => 
+    acc.isVerified && acc.country === 'CL' && acc.currency === 'CLP'
+  );
   const hasUnverifiedAccounts = Array.isArray(bankAccounts) && bankAccounts.length > 0 && !hasVerifiedAccount;
+  const hasUnverifiedChileanAccounts = Array.isArray(bankAccounts) && bankAccounts.some(acc => 
+    !acc.isVerified && acc.country === 'CL' && acc.currency === 'CLP'
+  );
 
   // Handle verification completion
   const handleVerificationComplete = async (accountId: string) => {
@@ -434,9 +447,23 @@ export default function BankAccountOnboardingV2({
     if (updatedAccounts.ok) {
       const responseData = await updatedAccounts.json();
       const accounts = responseData.bankAccounts || responseData;
-      const hasVerified = Array.isArray(accounts) && accounts.some((acc: BankAccount) => acc.isVerified);
       
-      if (hasVerified && onComplete) {
+      // Check verification requirements based on Chilean requirements
+      let requirementsMet = false;
+      
+      if (requireChileanVerification) {
+        // For Chilean verification, require at least one verified Chilean account
+        requirementsMet = Array.isArray(accounts) && accounts.some((acc: BankAccount) => 
+          acc.isVerified && acc.country === 'CL' && acc.currency === 'CLP'
+        );
+        console.log('Chilean verification requirements met:', requirementsMet);
+      } else {
+        // For general verification, require at least one verified account
+        requirementsMet = Array.isArray(accounts) && accounts.some((acc: BankAccount) => acc.isVerified);
+        console.log('General verification requirements met:', requirementsMet);
+      }
+      
+      if (requirementsMet && onComplete) {
         console.log('All requirements met, calling onComplete');
         onComplete();
       }
@@ -482,12 +509,21 @@ export default function BankAccountOnboardingV2({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">
-          {hasUnverifiedAccounts ? 'Verify Your Bank Account' : 'Bank Account Setup'}
+          {requireChileanVerification 
+            ? (hasUnverifiedChileanAccounts ? 'Verify Your Chilean Bank Account' : 'Chilean Bank Account Setup')
+            : (hasUnverifiedAccounts ? 'Verify Your Bank Account' : 'Bank Account Setup')
+          }
         </h2>
         <p className="text-gray-600">
-          {hasUnverifiedAccounts 
-            ? 'Complete bank account verification to start sending money globally.'
-            : 'Add and verify your bank accounts to start sending money globally.'
+          {requireChileanVerification 
+            ? (hasUnverifiedChileanAccounts 
+                ? 'Complete Chilean bank account verification to start sending money to other Chilean users.'
+                : 'Add and verify your Chilean bank account to start sending money to other Chilean users.'
+              )
+            : (hasUnverifiedAccounts 
+                ? 'Complete bank account verification to start sending money globally.'
+                : 'Add and verify your bank accounts to start sending money globally.'
+              )
           }
         </p>
       </div>
@@ -528,21 +564,31 @@ export default function BankAccountOnboardingV2({
 
       {/* Status Summary */}
       {Array.isArray(bankAccounts) && bankAccounts.length > 0 && (
-        <Card className={hasVerifiedAccount ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}>
+        <Card className={
+          (requireChileanVerification ? hasVerifiedChileanAccount : hasVerifiedAccount) 
+            ? 'border-green-200 bg-green-50' 
+            : 'border-amber-200 bg-amber-50'
+        }>
           <CardContent className="py-4">
             <div className="flex items-center gap-2">
-              {hasVerifiedAccount ? (
+              {(requireChileanVerification ? hasVerifiedChileanAccount : hasVerifiedAccount) ? (
                 <>
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <span className="font-medium text-green-700">
-                    You have {bankAccounts.filter(acc => acc.isVerified).length} verified account(s)
+                    {requireChileanVerification 
+                      ? `You have ${bankAccounts.filter(acc => acc.isVerified && acc.country === 'CL').length} verified Chilean account(s)`
+                      : `You have ${bankAccounts.filter(acc => acc.isVerified).length} verified account(s)`
+                    }
                   </span>
                 </>
               ) : (
                 <>
                   <AlertCircle className="h-5 w-5 text-amber-600" />
                   <span className="font-medium text-amber-700">
-                    Verification required for your bank account(s)
+                    {requireChileanVerification 
+                      ? 'Chilean bank account verification required'
+                      : 'Verification required for your bank account(s)'
+                    }
                   </span>
                 </>
               )}
@@ -635,7 +681,7 @@ export default function BankAccountOnboardingV2({
             {hasUnverifiedAccounts ? "Add Another Account" : "Add Bank Account"}
           </Button>
           
-          {onSkip && !requireVerification && !hasUnverifiedAccounts && (
+          {onSkip && !requireVerification && !requireChileanVerification && !hasUnverifiedAccounts && (
             <Button
               onClick={onSkip}
               variant="ghost"
@@ -683,6 +729,7 @@ export default function BankAccountOnboardingV2({
                     </SelectTrigger>
                     <SelectContent>
                       {Object.values(COUNTRY_BANKING_CONFIGS)
+                        .filter(config => !requireChileanVerification || config.countryCode === 'CL')
                         .sort((a, b) => a.countryName.localeCompare(b.countryName))
                         .map((config) => (
                           <SelectItem key={config.countryCode} value={config.countryCode}>
