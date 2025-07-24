@@ -9,7 +9,11 @@ import {
   formatRUTInput,
   isValidRUTFormat,
   getRUTValidationError,
-  getExampleRUTs
+  getExampleRUTs,
+  isValidChileanUser,
+  filterChileanUsers,
+  isChileanUsernamePattern,
+  formatChileanUserDisplay
 } from '../chilean-utils';
 
 describe('Chilean RUT Utilities', () => {
@@ -208,6 +212,115 @@ describe('Chilean RUT Utilities', () => {
       typingSequence.forEach((input, index) => {
         const formatted = formatRUTInput(input);
         expect(formatted).toBe(expectedFormats[index]);
+      });
+    });
+  });
+
+  describe('Chilean User Search Utilities', () => {
+    describe('isValidChileanUser', () => {
+      it('should identify valid Chilean users', () => {
+        const validUser = {
+          id: '1',
+          verifiedPaymentMethods: [
+            { currency: 'CLP', country: 'CL' },
+            { currency: 'USD', country: 'US' }
+          ]
+        };
+        
+        expect(isValidChileanUser(validUser)).toBe(true);
+      });
+
+      it('should reject users without Chilean accounts', () => {
+        const invalidUser = {
+          id: '1',
+          verifiedPaymentMethods: [
+            { currency: 'USD', country: 'US' }
+          ]
+        };
+        
+        expect(isValidChileanUser(invalidUser)).toBe(false);
+        expect(isValidChileanUser(null)).toBe(false);
+        expect(isValidChileanUser({})).toBe(false);
+      });
+    });
+
+    describe('filterChileanUsers', () => {
+      it('should filter array to only Chilean users', () => {
+        const users = [
+          {
+            id: '1',
+            verifiedPaymentMethods: [{ currency: 'CLP', country: 'CL' }]
+          },
+          {
+            id: '2',
+            verifiedPaymentMethods: [{ currency: 'USD', country: 'US' }]
+          },
+          {
+            id: '3',
+            verifiedPaymentMethods: [
+              { currency: 'CLP', country: 'CL' },
+              { currency: 'USD', country: 'US' }
+            ]
+          }
+        ];
+        
+        const chileanUsers = filterChileanUsers(users);
+        expect(chileanUsers).toHaveLength(2);
+        expect(chileanUsers.map(u => u.id)).toEqual(['1', '3']);
+      });
+    });
+
+    describe('isChileanUsernamePattern', () => {
+      it('should identify Chilean username patterns', () => {
+        expect(isChileanUsernamePattern('juan.perez')).toBe(true);
+        expect(isChileanUsernamePattern('maria_gonzalez')).toBe(true);
+        expect(isChileanUsernamePattern('carlos123')).toBe(true);
+        expect(isChileanUsernamePattern('ana')).toBe(true);
+        
+        expect(isChileanUsernamePattern('test@email.com')).toBe(false);
+        expect(isChileanUsernamePattern('+56912345678')).toBe(false);
+        expect(isChileanUsernamePattern('')).toBe(false);
+        expect(isChileanUsernamePattern('a')).toBe(false);
+      });
+    });
+
+    describe('formatChileanUserDisplay', () => {
+      it('should format Chilean user display information', () => {
+        const user = {
+          fullName: 'Juan Pérez',
+          username: 'juan.perez',
+          email: 'juan@example.com',
+          isVerified: true,
+          verifiedPaymentMethods: [
+            { currency: 'CLP', country: 'CL' },
+            { currency: 'CLP', country: 'CL' }
+          ]
+        };
+        
+        const display = formatChileanUserDisplay(user);
+        
+        expect(display.displayName).toBe('Juan Pérez');
+        expect(display.subtitle).toBe('@juan.perez');
+        expect(display.badges).toContain('Verificado');
+        expect(display.badges).toContain('2 cuentas CLP');
+      });
+
+      it('should handle users without full names', () => {
+        const user = {
+          username: 'testuser',
+          email: 'test@example.com',
+          isVerified: false,
+          verifiedPaymentMethods: [
+            { currency: 'CLP', country: 'CL' }
+          ]
+        };
+        
+        const display = formatChileanUserDisplay(user);
+        
+        expect(display.displayName).toBe('testuser');
+        expect(display.subtitle).toBe('test@example.com');
+        expect(display.badges).not.toContain('Verificado');
+        expect(display.badges).toContain('1 cuenta CLP');
       });
     });
   });

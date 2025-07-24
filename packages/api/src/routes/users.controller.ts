@@ -67,7 +67,7 @@ function validateBankAccountData(currency: string, data: any): { isValid: boolea
 // GET /api/users/search - Intelligent search for users by email/username/phone
 router.get('/search', optionalAuth, async (req: Request, res: Response) => {
   try {
-    const { q: query, limit = '10', currency } = req.query;
+    const { q: query, limit = '10', currency, country } = req.query;
     
     if (!query || typeof query !== 'string' || query.trim().length < 2) {
       return res.status(400).json({
@@ -80,7 +80,7 @@ router.get('/search', optionalAuth, async (req: Request, res: Response) => {
     const searchQuery = query.trim();
     
     // Intelligent search: automatically detect if it's email, phone, or username
-    const users = await dbService.intelligentUserSearch(searchQuery, searchLimit, currency as string);
+    const users = await dbService.intelligentUserSearch(searchQuery, searchLimit, currency as string, country as string);
     
     // Transform the response to include supported currencies and payment methods
     const searchResults = users.map((user: any) => ({

@@ -21,6 +21,11 @@ import {
   ArrowRight,
   Users
 } from "lucide-react";
+import { 
+  isValidChileanUser, 
+  formatChileanUserDisplay,
+  isChileanUsernamePattern 
+} from "@/lib/chilean-utils";
 
 // Types for user-to-user transfers
 export interface UserProfile {
@@ -177,6 +182,11 @@ export function UserRecipientSelector({
         currency: transferData.receiveCurrency,
         limit: '10'
       });
+
+      // Add Chilean user filtering for CLP transfers
+      if (transferData.receiveCurrency === 'CLP') {
+        searchParams.append('country', 'CL');
+      }
       
       const response = await fetch(`${API_URL}/api/users/search?${searchParams}`, {
         headers: {
@@ -191,8 +201,19 @@ export function UserRecipientSelector({
 
       const data: UserSearchResult = await response.json();
       
-      // Filter out current user from results
-      const filteredUsers = data.users.filter(user => user.id !== currentUserId);
+      // Filter out current user from results and ensure Chilean users have verified CLP accounts
+      const filteredUsers = data.users.filter(user => {
+        if (user.id === currentUserId) return false;
+        
+        // For CLP transfers, ensure user has verified Chilean bank account
+        if (transferData.receiveCurrency === 'CLP') {
+          return user.verifiedPaymentMethods.some(method => 
+            method.currency === 'CLP' && method.country === 'CL'
+          );
+        }
+        
+        return true;
+      });
       
       setSearchResults(filteredUsers);
       setHasSearched(true);
@@ -257,6 +278,10 @@ export function UserRecipientSelector({
     
     const isSelected = selectedRecipient?.id === user.id;
     
+    // Use Chilean formatting for CLP transfers
+    const isChileanTransfer = transferData.receiveCurrency === 'CLP';
+    const displayInfo = isChileanTransfer ? formatChileanUserDisplay(user) : null;
+    
     return (
       <Card 
         key={user.id} 
@@ -272,7 +297,7 @@ export function UserRecipientSelector({
               {user.profileImageUrl ? (
                 <img
                   src={user.profileImageUrl}
-                  alt={user.fullName}
+                  alt={displayInfo?.displayName || user.fullName}
                   className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
@@ -286,7 +311,7 @@ export function UserRecipientSelector({
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-1">
                 <h3 className="text-sm font-semibold text-gray-900 truncate">
-                  {user.fullName}
+                  {displayInfo?.displayName || user.fullName}
                 </h3>
                 {user.isVerified && (
                   <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
@@ -296,19 +321,28 @@ export function UserRecipientSelector({
                 )}
               </div>
               
-              <div className="flex items-center space-x-4 text-xs text-gray-500 mb-2">
-                {user.email && (
-                  <div className="flex items-center space-x-1">
-                    <Mail className="w-3 h-3" />
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                )}
-                {user.username && (
-                  <div className="flex items-center space-x-1">
-                    <span>@{user.username}</span>
-                  </div>
-                )}
-              </div>
+              {/* Subtitle with username or email */}
+              {(displayInfo?.subtitle || user.email || user.username) && (
+                <div className="flex items-center space-x-4 text-xs text-gray-500 mb-2">
+                  {displayInfo?.subtitle ? (
+                    <span className="truncate">{displayInfo.subtitle}</span>
+                  ) : (
+                    <>
+                      {user.email && (
+                        <div className="flex items-center space-x-1">
+                          <Mail className="w-3 h-3" />
+                          <span className="truncate">{user.email}</span>
+                        </div>
+                      )}
+                      {user.username && (
+                        <div className="flex items-center space-x-1">
+                          <span>@{user.username}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
               
               {/* Recent transfer info */}
               {isRecent && recentData && (
@@ -323,27 +357,45 @@ export function UserRecipientSelector({
                 </div>
               )}
               
-              {/* Supported currencies */}
+              {/* Chilean-specific badges or regular currency badges */}
               <div className="flex flex-wrap gap-1 mb-2">
-                {user.supportedCurrencies.map(currency => (
-                  <Badge 
-                    key={currency} 
-                    variant={currency === transferData.receiveCurrency ? "default" : "secondary"}
-                    className="text-xs"
-                  >
-                    {currency}
-                  </Badge>
-                ))}
+                {isChileanTransfer && displayInfo?.badges ? (
+                  displayInfo.badges.map((badge, index) => (
+                    <Badge 
+                      key={index}
+                      variant={badge.includes('CLP') ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {badge}
+                    </Badge>
+                  ))
+                ) : (
+                  user.supportedCurrencies.map(currency => (
+                    <Badge 
+                      key={currency} 
+                      variant={currency === transferData.receiveCurrency ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {currency}
+                    </Badge>
+                  ))
+                )}
               </div>
               
               {/* Compatible payment methods */}
               {compatibleMethods.length > 0 ? (
                 <div className="text-xs text-green-600">
                   ✓ {compatibleMethods.length} verified account{compatibleMethods.length !== 1 ? 's' : ''} for {transferData.receiveCurrency}
+                  {isChileanTransfer && (
+                    <span className="ml-1">(Chilean bank)</span>
+                  )}
                 </div>
               ) : (
                 <div className="text-xs text-red-600">
                   ✗ No verified accounts for {transferData.receiveCurrency}
+                  {isChileanTransfer && (
+                    <span className="ml-1">(Need Chilean bank account)</span>
+                  )}
                 </div>
               )}
             </div>
@@ -494,12 +546,21 @@ export function UserRecipientSelector({
           <>
             {/* Search Input */}
             <div className="space-y-2">
-              <Label htmlFor="user-search">Search by email, username, or phone</Label>
+              <Label htmlFor="user-search">
+                {transferData.receiveCurrency === 'CLP' 
+                  ? 'Search Chilean users by username, email, or phone' 
+                  : 'Search by email, username, or phone'
+                }
+              </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="user-search"
-                  placeholder="Enter email, username, or phone number..."
+                  placeholder={
+                    transferData.receiveCurrency === 'CLP'
+                      ? "Enter username, email, or phone number..."
+                      : "Enter email, username, or phone number..."
+                  }
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -508,6 +569,11 @@ export function UserRecipientSelector({
                   <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
                 )}
               </div>
+              {transferData.receiveCurrency === 'CLP' && (
+                <p className="text-xs text-gray-500">
+                  Only showing Chilean users with verified CLP bank accounts
+                </p>
+              )}
             </div>
 
             {/* Search Results */}
@@ -528,7 +594,10 @@ export function UserRecipientSelector({
                   <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
                   <p className="text-gray-600">
-                    No users found matching "{searchQuery}". Try a different search term.
+                    {transferData.receiveCurrency === 'CLP' 
+                      ? `No Chilean users found matching "${searchQuery}" with verified CLP bank accounts. Try a different search term.`
+                      : `No users found matching "${searchQuery}". Try a different search term.`
+                    }
                   </p>
                 </CardContent>
               </Card>

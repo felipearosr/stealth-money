@@ -216,3 +216,120 @@ export function getExampleRUTs(): string[] {
     '1.234.567-4'
   ];
 }
+
+/**
+ * Checks if a user profile is a valid Chilean user for transfers
+ * @param user - User profile to check
+ * @returns boolean indicating if user can receive CLP transfers
+ */
+export function isValidChileanUser(user: any): boolean {
+  if (!user) return false;
+  
+  // Check if user has verified Chilean bank accounts
+  const hasChileanAccount = user.verifiedPaymentMethods?.some((method: any) => 
+    method.currency === 'CLP' && method.country === 'CL'
+  );
+  
+  return !!hasChileanAccount;
+}
+
+/**
+ * Filters users to only include valid Chilean users
+ * @param users - Array of user profiles
+ * @returns Array of users that can receive CLP transfers
+ */
+export function filterChileanUsers(users: any[]): any[] {
+  return users.filter(isValidChileanUser);
+}
+
+/**
+ * Checks if a search query looks like a Chilean username pattern
+ * @param query - Search query string
+ * @returns boolean indicating if it matches Chilean username patterns
+ */
+export function isChileanUsernamePattern(query: string): boolean {
+  if (!query || typeof query !== 'string') return false;
+  
+  const trimmed = query.trim().toLowerCase();
+  
+  // Common Chilean username patterns
+  const chileanPatterns = [
+    /^[a-z]+\.[a-z]+$/,           // firstname.lastname
+    /^[a-z]+_[a-z]+$/,            // firstname_lastname
+    /^[a-z]+[0-9]+$/,             // name + numbers
+    /^[a-z]{2,}$/,                // simple names
+  ];
+  
+  return chileanPatterns.some(pattern => pattern.test(trimmed));
+}
+
+/**
+ * Gets search suggestions for Chilean users
+ * @param query - Current search query
+ * @returns Array of search suggestions
+ */
+export function getChileanSearchSuggestions(query: string): string[] {
+  if (!query || query.length < 2) return [];
+  
+  const suggestions: string[] = [];
+  const lowerQuery = query.toLowerCase();
+  
+  // Common Chilean name patterns
+  const commonNames = [
+    'juan', 'maria', 'carlos', 'ana', 'luis', 'carmen', 'jose', 'francisca',
+    'pedro', 'patricia', 'diego', 'carolina', 'miguel', 'andrea', 'pablo', 'monica'
+  ];
+  
+  // Suggest names that start with the query
+  commonNames.forEach(name => {
+    if (name.startsWith(lowerQuery)) {
+      suggestions.push(name);
+      suggestions.push(`${name}.${name}`); // firstname.lastname pattern
+      suggestions.push(`${name}_${name}`); // firstname_lastname pattern
+    }
+  });
+  
+  return suggestions.slice(0, 5); // Limit to 5 suggestions
+}
+
+/**
+ * Formats Chilean user display information
+ * @param user - User profile
+ * @returns Formatted display object
+ */
+export function formatChileanUserDisplay(user: any): {
+  displayName: string;
+  subtitle: string;
+  badges: string[];
+} {
+  const displayName = user.fullName || user.username || user.email;
+  
+  let subtitle = '';
+  if (user.username && user.fullName && user.fullName !== user.username) {
+    subtitle = `@${user.username}`;
+  } else if (user.username && !user.fullName) {
+    subtitle = user.email || '';
+  } else if (user.email && !user.username) {
+    subtitle = user.email;
+  }
+  
+  const badges: string[] = [];
+  if (user.isVerified) {
+    badges.push('Verificado');
+  }
+  
+  // Count Chilean accounts
+  const chileanAccounts = user.verifiedPaymentMethods?.filter((method: any) => 
+    method.currency === 'CLP' && method.country === 'CL'
+  ) || [];
+  
+  if (chileanAccounts.length > 0) {
+    badges.push(`${chileanAccounts.length} cuenta${chileanAccounts.length > 1 ? 's' : ''} CLP`);
+  }
+  
+  return {
+    displayName,
+    subtitle,
+    badges
+  };
+}

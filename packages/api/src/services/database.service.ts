@@ -109,7 +109,7 @@ export class DatabaseService {
   }
 
   // Intelligent user search - automatically detects email, phone, or username
-  async intelligentUserSearch(query: string, limit: number = 10, currency?: string): Promise<any[]> {
+  async intelligentUserSearch(query: string, limit: number = 10, currency?: string, country?: string): Promise<any[]> {
     const trimmedQuery = query.trim();
     
     // Detect query type
@@ -154,6 +154,11 @@ export class DatabaseService {
         }
       ]
     };
+
+    // Add country filter for Chilean users if specified
+    if (country === 'CL') {
+      baseWhere.AND.push({ country: 'CL' });
+    }
 
     // Enhanced query with currency filtering if provided
     let orderBy: any[] = [
