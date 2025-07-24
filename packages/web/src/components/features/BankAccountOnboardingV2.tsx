@@ -13,16 +13,18 @@ import { CheckCircle, AlertCircle, Plus, Trash2, Edit, Globe, Building2, CreditC
 import { BankAccountVerification } from './BankAccountVerification';
 import { 
   COUNTRY_BANKING_CONFIGS, 
-  validateRUT, 
-  formatRUT, 
   validateIBAN, 
   validateCLABE,
   validateUSRoutingNumber,
   validateUKSortCode,
   formatSortCode,
-  type CountryBankingConfig,
   type Bank
 } from '@/lib/bank-config';
+import { 
+  validateRUT, 
+  formatRUTInput, 
+  getRUTValidationError
+} from '@/lib/chilean-utils';
 
 interface BankAccount {
   id: string;
@@ -193,7 +195,7 @@ export default function BankAccountOnboardingV2({
         switch (field.validation) {
           case 'Chilean RUT':
             if (!validateRUT(value)) {
-              errors[field.field] = 'Invalid RUT format';
+              errors[field.field] = getRUTValidationError(value);
             }
             break;
           case 'IBAN':
@@ -391,13 +393,13 @@ export default function BankAccountOnboardingV2({
         <Input
           id={field.field}
           type={field.type}
-          value={formData[field.field] || ''}
+          value={String(formData[field.field] || '')}
           onChange={(e) => {
             let value = e.target.value;
             
             // Apply formatting for specific fields
             if (field.field === 'rut') {
-              value = formatRUT(value);
+              value = formatRUTInput(value, String(formData[field.field] || ''));
             } else if (field.field === 'sortCode') {
               value = formatSortCode(value);
             }
