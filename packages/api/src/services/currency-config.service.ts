@@ -362,8 +362,8 @@ export class CurrencyConfigService {
     }
   };
 
-  // Send currencies (currently only USD)
-  private static readonly SEND_CURRENCIES = ['USD'] as const;
+  // Send currencies (USD for international, CLP for Chilean domestic)
+  private static readonly SEND_CURRENCIES = ['USD', 'CLP'] as const;
 
   // Receive currencies (all supported except USD)
   private static readonly RECEIVE_CURRENCIES = [
@@ -421,6 +421,11 @@ export class CurrencyConfigService {
     const from = fromCurrency.toUpperCase();
     const to = toCurrency.toUpperCase();
     
+    // Special case: CLP-to-CLP domestic transfers are supported
+    if (from === 'CLP' && to === 'CLP') {
+      return true;
+    }
+    
     return this.isSendCurrencySupported(from) && this.isReceiveCurrencySupported(to);
   }
 
@@ -430,6 +435,21 @@ export class CurrencyConfigService {
   static getCurrencyPair(fromCurrency: string, toCurrency: string): CurrencyPair | null {
     const from = fromCurrency.toUpperCase();
     const to = toCurrency.toUpperCase();
+    
+    // Special handling for CLP-to-CLP domestic transfers
+    if (from === 'CLP' && to === 'CLP') {
+      const clpConfig = this.getCurrency('CLP');
+      if (!clpConfig) return null;
+      
+      return {
+        from: 'CLP',
+        to: 'CLP',
+        isSupported: true,
+        minAmount: clpConfig.minAmount,
+        maxAmount: clpConfig.maxAmount,
+        estimatedArrival: this.getEstimatedArrival('CLP')
+      };
+    }
     
     if (!this.isCurrencyPairSupported(from, to)) {
       return null;
@@ -496,8 +516,8 @@ export class CurrencyConfigService {
     const from = fromCurrency.toUpperCase();
     const to = toCurrency.toUpperCase();
 
-    // Check if currencies are the same
-    if (from === to) {
+    // Check if currencies are the same (allow CLP-to-CLP for Chilean domestic transfers)
+    if (from === to && from !== 'CLP') {
       return 'Send and receive currencies cannot be the same';
     }
 

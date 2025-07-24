@@ -202,6 +202,7 @@ export class FXService extends CircleService {
     'CLP-EUR': 0.000895,
     'CLP-GBP': 0.000821,
     'CLP-MXN': 0.0195,
+    'CLP-CLP': 1.0, // Domestic Chilean transfers
     'MXN-EUR': 0.046,
     'MXN-GBP': 0.042,
     'MXN-CLP': 51.4
@@ -321,7 +322,12 @@ export class FXService extends CircleService {
         request.receiveCurrency
       );
 
-      // Get current exchange rate
+      // Handle CLP-to-CLP domestic transfers
+      if (request.sendCurrency === 'CLP' && request.receiveCurrency === 'CLP') {
+        return this.calculateDomesticCLPTransfer(request, currencyPair);
+      }
+
+      // Get current exchange rate for international transfers
       const rateResponse = await this.getExchangeRate({
         fromCurrency: request.sendCurrency,
         toCurrency: request.receiveCurrency,
@@ -744,6 +750,95 @@ export class FXService extends CircleService {
         cacheSize: this.rateCache.size
       };
     }
+  }
+
+  /**
+   * Calculate domestic CLP-to-CLP transfer (Chilean user-to-user)
+   */
+  private async calculateDomesticCLPTransfer(
+    request: CalculateTransferRequest,
+    currencyPair: any
+  ): Promise<TransferCalculationResponse> {
+    // For domestic CLP transfers, exchange rate is 1:1
+    const exchangeRate = 1.0;
+    
+    // Calculate Chilean domestic transfer fees
+    const fees = this.calculateChileanDomesticFees(request.sendAmount);
+    
+    // Calculate breakdown for CLP-to-CLP transfer
+    const breakdown = this.calculateChileanDomesticBreakdown(request.sendAmount, fees);
+
+    return {
+      sendAmount: request.sendAmount,
+      receiveAmount: breakdown.finalAmountReceive,
+      exchangeRate,
+      fees,
+      rateId: this.generateRateId(),
+      rateValidUntil: new Date(Date.now() + 60 * 60 * 1000), // 1 hour for domestic transfers
+      estimatedArrival: currencyPair?.estimatedArrival || {
+        min: 1,
+        max: 2,
+        unit: 'hours'
+      },
+      breakdown
+    };
+  }
+
+  /**
+   * Calculate fees for Chilean domestic transfers
+   */
+  private calculateChileanDomesticFees(amount: number): {
+    cardProcessing: number;
+    transfer: number;
+    payout: number;
+    total: number;
+  } {
+    // No card processing fees for bank-to-bank transfers
+    const cardProcessing = 0;
+    
+    // Lower transfer fee for domestic transfers (0.3% instead of 0.5%)
+    const transfer = Math.round((amount * 0.003) * 100) / 100;
+    
+    // Fixed payout fee for Chilean domestic transfers
+    const payout = 1000; // CLP 1000 fixed fee
+    
+    const total = cardProcessing + transfer + payout;
+
+    return {
+      cardProcessing,
+      transfer,
+      payout,
+      total: Math.round(total * 100) / 100
+    };
+  }
+
+  /**
+   * Calculate breakdown for Chilean domestic transfers
+   */
+  private calculateChileanDomesticBreakdown(
+    sendAmount: number,
+    fees: { cardProcessing: number; transfer: number; payout: number; total: number }
+  ) {
+    // For CLP-to-CLP, everything stays in CLP
+    const sendAmountCLP = sendAmount;
+    const cardProcessingFee = fees.cardProcessing;
+    const netAmountCLP = sendAmountCLP - cardProcessingFee;
+    const grossAmountReceive = netAmountCLP; // No exchange rate conversion
+    const transferFee = fees.transfer;
+    const payoutFee = fees.payout;
+    const finalAmountReceive = grossAmountReceive - transferFee - payoutFee;
+
+    return {
+      sendAmountUSD: Math.round(sendAmountCLP * 100) / 100, // Keep field name for API compatibility
+      cardProcessingFee: Math.round(cardProcessingFee * 100) / 100,
+      netAmountUSD: Math.round(netAmountCLP * 100) / 100, // Keep field name for API compatibility
+      exchangeRate: 1.0,
+      grossAmountReceive: Math.round(grossAmountReceive * 100) / 100,
+      transferFee: Math.round(transferFee * 100) / 100,
+      payoutFee: Math.round(payoutFee * 100) / 100,
+      finalAmountReceive: Math.round(finalAmountReceive * 100) / 100,
+      receiveAmount: Math.round(finalAmountReceive * 100) / 100
+    };
   }
 
   /**

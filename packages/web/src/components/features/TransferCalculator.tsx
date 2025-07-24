@@ -85,8 +85,8 @@ export function TransferCalculator({
   // Component state
   const [calculatorMode, setCalculatorMode] = useState<CalculatorMode>('send');
   const [inputAmount, setInputAmount] = useState<string>('');
-  const [sendCurrency, setSendCurrency] = useState<SendCurrency>('USD');
-  const [receiveCurrency, setReceiveCurrency] = useState<ReceiveCurrency>('EUR');
+  const [sendCurrency, setSendCurrency] = useState<SendCurrency>('CLP'); // Default to CLP for Chilean users
+  const [receiveCurrency, setReceiveCurrency] = useState<ReceiveCurrency>('CLP'); // Default to CLP for Chilean users
   const [calculation, setCalculation] = useState<TransferCalculation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

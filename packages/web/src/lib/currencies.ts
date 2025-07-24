@@ -66,10 +66,10 @@ export const SUPPORTED_CURRENCIES: Record<string, SupportedCurrency> = {
   }
 };
 
-// Send currencies (currently only USD)
-export const SEND_CURRENCIES = ['USD'] as const;
+// Send currencies (USD for international, CLP for Chilean domestic)
+export const SEND_CURRENCIES = ['USD', 'CLP'] as const;
 
-// Receive currencies (all supported except USD)
+// Receive currencies (all supported except USD, plus CLP for domestic)
 export const RECEIVE_CURRENCIES = ['EUR', 'CLP', 'MXN', 'GBP'] as const;
 
 export type SendCurrency = typeof SEND_CURRENCIES[number];
