@@ -3,6 +3,7 @@
 import { useUser, UserButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const isClerkConfigured = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder');
@@ -53,17 +54,29 @@ function AuthenticatedNavigation() {
 }
 
 export function Navigation() {
+  const pathname = usePathname();
+  const isHomepage = pathname === '/';
+
   return (
     <nav className="hidden md:flex items-center space-x-8">
-      <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+      <Link 
+        href={isHomepage ? "#features" : "/#features"} 
+        className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+      >
         Features
-      </a>
-      <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+      </Link>
+      <Link 
+        href={isHomepage ? "#how-it-works" : "/#how-it-works"} 
+        className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+      >
         How It Works
-      </a>
-      <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+      </Link>
+      <Link 
+        href="/pricing" 
+        className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+      >
         Pricing
-      </a>
+      </Link>
       
       {/* Authentication-based navigation */}
       {isClerkConfigured ? (
