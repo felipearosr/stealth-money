@@ -94,6 +94,8 @@ class TransferService {
             status: transfer.status,
             sendAmount: transfer.sendAmount,
             receiveAmount: transfer.receiveAmount,
+            sendCurrency: transfer.sendCurrency,
+            receiveCurrency: transfer.receiveCurrency,
             exchangeRate: transfer.exchangeRate,
             fees: transfer.fees,
             timeline: transfer.timeline,

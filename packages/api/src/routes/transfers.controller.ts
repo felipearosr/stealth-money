@@ -404,7 +404,7 @@ router.post('/transfers/create-chilean-user-transfer', transferCreationRateLimit
             sendCurrency: 'CLP',
             receiveCurrency: 'CLP',
             exchangeRate: 1.0,
-            fees: usdCalculation.fees * (sendAmount / usdCalculation.sendAmount), // Convert fees back to CLP
+            fees: usdCalculation.fees.total * (sendAmount / usdCalculation.sendAmount), // Convert fees back to CLP
             timeline: [{
                 type: 'chilean_transfer_created',
                 status: 'success',

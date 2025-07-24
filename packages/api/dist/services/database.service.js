@@ -90,7 +90,7 @@ class DatabaseService {
         });
     }
     // Intelligent user search - automatically detects email, phone, or username
-    async intelligentUserSearch(query, limit = 10, currency) {
+    async intelligentUserSearch(query, limit = 10, currency, country) {
         const trimmedQuery = query.trim();
         // Detect query type
         const isEmail = trimmedQuery.includes('@');
@@ -133,6 +133,10 @@ class DatabaseService {
                 }
             ]
         };
+        // Add country filter for Chilean users if specified
+        if (country === 'CL') {
+            baseWhere.AND.push({ country: 'CL' });
+        }
         // Enhanced query with currency filtering if provided
         let orderBy = [
             { isVerified: 'desc' }, // Verified users first
@@ -236,9 +240,16 @@ class DatabaseService {
     }
     // Bank account management
     async createBankAccount(data) {
+        console.log('Creating bank account with data:', {
+            userId: data.userId,
+            currency: data.currency,
+            isPrimary: data.isPrimary,
+            bankName: data.bankName
+        });
         // If this is set as primary, unset other primary accounts for this currency
         if (data.isPrimary) {
-            await this.prisma.bankAccount.updateMany({
+            console.log(`Unsetting primary accounts for user ${data.userId}, currency ${data.currency}`);
+            const result = await this.prisma.bankAccount.updateMany({
                 where: {
                     userId: data.userId,
                     currency: data.currency,
@@ -246,6 +257,7 @@ class DatabaseService {
                 },
                 data: { isPrimary: false }
             });
+            console.log(`Unset ${result.count} primary accounts`);
         }
         return this.prisma.bankAccount.create({
             data: {
@@ -263,6 +275,7 @@ class DatabaseService {
                 accountNumber: data.accountNumber,
                 rut: data.rut,
                 bankCode: data.bankCode,
+                chileanAccountNumber: data.chileanAccountNumber,
                 clabe: data.clabe,
                 sortCode: data.sortCode,
                 ukAccountNumber: data.ukAccountNumber,
@@ -372,6 +385,7 @@ class DatabaseService {
                 accountNumber: data.accountNumber,
                 rut: data.rut,
                 bankCode: data.bankCode,
+                chileanAccountNumber: data.chileanAccountNumber,
                 clabe: data.clabe,
                 sortCode: data.sortCode,
                 ukAccountNumber: data.ukAccountNumber,

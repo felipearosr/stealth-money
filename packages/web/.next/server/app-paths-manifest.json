@@ -1,18 +1,5 @@
 {
-  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/_not-found/page": "app/_not-found/page.js",
-  "/auth/sign-in/[[...sign-in]]/page": "app/auth/sign-in/[[...sign-in]]/page.js",
-  "/auth/sign-up/[[...sign-up]]/page": "app/auth/sign-up/[[...sign-up]]/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/pay/[transactionId]/page": "app/pay/[transactionId]/page.js",
   "/page": "app/page.js",
-  "/pricing/page": "app/pricing/page.js",
-  "/recipient/[transactionId]/page": "app/recipient/[transactionId]/page.js",
-  "/status/[transactionId]/page": "app/status/[transactionId]/page.js",
-  "/test-calculator/page": "app/test-calculator/page.js",
-  "/test-flow/page": "app/test-flow/page.js",
-  "/test-user-recipient/page": "app/test-user-recipient/page.js",
-  "/transfer/process/page": "app/transfer/process/page.js",
-  "/transfer/user/page": "app/transfer/user/page.js",
-  "/user-transfer/page": "app/user-transfer/page.js"
+  "/transfer/process/page": "app/transfer/process/page.js"
 }

@@ -4,10 +4,14 @@ import { PublicTransferCalculator } from "@/components/features/PublicTransferCa
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navigation } from "@/components/ui/navigation";
+import { VideoModal } from "@/components/ui/video-modal";
 import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star } from "lucide-react";
 import { Calculator, UserPlus, CreditCard, Rocket } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
@@ -85,7 +89,12 @@ export default function Home() {
                 Start Transfer
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="border-gray-300">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-gray-300"
+                onClick={() => setIsVideoModalOpen(true)}
+              >
                 Watch Demo
               </Button>
             </div>
@@ -224,145 +233,6 @@ export default function Home() {
         </div>
       </section>
 
-
-      {/* How It Works -- UPGRADED SECTION */}
-      <section id="how-it-works" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4 mb-20">
-            <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
-              Get Started in Minutes
-            </h2>
-            <p className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-              From Your Screen to Their Bank in 4 Simple Steps
-            </p>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              We've redesigned international money transfers to be fast, fair, and incredibly easy. Here’s how your journey looks:
-            </p>
-          </div>
-
-          <div className="relative">
-            {/* Desktop Connector Line */}
-            <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-gray-300 transform -translate-y-1/2">
-              <div className="absolute top-0 left-0 w-full h-full border-t-2 border-dashed border-gray-300"></div>
-            </div>
-
-            <div className="relative grid md:grid-cols-4 gap-x-8 gap-y-12">
-              {/* Step 1 */}
-              <div className="text-center">
-                <div className="relative">
-                  <div className="relative w-20 h-20 bg-white border-4 border-blue-600 rounded-full flex items-center justify-center mx-auto z-10">
-                    <Calculator className="w-10 h-10 text-blue-600" />
-                  </div>
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-gray-900">1. Calculate Your Transfer</h3>
-                <p className="mt-2 text-gray-600">
-                  Tell us how much to send. You’ll instantly see our real-time exchange rate with zero hidden markups.
-                </p>
-              </div>
-
-              {/* Step 2 */}
-              <div className="text-center">
-                 <div className="relative">
-                  <div className="relative w-20 h-20 bg-white border-4 border-blue-600 rounded-full flex items-center justify-center mx-auto z-10">
-                    <UserPlus className="w-10 h-10 text-blue-600" />
-                  </div>
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-gray-900">2. Add Recipient</h3>
-                <p className="mt-2 text-gray-600">
-                  Provide the recipient’s details. All we need is their name and bank information to ensure the money gets to the right person.
-                </p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="text-center">
-                <div className="relative">
-                  <div className="relative w-20 h-20 bg-white border-4 border-blue-600 rounded-full flex items-center justify-center mx-auto z-10">
-                    <CreditCard className="w-10 h-10 text-blue-600" />
-                  </div>
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-gray-900">3. Fund Your Transfer</h3>
-                <p className="mt-2 text-gray-600">
-                  Pay securely with your card. Your payment is protected by Circle's PCI-compliant infrastructure.
-                </p>
-              </div>
-              
-              {/* Step 4 */}
-              <div className="text-center">
-                 <div className="relative">
-                  <div className="relative w-20 h-20 bg-white border-4 border-blue-600 rounded-full flex items-center justify-center mx-auto z-10">
-                    <Rocket className="w-10 h-10 text-blue-600" />
-                  </div>
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-gray-900">4. Funds Arrive Instantly</h3>
-                <p className="mt-2 text-gray-600">
-                  Our blockchain rails bypass traditional systems, delivering the funds to your recipient in under a minute.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works -- OPTION 2: Focused Grid */}
-      <section id="how-it-works" className="py-24 bg-gradient-to-br from-slate-50 to-blue-100/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
-              How It Works
-            </h2>
-            <p className="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-              A Radically Simple Way to Send Money
-            </p>
-            <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-600">
-              Three steps, under a minute. That's all it takes.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-
-            {/* Step 1 */}
-            <Card className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-600">
-              <CardContent className="p-8">
-                <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-4xl font-extrabold text-blue-600">1</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Calculate & See Rate</h3>
-                <p className="mt-2 text-gray-600">
-                  Enter an amount and get a guaranteed real-time exchange rate.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Step 2 */}
-            <Card className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-600">
-              <CardContent className="p-8">
-                <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-4xl font-extrabold text-blue-600">2</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Add Recipient & Pay</h3>
-                <p className="mt-2 text-gray-600">
-                  Provide recipient details and pay securely with your card in seconds.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Step 3 */}
-            <Card className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-600">
-              <CardContent className="p-8">
-                <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-4xl font-extrabold text-blue-600">3</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Money Arrives Instantly</h3>
-                <p className="mt-2 text-gray-600">
-                  Our blockchain tech delivers funds directly, bypassing slow bank delays.
-                </p>
-              </CardContent>
-            </Card>
-            
-          </div>
-        </div>
-      </section>
-
       {/* Social Proof */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -470,6 +340,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Video Modal */}
+      <VideoModal
+        isOpen={isVideoModalOpen}
+        onClose={() => setIsVideoModalOpen(false)}
+        videoId="dQw4w9WgXcQ" // Replace with your actual YouTube video ID
+      />
     </div>
   );
 }

@@ -73,7 +73,7 @@ export function PublicTransferCalculator({ className = "" }: PublicTransferCalcu
             <span>Calculate Your Transfer</span>
           </CardTitle>
           <p className="text-sm text-gray-600 text-center">
-            Get real-time exchange rates and see exactly what you'll pay
+            {"Get real-time exchange rates and see exactly what you'll pay"}
           </p>
         </CardHeader>
         <CardContent className="pt-0">

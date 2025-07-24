@@ -11,7 +11,7 @@ export interface BrowserNotification {
   body: string;
   icon?: string;
   tag?: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   timestamp: Date;
   read: boolean;
   actions?: Array<{
@@ -44,7 +44,7 @@ interface NotificationContextType {
  */
 interface WebSocketMessage {
   type: 'notification' | 'status_update' | 'error';
-  payload: any;
+  payload: Record<string, unknown>;
 }
 
 /**
@@ -72,7 +72,7 @@ export function NotificationProvider({
   const [notifications, setNotifications] = useState<BrowserNotification[]>([]);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [, setIsConnected] = useState(false);
 
   // Check if browser notifications are supported
   const isSupported = typeof window !== 'undefined' && 'Notification' in window;

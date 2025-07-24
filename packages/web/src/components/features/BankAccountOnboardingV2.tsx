@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@clerk/nextjs';
-import { CheckCircle, AlertCircle, Plus, Trash2, Edit, Globe, Building2, CreditCard, User } from 'lucide-react';
+import { CheckCircle, AlertCircle, Plus, Trash2, Edit, Globe, Building2, CreditCard } from 'lucide-react';
 import { BankAccountVerification } from './BankAccountVerification';
 import { 
   COUNTRY_BANKING_CONFIGS, 
@@ -130,12 +130,14 @@ export default function BankAccountOnboardingV2({
 
   useEffect(() => {
     fetchBankAccounts();
-    
+  }, []);
+
+  useEffect(() => {
     // If Chilean verification is required, default to Chile
     if (requireChileanVerification && !selectedCountry) {
       handleCountryChange('CL');
     }
-  }, [requireChileanVerification]);
+  }, [requireChileanVerification, selectedCountry]);
 
   // Handle country selection
   const handleCountryChange = (countryCode: string) => {
@@ -247,7 +249,7 @@ export default function BankAccountOnboardingV2({
       const token = await getToken();
       
       // Prepare submission data
-      const submissionData: any = {
+      const submissionData: Record<string, unknown> = {
         accountName: formData.accountName,
         currency: countryConfig.currency,
         country: selectedCountry,
@@ -554,8 +556,7 @@ export default function BankAccountOnboardingV2({
                 </span>
               </div>
               <p className="text-blue-600">
-                Your account has been added but needs verification to send money. 
-                Click "Verify Account" below to start the verification process.
+                {'Your account has been added but needs verification to send money. Click "Verify Account" below to start the verification process.'}
               </p>
             </div>
           </CardContent>

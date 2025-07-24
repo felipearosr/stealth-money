@@ -83,7 +83,7 @@ interface TransferFlowState {
 
 export default function UserTransferPage() {
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
 
   // Transfer flow state
@@ -146,7 +146,7 @@ export default function UserTransferPage() {
     rateId: string;
     rateValidUntil: string;
     calculatorMode: 'send' | 'receive';
-    breakdown: any;
+    breakdown: Record<string, unknown>;
     estimatedArrival: string;
   }) => {
     const transferData: TransferCalculationData = {

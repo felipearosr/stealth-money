@@ -235,7 +235,11 @@ export class HybridVerificationService {
       status: 'pending',
       provider: provider.name,
       cost: provider.cost,
-      estimatedTime: provider.estimatedTime,
+      estimatedTime: {
+        min: provider.estimatedTime.min,
+        max: provider.estimatedTime.max,
+        unit: provider.estimatedTime.unit as 'days' | 'hours' | 'minutes' | 'seconds'
+      },
       redirectUrl,
       instructions: 'Click the link to verify your bank account through your online banking. This is free and takes 10-30 seconds.',
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
@@ -265,7 +269,11 @@ export class HybridVerificationService {
       status: 'pending',
       provider: provider.name,
       cost: provider.cost,
-      estimatedTime: provider.estimatedTime,
+      estimatedTime: {
+        min: provider.estimatedTime.min,
+        max: provider.estimatedTime.max,
+        unit: provider.estimatedTime.unit as 'days' | 'hours' | 'minutes' | 'seconds'
+      },
       redirectUrl: `https://link.plaid.com/?token=${linkToken}`,
       instructions: 'Connect your bank account securely through Plaid Link. Takes 5-15 seconds.',
       expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours
@@ -296,7 +304,11 @@ export class HybridVerificationService {
       status: 'pending',
       provider: provider.name,
       cost: provider.cost,
-      estimatedTime: provider.estimatedTime,
+      estimatedTime: {
+        min: provider.estimatedTime.min,
+        max: provider.estimatedTime.max,
+        unit: provider.estimatedTime.unit as 'days' | 'hours' | 'minutes' | 'seconds'
+      },
       redirectUrl: `https://widget.belvo.com/?token=${widgetToken}`,
       instructions: 'Verify your bank account through Belvo\'s secure connection. Takes 10-30 seconds.',
       expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours
@@ -328,7 +340,11 @@ export class HybridVerificationService {
       status: 'pending',
       provider: provider.name,
       cost: provider.cost,
-      estimatedTime: provider.estimatedTime,
+      estimatedTime: {
+        min: provider.estimatedTime.min,
+        max: provider.estimatedTime.max,
+        unit: provider.estimatedTime.unit as 'days' | 'hours' | 'minutes' | 'seconds'
+      },
       instructions: `Two small deposits (less than $1 each) will appear in your ${request.bankAccount.bankName} account within 4-8 hours. Enter the exact amounts to verify.`,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
       metadata: {
@@ -365,7 +381,11 @@ export class HybridVerificationService {
       status: 'pending',
       provider: provider.name,
       cost: provider.cost,
-      estimatedTime: provider.estimatedTime,
+      estimatedTime: {
+        min: provider.estimatedTime.min,
+        max: provider.estimatedTime.max,
+        unit: provider.estimatedTime.unit as 'days' | 'hours' | 'minutes' | 'seconds'
+      },
       instructions,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       metadata: {

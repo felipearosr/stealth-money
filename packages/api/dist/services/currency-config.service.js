@@ -48,6 +48,10 @@ class CurrencyConfigService {
     static isCurrencyPairSupported(fromCurrency, toCurrency) {
         const from = fromCurrency.toUpperCase();
         const to = toCurrency.toUpperCase();
+        // Special case: CLP-to-CLP domestic transfers are supported
+        if (from === 'CLP' && to === 'CLP') {
+            return true;
+        }
         return this.isSendCurrencySupported(from) && this.isReceiveCurrencySupported(to);
     }
     /**
@@ -56,6 +60,20 @@ class CurrencyConfigService {
     static getCurrencyPair(fromCurrency, toCurrency) {
         const from = fromCurrency.toUpperCase();
         const to = toCurrency.toUpperCase();
+        // Special handling for CLP-to-CLP domestic transfers
+        if (from === 'CLP' && to === 'CLP') {
+            const clpConfig = this.getCurrency('CLP');
+            if (!clpConfig)
+                return null;
+            return {
+                from: 'CLP',
+                to: 'CLP',
+                isSupported: true,
+                minAmount: clpConfig.minAmount,
+                maxAmount: clpConfig.maxAmount,
+                estimatedArrival: this.getEstimatedArrival('CLP')
+            };
+        }
         if (!this.isCurrencyPairSupported(from, to)) {
             return null;
         }
@@ -108,8 +126,8 @@ class CurrencyConfigService {
     static validateCurrencyPair(fromCurrency, toCurrency, amount) {
         const from = fromCurrency.toUpperCase();
         const to = toCurrency.toUpperCase();
-        // Check if currencies are the same
-        if (from === to) {
+        // Check if currencies are the same (allow CLP-to-CLP for Chilean domestic transfers)
+        if (from === to && from !== 'CLP') {
             return 'Send and receive currencies cannot be the same';
         }
         // Check if pair is supported
@@ -621,8 +639,8 @@ CurrencyConfigService.SUPPORTED_CURRENCIES = {
         isActive: true
     }
 };
-// Send currencies (currently only USD)
-CurrencyConfigService.SEND_CURRENCIES = ['USD'];
+// Send currencies (USD for international, CLP for Chilean domestic)
+CurrencyConfigService.SEND_CURRENCIES = ['USD', 'CLP'];
 // Receive currencies (all supported except USD)
 CurrencyConfigService.RECEIVE_CURRENCIES = [
     'EUR', 'GBP', 'CLP', 'MXN', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK',

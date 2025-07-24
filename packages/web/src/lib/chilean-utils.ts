@@ -106,7 +106,7 @@ export function cleanRUT(rut: string): string {
  * @param _previousValue - Previous input value (to handle deletions) - currently unused
  * @returns Formatted RUT string
  */
-export function formatRUTInput(value: string, _previousValue: string = ''): string {
+export function formatRUTInput(value: string): string {
   if (!value) {
     return '';
   }
@@ -222,11 +222,12 @@ export function getExampleRUTs(): string[] {
  * @param user - User profile to check
  * @returns boolean indicating if user can receive CLP transfers
  */
-export function isValidChileanUser(user: any): boolean {
+export function isValidChileanUser(user: unknown): boolean {
   if (!user) return false;
   
   // Check if user has verified Chilean bank accounts
-  const hasChileanAccount = user.verifiedPaymentMethods?.some((method: any) => 
+  const userObj = user as { verifiedPaymentMethods?: Array<{ currency: string; country: string }> };
+  const hasChileanAccount = userObj.verifiedPaymentMethods?.some((method) => 
     method.currency === 'CLP' && method.country === 'CL'
   );
   
@@ -238,7 +239,7 @@ export function isValidChileanUser(user: any): boolean {
  * @param users - Array of user profiles
  * @returns Array of users that can receive CLP transfers
  */
-export function filterChileanUsers(users: any[]): any[] {
+export function filterChileanUsers(users: unknown[]): unknown[] {
   return users.filter(isValidChileanUser);
 }
 
@@ -297,29 +298,37 @@ export function getChileanSearchSuggestions(query: string): string[] {
  * @param user - User profile
  * @returns Formatted display object
  */
-export function formatChileanUserDisplay(user: any): {
+export function formatChileanUserDisplay(user: unknown): {
   displayName: string;
   subtitle: string;
   badges: string[];
 } {
-  const displayName = user.fullName || user.username || user.email;
+  const userObj = user as { 
+    fullName?: string; 
+    username?: string; 
+    email?: string; 
+    isVerified?: boolean;
+    verifiedPaymentMethods?: Array<{ currency: string; country: string }>;
+  };
+  
+  const displayName = userObj.fullName || userObj.username || userObj.email || '';
   
   let subtitle = '';
-  if (user.username && user.fullName && user.fullName !== user.username) {
-    subtitle = `@${user.username}`;
-  } else if (user.username && !user.fullName) {
-    subtitle = user.email || '';
-  } else if (user.email && !user.username) {
-    subtitle = user.email;
+  if (userObj.username && userObj.fullName && userObj.fullName !== userObj.username) {
+    subtitle = `@${userObj.username}`;
+  } else if (userObj.username && !userObj.fullName) {
+    subtitle = userObj.email || '';
+  } else if (userObj.email && !userObj.username) {
+    subtitle = userObj.email;
   }
   
   const badges: string[] = [];
-  if (user.isVerified) {
+  if (userObj.isVerified) {
     badges.push('Verificado');
   }
   
   // Count Chilean accounts
-  const chileanAccounts = user.verifiedPaymentMethods?.filter((method: any) => 
+  const chileanAccounts = userObj.verifiedPaymentMethods?.filter((method) => 
     method.currency === 'CLP' && method.country === 'CL'
   ) || [];
   

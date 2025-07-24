@@ -11,7 +11,7 @@ import { ProgressIndicator } from "@/components/features/ProgressIndicator";
 import OnboardingGate from "@/components/features/OnboardingGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, AlertCircle, Users, Calculator } from "lucide-react";
+import { ArrowLeft, AlertCircle, Calculator } from "lucide-react";
 
 // Types for the transfer process
 export type TransferStep = 'calculator' | 'recipient' | 'payment' | 'status';
@@ -83,7 +83,7 @@ interface TransferProcessState {
 
 export default function TransferProcessPage() {
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { } = useAuth();
   const router = useRouter();
 
   // Transfer process state
@@ -167,7 +167,7 @@ export default function TransferProcessPage() {
     rateId: string;
     rateValidUntil: string;
     calculatorMode: 'send' | 'receive';
-    breakdown: any;
+    breakdown: Record<string, unknown>;
     estimatedArrival: string;
   }) => {
     const transferData: TransferCalculationData = {

@@ -211,6 +211,8 @@ router.get('/transfers/:id/status', security_middleware_1.generalRateLimit, asyn
                 status: transaction.status || 'UNKNOWN',
                 sendAmount: transaction.amount,
                 receiveAmount: transaction.recipientAmount,
+                sendCurrency: transaction.sourceCurrency,
+                receiveCurrency: transaction.destCurrency,
                 exchangeRate: transaction.exchangeRate,
                 fees: 0, // Calculate fees if needed
                 timeline: [{
@@ -241,6 +243,8 @@ router.get('/transfers/:id/status', security_middleware_1.generalRateLimit, asyn
             })),
             sendAmount: transferStatus.sendAmount,
             receiveAmount: transferStatus.receiveAmount,
+            sendCurrency: transferStatus.sendCurrency || 'USD',
+            receiveCurrency: transferStatus.receiveCurrency || 'EUR',
             exchangeRate: transferStatus.exchangeRate,
             fees: transferStatus.fees,
             estimatedCompletion: transferStatus.estimatedCompletion instanceof Date ?
@@ -266,6 +270,155 @@ router.get('/transfers/:id/status', security_middleware_1.generalRateLimit, asyn
         res.status(500).json({
             error: 'STATUS_FETCH_FAILED',
             message: 'Failed to fetch transfer status',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            retryable: true
+        });
+    }
+});
+// Chilean user-to-user transfer creation endpoint
+router.post('/transfers/create-chilean-user-transfer', security_middleware_1.transferCreationRateLimit, auth_middleware_1.requireAuth, async (req, res) => {
+    try {
+        // Enhanced validation schema for Chilean user-to-user transfers
+        const createChileanTransferSchema = zod_1.z.object({
+            sendAmount: zod_1.z.number().min(1000).max(10000000), // CLP amounts (1,000 to 10,000,000 CLP)
+            sendCurrency: zod_1.z.literal('CLP'),
+            receiveCurrency: zod_1.z.literal('CLP'),
+            cardDetails: zod_1.z.object({
+                number: zod_1.z.string().min(13).max(19),
+                expiryMonth: zod_1.z.number().min(1).max(12),
+                expiryYear: zod_1.z.number().min(new Date().getFullYear()).max(new Date().getFullYear() + 20),
+                cvv: zod_1.z.string().min(3).max(4)
+            }),
+            recipientUserId: zod_1.z.string().min(1),
+            recipientPaymentMethodId: zod_1.z.string().min(1),
+            rateId: zod_1.z.string().optional(),
+            transferType: zod_1.z.literal('chilean_user_to_user')
+        });
+        const validatedData = createChileanTransferSchema.parse(req.body);
+        const { sendAmount, cardDetails, recipientUserId, recipientPaymentMethodId, rateId } = validatedData;
+        // Get authenticated user ID
+        const senderId = req.userId;
+        if (!senderId) {
+            return res.status(401).json({
+                error: 'AUTHENTICATION_REQUIRED',
+                message: 'User authentication required for Chilean transfers'
+            });
+        }
+        // Validate that both users are Chilean users with verified accounts
+        // This would typically involve checking the database for user verification status
+        // Create Chilean transfer record
+        const transferRecord = await dbService.createTransaction({
+            amount: sendAmount,
+            sourceCurrency: 'CLP',
+            destCurrency: 'CLP',
+            exchangeRate: 1.0, // Same currency
+            recipientAmount: sendAmount, // No exchange needed
+            recipientUserId,
+            userId: senderId,
+            recipientEmail: '', // Will be populated from user lookup
+            recipientName: '', // Will be populated from user lookup
+            payoutMethod: 'chilean_bank_account',
+            payoutDetails: {
+                paymentMethodId: recipientPaymentMethodId,
+                transferType: 'chilean_user_to_user'
+            }
+        });
+        // For Chilean transfers, we use a simplified flow:
+        // 1. Process card payment in CLP (converted to USD for Circle)
+        // 2. Transfer directly to recipient's Chilean bank account
+        // Import Chilean-specific services
+        const { FXService } = await Promise.resolve().then(() => __importStar(require('../services/fx.service')));
+        const fxService = new FXService();
+        // Calculate USD equivalent for Circle processing
+        const usdCalculation = await fxService.calculateTransfer({
+            sendAmount,
+            sendCurrency: 'CLP',
+            receiveCurrency: 'USD'
+        });
+        // Transform card details for Circle API
+        const transformedCardDetails = {
+            number: cardDetails.number,
+            cvv: cardDetails.cvv,
+            expiry: {
+                month: cardDetails.expiryMonth.toString().padStart(2, '0'),
+                year: cardDetails.expiryYear.toString()
+            },
+            billingDetails: {
+                name: 'Chilean User', // This would come from user profile
+                city: 'Santiago',
+                country: 'CL',
+                line1: 'Address',
+                postalCode: '8320000'
+            }
+        };
+        // Create Chilean transfer using enhanced transfer service
+        const { TransferService } = await Promise.resolve().then(() => __importStar(require('../services/transfer.service')));
+        const transferService = new TransferService();
+        // Create a Chilean-specific recipient info structure
+        const chileanRecipientInfo = {
+            name: 'Chilean Recipient', // This would come from user lookup
+            email: 'recipient@example.com', // This would come from user lookup
+            bankAccount: {
+                currency: 'CLP',
+                country: 'CL',
+                bankName: 'Chilean Bank', // This would come from payment method
+                accountHolderName: 'Recipient Name', // This would come from payment method
+                // Chilean-specific fields would be populated from payment method
+                rut: '12345678-9',
+                bankCode: '001',
+                accountNumber: '1234567890'
+            }
+        };
+        const result = await transferService.createTransfer({
+            sendAmount: usdCalculation.sendAmount, // USD amount for Circle
+            sendCurrency: 'USD',
+            receiveCurrency: 'CLP', // Final payout in CLP
+            cardDetails: transformedCardDetails,
+            recipientInfo: chileanRecipientInfo,
+            exchangeRate: usdCalculation.exchangeRate,
+            metadata: {
+                originalAmount: sendAmount,
+                originalCurrency: 'CLP',
+                transferType: 'chilean_user_to_user',
+                recipientUserId,
+                recipientPaymentMethodId
+            }
+        });
+        // Return Chilean-specific response
+        res.status(201).json({
+            transferId: transferRecord.id,
+            status: 'CHILEAN_BANK_PROCESSING',
+            estimatedCompletion: result.estimatedCompletion?.toISOString(),
+            sendAmount,
+            receiveAmount: sendAmount, // Same currency
+            sendCurrency: 'CLP',
+            receiveCurrency: 'CLP',
+            exchangeRate: 1.0,
+            fees: usdCalculation.fees.total * (sendAmount / usdCalculation.sendAmount), // Convert fees back to CLP
+            timeline: [{
+                    type: 'chilean_transfer_created',
+                    status: 'success',
+                    message: 'Chilean transfer created successfully',
+                    timestamp: new Date().toISOString()
+                }]
+        });
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return res.status(400).json({
+                error: 'VALIDATION_FAILED',
+                message: 'Chilean transfer validation failed',
+                details: error.errors.map(err => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                })),
+                retryable: false
+            });
+        }
+        console.error('Chilean transfer creation error:', error);
+        res.status(500).json({
+            error: 'CHILEAN_TRANSFER_FAILED',
+            message: 'Failed to create Chilean transfer',
             details: error instanceof Error ? error.message : 'Unknown error',
             retryable: true
         });
@@ -644,20 +797,20 @@ router.post('/transfers/calculate', security_middleware_1.generalRateLimit, asyn
             fees: calculation.fees.total,
             rateValidUntil: calculation.rateValidUntil.toISOString(),
             breakdown: {
-                sendAmountUSD: calculation.breakdown.sendAmountUSD,
+                sendAmountUSD: calculation.breakdown.sendAmountUSD || 0,
                 fees: {
-                    cardProcessing: calculation.fees.cardProcessing,
-                    transfer: calculation.fees.transfer,
-                    payout: calculation.fees.payout,
-                    total: calculation.fees.total
+                    cardProcessing: calculation.fees.cardProcessing || 0,
+                    transfer: calculation.fees.transfer || 0,
+                    payout: calculation.fees.payout || 0,
+                    total: calculation.fees.total || 0
                 },
-                netAmountUSD: calculation.breakdown.netAmountUSD,
-                exchangeRate: calculation.breakdown.exchangeRate,
-                grossAmountReceive: calculation.breakdown.grossAmountReceive,
-                transferFee: calculation.breakdown.transferFee,
-                payoutFee: calculation.breakdown.payoutFee,
-                finalAmountReceive: calculation.breakdown.finalAmountReceive,
-                receiveAmount: calculation.breakdown.finalAmountReceive
+                netAmountUSD: calculation.breakdown.netAmountUSD || 0,
+                exchangeRate: calculation.breakdown.exchangeRate || 0,
+                grossAmountReceive: calculation.breakdown.grossAmountReceive || 0,
+                transferFee: calculation.breakdown.transferFee || 0,
+                payoutFee: calculation.breakdown.payoutFee || 0,
+                finalAmountReceive: calculation.breakdown.finalAmountReceive || 0,
+                receiveAmount: calculation.breakdown.finalAmountReceive || calculation.breakdown.receiveAmount || calculation.receiveAmount || 0
             },
             estimatedArrival: calculation.estimatedArrival,
             rateId: calculation.rateId,

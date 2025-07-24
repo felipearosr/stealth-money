@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { z } from "zod";
+import Image from "next/image";
 import { CreditCard, User, Building, Loader2, Shield, AlertCircle, ArrowLeft, CheckCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,32 +110,32 @@ interface EnhancedPaymentFormProps {
   isLoading?: boolean;
 }
 
-// Chilean-specific interfaces
-interface ChileanBankAccount {
-  id: string;
-  accountName: string;
-  bankName: string;
-  bankCode: string;
-  accountNumber: string;
-  rut: string;
-  accountHolderName: string;
-  accountType: 'checking' | 'savings' | 'vista' | 'rut';
-  isVerified: boolean;
-  isPrimary: boolean;
-  currency: 'CLP';
-  country: 'CL';
-}
+// Chilean-specific interfaces (commented out as unused)
+// interface ChileanBankAccount {
+//   id: string;
+//   accountName: string;
+//   bankName: string;
+//   bankCode: string;
+//   accountNumber: string;
+//   rut: string;
+//   accountHolderName: string;
+//   accountType: 'checking' | 'savings' | 'vista' | 'rut';
+//   isVerified: boolean;
+//   isPrimary: boolean;
+//   currency: 'CLP';
+//   country: 'CL';
+// }
 
-interface ChileanTransferData extends TransferCalculationData {
-  sendCurrency: 'CLP';
-  receiveCurrency: 'CLP';
-}
+// interface ChileanTransferData extends TransferCalculationData {
+//   sendCurrency: 'CLP';
+//   receiveCurrency: 'CLP';
+// }
 
-interface ChileanUserProfile extends UserProfile {
-  country: 'CL';
-  rut?: string;
-  supportedCurrencies: ['CLP'];
-}
+// interface ChileanUserProfile extends UserProfile {
+//   country: 'CL';
+//   rut?: string;
+//   supportedCurrencies: ['CLP'];
+// }
 
 // Legacy props for backward compatibility
 interface PaymentFormProps {
@@ -154,11 +155,11 @@ interface PaymentFormProps {
   onError?: (error: string) => void;
 }
 
-export function PaymentForm({ 
-  sendAmount, 
-  receiveAmount, 
-  exchangeRate, 
-  fees, 
+export function PaymentForm({
+  sendAmount,
+  receiveAmount,
+  exchangeRate,
+  fees,
   rateId,
   onSubmit,
   isLoading = false,
@@ -170,10 +171,10 @@ export function PaymentForm({
   onBack,
   onError
 }: PaymentFormProps) {
-  
+
   // Detect if this is a user-to-user transfer
   const isUserToUserTransfer = !!(transferData && recipientUser && selectedPaymentMethod);
-  
+
   // Use enhanced data if available, otherwise fall back to legacy props
   const effectiveTransferData = transferData || {
     sendAmount,
@@ -250,7 +251,7 @@ export function PaymentForm({
       ...prev,
       [field]: value
     }));
-    
+
     // Clear validation error for this field
     if (validationErrors[`cardDetails.${field}`]) {
       setValidationErrors(prev => {
@@ -278,7 +279,7 @@ export function PaymentForm({
         [field]: value
       }));
     }
-    
+
     // Clear validation error for this field
     if (validationErrors[`recipientInfo.${field}`]) {
       setValidationErrors(prev => {
@@ -302,7 +303,7 @@ export function PaymentForm({
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     setValidationErrors({});
     setIsProcessing(true);
 
@@ -320,7 +321,7 @@ export function PaymentForm({
 
         // Determine the appropriate API endpoint based on transfer type
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        const endpoint = isChileanTransfer 
+        const endpoint = isChileanTransfer
           ? `${API_URL}/api/transfers/create-chilean-user-transfer`
           : `${API_URL}/api/transfers/create-user-to-user`;
 
@@ -358,7 +359,7 @@ export function PaymentForm({
         }
 
         const result = await response.json();
-        
+
         // Call success callback with transfer ID
         if (onSuccess) {
           onSuccess(result.transferId);
@@ -402,7 +403,7 @@ export function PaymentForm({
       }
     } catch (err) {
       console.error('Transfer creation error:', err);
-      
+
       if (err instanceof z.ZodError) {
         const errors: Record<string, string> = {};
         err.issues.forEach((error) => {
@@ -474,9 +475,11 @@ export function PaymentForm({
                 <h3 className="font-semibold text-sm text-gray-600 uppercase tracking-wide">To</h3>
                 <div className="flex items-center space-x-3">
                   {recipientUser!.profileImageUrl ? (
-                    <img
+                    <Image
                       src={recipientUser!.profileImageUrl}
                       alt={recipientUser!.fullName}
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
@@ -542,7 +545,7 @@ export function PaymentForm({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building className="h-5 w-5" />
-              Recipient's Bank Account
+              {"Recipient's Bank Account"}
             </CardTitle>
             <p className="text-sm text-gray-600">
               {recipientUser!.fullName} will receive the money in their verified account
@@ -666,7 +669,7 @@ export function PaymentForm({
               </div>
 
               {/* Submit Button */}
-              <Button 
+              <Button
                 type="submit"
                 disabled={isLoading || isProcessing}
                 className="w-full"
@@ -729,7 +732,7 @@ export function PaymentForm({
               <CreditCard className="h-4 w-4" />
               <h3 className="font-semibold">Payment Details</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="card-number">Card Number</Label>
@@ -917,7 +920,7 @@ export function PaymentForm({
           </div>
 
           {/* Submit Button */}
-          <Button 
+          <Button
             type="submit"
             disabled={isLoading || isProcessing}
             className="w-full"
@@ -987,7 +990,7 @@ export function EnhancedPaymentForm({
       ...prev,
       [field]: value
     }));
-    
+
     // Clear validation error for this field
     if (validationErrors[`cardDetails.${field}`]) {
       setValidationErrors(prev => {
@@ -1001,7 +1004,7 @@ export function EnhancedPaymentForm({
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     setValidationErrors({});
     setIsProcessing(true);
 
@@ -1041,13 +1044,13 @@ export function EnhancedPaymentForm({
       }
 
       const result = await response.json();
-      
+
       // Call success callback with transfer ID
       onSuccess(result.transferId);
-      
+
     } catch (err) {
       console.error('Transfer creation error:', err);
-      
+
       if (err instanceof z.ZodError) {
         const errors: Record<string, string> = {};
         err.issues.forEach((error) => {
@@ -1121,9 +1124,11 @@ export function EnhancedPaymentForm({
               <h3 className="font-semibold text-sm text-gray-600 uppercase tracking-wide">To</h3>
               <div className="flex items-center space-x-3">
                 {recipientUser.profileImageUrl ? (
-                  <img
+                  <Image
                     src={recipientUser.profileImageUrl}
                     alt={recipientUser.fullName}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
@@ -1189,7 +1194,7 @@ export function EnhancedPaymentForm({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />
-            Recipient's Bank Account
+            {"Recipient's Bank Account"}
           </CardTitle>
           <p className="text-sm text-gray-600">
             {recipientUser.fullName} will receive the money in their verified account
@@ -1313,7 +1318,7 @@ export function EnhancedPaymentForm({
             </div>
 
             {/* Submit Button */}
-            <Button 
+            <Button
               type="submit"
               disabled={isLoading || isProcessing}
               className="w-full"

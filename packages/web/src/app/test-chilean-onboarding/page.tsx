@@ -26,7 +26,7 @@ export default function TestChileanOnboardingPage() {
             <CardTitle className="text-blue-700">How it works</CardTitle>
             <CardDescription className="text-blue-600">
               The Chilean onboarding gate will check if you have a verified Chilean bank account.
-              If not, you'll be required to add and verify one before accessing the protected content below.
+              If not, you&apos;ll be required to add and verify one before accessing the protected content below.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-blue-600">

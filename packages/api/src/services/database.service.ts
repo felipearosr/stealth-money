@@ -146,7 +146,7 @@ export class DatabaseService {
     }
 
     // Base query conditions
-    const baseWhere = {
+    const baseWhere: any = {
       AND: [
         { isDiscoverable: true },
         {

@@ -252,6 +252,6 @@ export function runChileanIntegrationTests(): boolean {
 export { testData };
 
 // Run tests if this file is executed directly
-if (typeof window !== 'undefined' && (window as any).runChileanTests) {
+if (typeof window !== 'undefined' && (window as { runChileanTests?: boolean }).runChileanTests) {
   runChileanIntegrationTests();
 }

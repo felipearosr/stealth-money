@@ -32,9 +32,9 @@ class MockWebSocket {
     }
   }
 
-  send(data: string) {
+  //send(data: string) {
     // Mock send functionality
-  }
+  //}
 }
 
 // Mock Notification API

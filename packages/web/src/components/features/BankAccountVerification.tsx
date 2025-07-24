@@ -32,7 +32,7 @@ interface VerificationProps {
 
 export function BankAccountVerification({ account, onVerificationComplete, onSkip }: VerificationProps) {
   const { getToken } = useAuth();
-  const [verificationMethod, setVerificationMethod] = useState<'micro_deposits' | 'instant' | null>(null);
+  const [, setVerificationMethod] = useState<'micro_deposits' | 'instant' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -195,7 +195,7 @@ export function BankAccountVerification({ account, onVerificationComplete, onSki
               <div className="flex-1">
                 <h4 className="font-semibold">Micro-Deposits (Recommended)</h4>
                 <p className="text-sm text-gray-600">
-                  We'll send 2 small deposits (under $1) to your account. Verify the amounts to complete setup.
+                  {"We'll send 2 small deposits (under $1) to your account. Verify the amounts to complete setup."}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Takes 1-2 business days • Most secure method
@@ -239,7 +239,7 @@ export function BankAccountVerification({ account, onVerificationComplete, onSki
         <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">Micro-Deposits Sent</h3>
         <p className="text-gray-600">
-          We've sent 2 small deposits to your {account.bankName} account ending in {account.accountNumber?.slice(-4) || '****'}.
+          {"We've sent 2 small deposits to your {account.bankName} account ending in {account.accountNumber?.slice(-4) || '****'}."}
         </p>
         <p className="text-sm text-gray-500 mt-2">
           Check your account statement and enter the exact amounts below.
@@ -312,8 +312,8 @@ export function BankAccountVerification({ account, onVerificationComplete, onSki
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
         <p className="text-blue-800">
-          <strong>Can't find the deposits?</strong> They may take up to 2 business days to appear. 
-          Look for deposits from "Stealth Money" or "SM Verify" in your transaction history.
+          <strong>{"Can't find the deposits?"}</strong> They may take up to 2 business days to appear. 
+          {'Look for deposits from "Stealth Money" or "SM Verify" in your transaction history.'}
         </p>
       </div>
     </div>
@@ -339,7 +339,7 @@ export function BankAccountVerification({ account, onVerificationComplete, onSki
       <AlertCircle className="h-16 w-16 text-red-500 mx-auto" />
       <h3 className="text-xl font-semibold text-red-700">Verification Failed</h3>
       <p className="text-gray-600">
-        The amounts you entered don't match our records. Please check your account statement and try again.
+        {"The amounts you entered don't match our records. Please check your account statement and try again."}
       </p>
       <p className="text-sm text-gray-500">
         Attempts remaining: {3 - account.verificationFailures}
@@ -424,7 +424,7 @@ export function BankAccountVerification({ account, onVerificationComplete, onSki
           <div className="pt-4 border-t">
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-3">
-                You can verify this account later, but you won't be able to send or receive money until it's verified.
+                {"You can verify this account later, but you won't be able to send or receive money until it's verified."}
               </p>
               <Button variant="outline" onClick={onSkip}>
                 Skip for Now

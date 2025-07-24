@@ -14,7 +14,11 @@ jest.mock('../BankAccountOnboardingV2', () => {
     requireChileanVerification, 
     requireVerification,
     onComplete 
-  }: any) {
+  }: {
+    requireChileanVerification?: boolean;
+    requireVerification?: boolean;
+    onComplete?: () => void;
+  }) {
     return (
       <div data-testid="bank-account-onboarding">
         <div data-testid="require-chilean">{requireChileanVerification ? 'true' : 'false'}</div>

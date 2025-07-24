@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from "react";
 import { UserRecipientSelector, UserProfile, VerifiedPaymentMethod } from "./UserRecipientSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,9 +89,11 @@ export function UserRecipientSelectorDemo() {
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       {selectedRecipient.profileImageUrl ? (
-                        <img
+                        <Image
                           src={selectedRecipient.profileImageUrl}
                           alt={selectedRecipient.fullName}
+                          width={48}
+                          height={48}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
@@ -99,7 +102,7 @@ export function UserRecipientSelectorDemo() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
                         <h3 className="text-lg font-semibold text-gray-900">
@@ -109,13 +112,13 @@ export function UserRecipientSelectorDemo() {
                           <CheckCircle className="w-5 h-5 text-green-500" />
                         )}
                       </div>
-                      
+
                       <p className="text-gray-600 mb-2">{selectedRecipient.email}</p>
-                      
+
                       <div className="flex flex-wrap gap-1">
                         {selectedRecipient.supportedCurrencies.map(currency => (
-                          <Badge 
-                            key={currency} 
+                          <Badge
+                            key={currency}
                             variant={currency === mockTransferData.receiveCurrency ? "default" : "secondary"}
                             className="text-xs"
                           >

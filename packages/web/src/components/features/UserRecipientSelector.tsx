@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,6 @@ import {
   Search, 
   User, 
   Mail, 
-  Phone, 
   CreditCard, 
   Clock, 
   Star,
@@ -22,9 +22,7 @@ import {
   Users
 } from "lucide-react";
 import { 
-  isValidChileanUser, 
-  formatChileanUserDisplay,
-  isChileanUsernamePattern 
+  formatChileanUserDisplay
 } from "@/lib/chilean-utils";
 
 // Types for user-to-user transfers
@@ -295,11 +293,13 @@ export function UserRecipientSelector({
             {/* Profile Image or Avatar */}
             <div className="flex-shrink-0">
               {user.profileImageUrl ? (
-                <img
-                  src={user.profileImageUrl}
-                  alt={displayInfo?.displayName || user.fullName}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
+                <Image
+                src={user.profileImageUrl}
+                alt={displayInfo?.displayName || user.fullName}
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-full object-cover"
+              />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
                   <User className="w-6 h-6 text-gray-500" />
@@ -422,7 +422,7 @@ export function UserRecipientSelector({
               <span className="font-medium">No Compatible Payment Methods</span>
             </div>
             <p className="text-red-600 text-sm mt-1">
-              {selectedRecipient.fullName} doesn't have any verified accounts that can receive {transferData.receiveCurrency}.
+              {selectedRecipient.fullName} {"doesn't have any verified accounts that can receive"} {transferData.receiveCurrency}.
             </p>
           </CardContent>
         </Card>
@@ -640,7 +640,7 @@ export function UserRecipientSelector({
                   <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No recent recipients</h3>
                   <p className="text-gray-600 mb-4">
-                    You haven't sent money to any users yet. Use the search tab to find someone to send money to.
+                    {"You haven't sent money to any users yet. Use the search tab to find someone to send money to."}
                   </p>
                   <Button
                     variant="outline"

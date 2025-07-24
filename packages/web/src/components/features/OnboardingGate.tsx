@@ -33,18 +33,9 @@ export default function OnboardingGate({
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [, setBankAccounts] = useState<BankAccount[]>([]);
 
-  useEffect(() => {
-    if (skipCheckOnPublicPages) {
-      setLoading(false);
-      setNeedsOnboarding(false);
-    } else {
-      checkOnboardingStatus();
-    }
-  }, [skipCheckOnPublicPages]);
-
-  const checkOnboardingStatus = async () => {
+  const checkOnboardingStatus = React.useCallback(async () => {
     try {
       setLoading(true);
       
@@ -136,7 +127,18 @@ export default function OnboardingGate({
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken, requireChileanVerification, requireVerification, blockTransfersUntilVerified]);
+
+  useEffect(() => {
+    if (skipCheckOnPublicPages) {
+      setLoading(false);
+      setNeedsOnboarding(false);
+    } else {
+      checkOnboardingStatus();
+    }
+  }, [skipCheckOnPublicPages, checkOnboardingStatus]);
+
+
 
   const handleOnboardingComplete = () => {
     console.log('OnboardingGate: Onboarding completed, refreshing status...');

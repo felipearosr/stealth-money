@@ -17,14 +17,14 @@ const CURRENCY_CONFIGS = {
         accountTypes: ['checking', 'savings']
     },
     EUR: {
-        country: 'DE', // Default to Germany, can be expanded
-        requiredFields: ['iban', 'bic'],
-        accountTypes: ['checking', 'savings']
+        country: null, // EUR is multinational, country must be provided
+        requiredFields: ['iban'], // BIC/SWIFT can be derived from IBAN
+        accountTypes: ['checking', 'savings', 'current']
     },
     CLP: {
         country: 'CL',
-        requiredFields: ['rut', 'bankCode', 'accountNumber'],
-        accountTypes: ['checking', 'savings']
+        requiredFields: ['rut', 'chileanAccountNumber'], // bankCode is now provided by bank selection
+        accountTypes: ['checking', 'savings', 'vista', 'rut']
     },
     MXN: {
         country: 'MX',
@@ -60,7 +60,7 @@ function validateBankAccountData(currency, data) {
 // GET /api/users/search - Intelligent search for users by email/username/phone
 router.get('/search', auth_middleware_1.optionalAuth, async (req, res) => {
     try {
-        const { q: query, limit = '10', currency } = req.query;
+        const { q: query, limit = '10', currency, country } = req.query;
         if (!query || typeof query !== 'string' || query.trim().length < 2) {
             return res.status(400).json({
                 error: 'Invalid query',
@@ -70,7 +70,7 @@ router.get('/search', auth_middleware_1.optionalAuth, async (req, res) => {
         const searchLimit = Math.min(parseInt(limit) || 10, 50);
         const searchQuery = query.trim();
         // Intelligent search: automatically detect if it's email, phone, or username
-        const users = await dbService.intelligentUserSearch(searchQuery, searchLimit, currency);
+        const users = await dbService.intelligentUserSearch(searchQuery, searchLimit, currency, country);
         // Transform the response to include supported currencies and payment methods
         const searchResults = users.map((user) => ({
             id: user.id,
@@ -153,7 +153,7 @@ router.post('/me/recipients', auth_middleware_1.requireAuth, user_sync_middlewar
     try {
         const { name, email, phone, currency, country, bankName, accountHolderName, accountType, isDefault, 
         // Currency-specific fields
-        iban, bic, routingNumber, accountNumber, rut, bankCode, clabe, sortCode, ukAccountNumber } = req.body;
+        iban, bic, routingNumber, accountNumber, rut, bankCode, chileanAccountNumber, clabe, sortCode, ukAccountNumber } = req.body;
         // Validate required fields
         if (!name || !email || !currency || !bankName || !accountHolderName) {
             return res.status(400).json({
@@ -186,6 +186,7 @@ router.post('/me/recipients', auth_middleware_1.requireAuth, user_sync_middlewar
             accountNumber,
             rut,
             bankCode,
+            chileanAccountNumber,
             clabe,
             sortCode,
             ukAccountNumber
@@ -305,12 +306,19 @@ router.post('/me/bank-accounts', auth_middleware_1.requireAuth, user_sync_middle
     try {
         const { accountName, currency, country, bankName, accountHolderName, accountType, isPrimary, 
         // Currency-specific fields
-        iban, bic, routingNumber, accountNumber, rut, bankCode, clabe, sortCode, ukAccountNumber } = req.body;
+        iban, bic, routingNumber, accountNumber, rut, bankCode, chileanAccountNumber, clabe, sortCode, ukAccountNumber } = req.body;
         // Validate required fields
         if (!accountName || !currency || !bankName || !accountHolderName) {
             return res.status(400).json({
                 error: 'Missing required fields',
                 message: 'accountName, currency, bankName, and accountHolderName are required'
+            });
+        }
+        // EUR requires country to be specified
+        if (currency === 'EUR' && !country) {
+            return res.status(400).json({
+                error: 'Country required for EUR accounts',
+                message: 'Please specify the country for your EUR account'
             });
         }
         // Validate bank account data for the currency
@@ -325,7 +333,7 @@ router.post('/me/bank-accounts', auth_middleware_1.requireAuth, user_sync_middle
             userId: authReq.userId,
             accountName,
             currency,
-            country: country || CURRENCY_CONFIGS[currency].country,
+            country: country || CURRENCY_CONFIGS[currency].country || 'US',
             bankName,
             accountHolderName,
             accountType,
@@ -336,6 +344,7 @@ router.post('/me/bank-accounts', auth_middleware_1.requireAuth, user_sync_middle
             accountNumber,
             rut,
             bankCode,
+            chileanAccountNumber,
             clabe,
             sortCode,
             ukAccountNumber

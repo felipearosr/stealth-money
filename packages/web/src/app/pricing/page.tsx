@@ -5,19 +5,10 @@ import { Navigation } from "@/components/ui/navigation";
 import {
   CheckCircle,
   ArrowRight,
-  Shield,
   XCircle,
   Minus,
-  Zap,
-  Globe,
   Star,
 } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Centralized data for the comparison table for easy updates
@@ -80,7 +71,7 @@ export default function Pricing() {
             Fair Prices. Faster Transfers.
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-600">
-            Join the future of finance with transparent pricing. We're built to save you time and money on every single international transfer.
+            Join the future of finance with transparent pricing. We&apos;re built to save you time and money on every single international transfer.
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg">
