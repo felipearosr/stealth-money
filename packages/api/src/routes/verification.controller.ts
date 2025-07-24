@@ -47,6 +47,8 @@ router.post('/users/me/bank-accounts/:id/verify/micro-deposits', requireAuth, sy
         iban: account.iban || undefined,
         bic: account.bic || undefined,
         rut: account.rut || undefined,
+        bankCode: account.bankCode || undefined,
+        chileanAccountNumber: account.chileanAccountNumber || undefined,
         clabe: account.clabe || undefined,
         sortCode: account.sortCode || undefined
       },

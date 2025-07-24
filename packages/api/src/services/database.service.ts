@@ -279,6 +279,7 @@ export class DatabaseService {
     accountNumber?: string;
     rut?: string;
     bankCode?: string;
+    chileanAccountNumber?: string;
     clabe?: string;
     sortCode?: string;
     ukAccountNumber?: string;
@@ -320,6 +321,7 @@ export class DatabaseService {
         accountNumber: data.accountNumber,
         rut: data.rut,
         bankCode: data.bankCode,
+        chileanAccountNumber: data.chileanAccountNumber,
         clabe: data.clabe,
         sortCode: data.sortCode,
         ukAccountNumber: data.ukAccountNumber,
@@ -373,6 +375,7 @@ export class DatabaseService {
     accountNumber?: string;
     rut?: string;
     bankCode?: string;
+    chileanAccountNumber?: string;
     clabe?: string;
     sortCode?: string;
     ukAccountNumber?: string;
@@ -447,6 +450,7 @@ export class DatabaseService {
     accountNumber?: string;
     rut?: string;
     bankCode?: string;
+    chileanAccountNumber?: string;
     clabe?: string;
     sortCode?: string;
     ukAccountNumber?: string;
@@ -480,6 +484,7 @@ export class DatabaseService {
         accountNumber: data.accountNumber,
         rut: data.rut,
         bankCode: data.bankCode,
+        chileanAccountNumber: data.chileanAccountNumber,
         clabe: data.clabe,
         sortCode: data.sortCode,
         ukAccountNumber: data.ukAccountNumber,

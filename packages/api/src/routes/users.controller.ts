@@ -23,7 +23,7 @@ const CURRENCY_CONFIGS = {
   },
   CLP: {
     country: 'CL',
-    requiredFields: ['rut', 'accountNumber'], // bankCode is now provided by bank selection
+    requiredFields: ['rut', 'chileanAccountNumber'], // bankCode is now provided by bank selection
     accountTypes: ['checking', 'savings', 'vista', 'rut']
   },
   MXN: {
@@ -185,6 +185,7 @@ router.post('/me/recipients', requireAuth, syncUser, async (req: Request, res: R
       accountNumber,
       rut,
       bankCode,
+      chileanAccountNumber,
       clabe,
       sortCode,
       ukAccountNumber
@@ -224,6 +225,7 @@ router.post('/me/recipients', requireAuth, syncUser, async (req: Request, res: R
       accountNumber,
       rut,
       bankCode,
+      chileanAccountNumber,
       clabe,
       sortCode,
       ukAccountNumber
@@ -372,6 +374,7 @@ router.post('/me/bank-accounts', requireAuth, syncUser, async (req: Request, res
       accountNumber,
       rut,
       bankCode,
+      chileanAccountNumber,
       clabe,
       sortCode,
       ukAccountNumber
@@ -417,6 +420,7 @@ router.post('/me/bank-accounts', requireAuth, syncUser, async (req: Request, res
       accountNumber,
       rut,
       bankCode,
+      chileanAccountNumber,
       clabe,
       sortCode,
       ukAccountNumber

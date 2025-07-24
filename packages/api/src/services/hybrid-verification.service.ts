@@ -15,6 +15,8 @@ export interface VerificationBankAccount {
   iban?: string;
   bic?: string;
   rut?: string; // Chile
+  bankCode?: string; // Chilean bank code
+  chileanAccountNumber?: string; // Chilean account number
   clabe?: string; // Mexico
   sortCode?: string; // UK
 }
@@ -119,7 +121,7 @@ export class HybridVerificationService {
     // Traditional microdeposits (global fallback)
     microdeposit_traditional: {
       name: 'Traditional Microdeposits',
-      supportedCountries: ['*'], // Global support
+      supportedCountries: ['*', 'CL', 'US', 'CA', 'MX', 'BR', 'AR', 'PE', 'CO'], // Explicit support for Latin American countries
       cost: 1.00, // $1.00 per verification
       estimatedTime: { min: 1, max: 3, unit: 'days' },
       method: 'microdeposit',
@@ -346,10 +348,16 @@ export class HybridVerificationService {
     provider: VerificationProvider
   ): Promise<VerificationResponse> {
     
-    // Generate micro-deposit amounts
-    const amount1 = Math.floor(Math.random() * 99) + 1;
-    const amount2 = Math.floor(Math.random() * 99) + 1;
+    // Generate micro-deposit amounts (in cents for Chilean pesos, use smaller amounts)
+    const isChilean = request.bankAccount.country === 'CL';
+    const amount1 = isChilean ? Math.floor(Math.random() * 50) + 10 : Math.floor(Math.random() * 99) + 1; // 10-59 CLP cents
+    const amount2 = isChilean ? Math.floor(Math.random() * 50) + 10 : Math.floor(Math.random() * 99) + 1; // 10-59 CLP cents
     const verificationId = `microdeposit-${Date.now()}`;
+
+    // Chilean-specific instructions
+    const instructions = isChilean 
+      ? `Se enviarán dos pequeños depósitos (menos de $1 CLP cada uno) a tu cuenta ${request.bankAccount.bankName}. Esto puede tomar 2-5 días hábiles. Una vez que veas los depósitos, ingresa los montos exactos para verificar tu cuenta.`
+      : `Two small deposits (less than $1 each) will be sent to your ${request.bankAccount.bankName} account. This may take 1-3 business days depending on your bank and country.`;
 
     return {
       id: verificationId,
@@ -358,13 +366,15 @@ export class HybridVerificationService {
       provider: provider.name,
       cost: provider.cost,
       estimatedTime: provider.estimatedTime,
-      instructions: `Two small deposits (less than $1 each) will be sent to your ${request.bankAccount.bankName} account. This may take 1-3 business days depending on your bank and country.`,
+      instructions,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       metadata: {
         method: 'traditional_microdeposit',
         amounts: [amount1, amount2],
         country: request.bankAccount.country,
-        accountNumber: request.bankAccount.accountNumber,
+        accountNumber: request.bankAccount.chileanAccountNumber || request.bankAccount.accountNumber,
+        rut: request.bankAccount.rut,
+        bankCode: request.bankAccount.bankCode,
         estimatedArrival: this.getEstimatedArrival(request.bankAccount.country)
       }
     };
