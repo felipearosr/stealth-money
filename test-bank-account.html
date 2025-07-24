@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test - Chilean Bank Account Setup</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .step { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #f0f8ff; border-color: #4CAF50; }
+        h1 { color: #333; }
+        h2 { color: #666; }
+        .field { margin: 10px 0; }
+        .field label { display: inline-block; width: 150px; font-weight: bold; }
+        .field input, .field select { width: 200px; padding: 5px; }
+        .example { background: #f9f9f9; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🇨🇱 Chilean Bank Account Setup - Test Guide</h1>
+    
+    <div class="step success">
+        <h2>✅ System Ready!</h2>
+        <p>The country-first bank account system has been successfully implemented. Here's how Chilean users can now add their accounts:</p>
+    </div>
+
+    <div class="step">
+        <h2>Step 1: Select Chile 🌍</h2>
+        <div class="field">
+            <label>Country:</label>
+            <select disabled>
+                <option>🇨🇱 Chile (CLP)</option>
+            </select>
+        </div>
+        <p><strong>Available countries:</strong> Chile, United States, Germany, Spain, France, Italy, Mexico, United Kingdom</p>
+    </div>
+
+    <div class="step">
+        <h2>Step 2: Choose Your Bank 🏦</h2>
+        <div class="field">
+            <label>Bank:</label>
+            <select disabled>
+                <option>Banco de Chile</option>
+            </select>
+        </div>
+        <p><strong>Chilean banks available:</strong></p>
+        <ul>
+            <li>Banco de Chile (Code: 001)</li>
+            <li>Banco del Estado (BancoEstado) (Code: 012)</li>
+            <li>Banco de Crédito e Inversiones (BCI) (Code: 016)</li>
+            <li>Banco Santander Chile (Code: 037)</li>
+            <li>Banco Itaú Chile (Code: 039)</li>
+            <li>Banco Security (Code: 049)</li>
+            <li>Banco Falabella (Code: 051)</li>
+            <li>And 4 more major banks...</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>Step 3: Select Account Type 💳</h2>
+        <div class="field">
+            <label>Account Type:</label>
+            <select disabled>
+                <option>Cuenta Corriente</option>
+            </select>
+        </div>
+        <p><strong>Chilean account types:</strong></p>
+        <ul>
+            <li>Cuenta Corriente (Checking Account)</li>
+            <li>Cuenta de Ahorro (Savings Account)</li>
+            <li>Cuenta Vista (Sight Account)</li>
+            <li>Cuenta RUT (BancoEstado only)</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>Step 4: Enter Account Details 📝</h2>
+        <div class="field">
+            <label>Account Nickname:</label>
+            <input type="text" value="My Chilean Account" disabled>
+        </div>
+        <div class="field">
+            <label>Account Holder:</label>
+            <input type="text" value="Juan Carlos Pérez" disabled>
+        </div>
+        <div class="field">
+            <label>RUT:</label>
+            <input type="text" value="12.345.678-9" disabled>
+        </div>
+        <div class="field">
+            <label>Account Number:</label>
+            <input type="text" value="0123456789" disabled>
+        </div>
+        
+        <div class="example">
+            <strong>RUT Format Examples:</strong><br>
+            ✅ 12.345.678-9<br>
+            ✅ 8.765.432-1<br>
+            ✅ 15.876.543-K<br>
+            <br>
+            <strong>Note:</strong> RUT validation and auto-formatting included!
+        </div>
+    </div>
+
+    <div class="step success">
+        <h2>🎉 What's Improved</h2>
+        <ul>
+            <li><strong>No Manual Bank Entry:</strong> Choose from predefined banks instead of typing</li>
+            <li><strong>Country-First Approach:</strong> Makes sense for multinational currencies like EUR</li>
+            <li><strong>Simplified Chilean Flow:</strong> Only RUT + Account Number needed (bank code auto-filled)</li>
+            <li><strong>Smart Validation:</strong> RUT format validation with automatic formatting</li>
+            <li><strong>Better UX:</strong> Clear 3-step process with visual indicators</li>
+            <li><strong>Multi-Country Support:</strong> Works with 8 countries and their banking systems</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>🚀 Ready to Test</h2>
+        <p>To test the new Chilean bank account system:</p>
+        <ol>
+            <li>Go to <a href="http://localhost:3000/dashboard" target="_blank">Dashboard</a></li>
+            <li>Click "Send to User" or "Send to Bank"</li>
+            <li>If you don't have a verified account, you'll see the new onboarding flow</li>
+            <li>Select "Chile" from the country dropdown</li>
+            <li>Choose any Chilean bank</li>
+            <li>Fill in RUT and account number</li>
+            <li>Submit and verify!</li>
+        </ol>
+    </div>
+
+    <script>
+        console.log('✅ Chilean Bank Account System Ready!');
+        console.log('🏦 Supported Banks:', [
+            'Banco de Chile',
+            'Banco del Estado',
+            'BCI',
+            'Santander Chile',
+            'Itaú Chile',
+            'Banco Security',
+            'Banco Falabella',
+            'And more...'
+        ]);
+    </script>
+</body>
+</html>

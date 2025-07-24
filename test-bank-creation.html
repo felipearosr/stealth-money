@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Bank Account Creation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🏦 Bank Account Creation Test</h1>
+    
+    <div class="section">
+        <h2>✅ Database Schema Fixed</h2>
+        <p>Removed the problematic unique constraint: <code>@@unique([userId, currency, isPrimary])</code></p>
+        <p>This was preventing multiple non-primary accounts for the same currency.</p>
+    </div>
+
+    <div class="section">
+        <h2>🧪 Test Chilean Bank Account Creation</h2>
+        <p>Click the button below to test creating a Chilean bank account via API:</p>
+        
+        <button onclick="testCreateBankAccount()">Create Test Chilean Account</button>
+        <button onclick="testCreateSecondAccount()">Create Second Account (Should Work Now)</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>📋 Expected Fix Results</h2>
+        <ul>
+            <li>✅ First account creation should work</li>
+            <li>✅ Second account creation should work (no unique constraint error)</li>
+            <li>✅ Primary account logic should work correctly</li>
+            <li>✅ API logs should show proper debugging information</li>
+        </ul>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4000';
+
+        async function testCreateBankAccount() {
+            try {
+                showResult('Testing bank account creation...', 'info');
+                
+                const testData = {
+                    accountName: 'Test Chilean Account',
+                    currency: 'CLP',
+                    country: 'CL',
+                    bankName: 'Banco de Chile',
+                    bankCode: '001',
+                    accountHolderName: 'Juan Pérez',
+                    accountType: 'checking',
+                    isPrimary: true,
+                    rut: '12.345.678-9',
+                    accountNumber: '1234567890'
+                };
+
+                const response = await fetch(`${API_URL}/api/users/me/bank-accounts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer mock-token' // This will need a real token
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ Bank account created successfully!', 'success');
+                    showResult(`Account ID: ${result.id}`, 'info');
+                    showResult(`Bank: ${result.bankName}`, 'info');
+                    showResult(`Currency: ${result.currency}`, 'info');
+                    showResult(`Primary: ${result.isPrimary}`, 'info');
+                } else {
+                    showResult(`❌ Error: ${result.message || result.error}`, 'error');
+                    console.error('Full error:', result);
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+                console.error('Network error:', error);
+            }
+        }
+
+        async function testCreateSecondAccount() {
+            try {
+                showResult('Testing second account creation...', 'info');
+                
+                const testData = {
+                    accountName: 'Second Chilean Account',
+                    currency: 'CLP',
+                    country: 'CL',
+                    bankName: 'BCI',
+                    bankCode: '016',
+                    accountHolderName: 'Juan Pérez',
+                    accountType: 'savings',
+                    isPrimary: false, // Not primary this time
+                    rut: '12.345.678-9',
+                    accountNumber: '9876543210'
+                };
+
+                const response = await fetch(`${API_URL}/api/users/me/bank-accounts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer mock-token'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ Second bank account created successfully!', 'success');
+                    showResult('This confirms the unique constraint fix worked!', 'success');
+                    showResult(`Account ID: ${result.id}`, 'info');
+                    showResult(`Bank: ${result.bankName}`, 'info');
+                    showResult(`Primary: ${result.isPrimary}`, 'info');
+                } else {
+                    showResult(`❌ Error: ${result.message || result.error}`, 'error');
+                    console.error('Full error:', result);
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+                console.error('Network error:', error);
+            }
+        }
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            resultDiv.appendChild(div);
+            
+            // Auto scroll to latest result
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show initial status
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('Ready to test! The database constraint has been fixed.', 'success');
+            showResult('Note: You may need to sign in first for the API calls to work with real authentication.', 'info');
+        });
+    </script>
+</body>
+</html>

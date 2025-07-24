@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import BankAccountOnboarding from './BankAccountOnboarding';
+import { useAuth } from '@clerk/nextjs';
+import BankAccountOnboardingV2 from './BankAccountOnboardingV2';
 
 interface BankAccount {
   id: string;
@@ -26,6 +27,7 @@ export default function OnboardingGate({
   skipCheckOnPublicPages = false,
   blockTransfersUntilVerified = false
 }: OnboardingGateProps) {
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -51,15 +53,23 @@ export default function OnboardingGate({
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       
+      // Get authentication token
+      const token = await getToken();
+      if (!token) {
+        // User not authenticated, let them proceed (auth will be handled elsewhere)
+        setNeedsOnboarding(false);
+        return;
+      }
+      
       // Add a timeout to prevent hanging
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
       try {
         const response = await fetch(`${API_URL}/api/users/me/bank-accounts`, {
           headers: {
             'Content-Type': 'application/json',
-            // Add authorization header if needed
+            'Authorization': `Bearer ${token}`
           },
           signal: controller.signal
         });
@@ -67,19 +77,29 @@ export default function OnboardingGate({
         clearTimeout(timeoutId);
 
         if (response.ok) {
-          const data = await response.json();
-          const accounts = data.bankAccounts || [];
-          setBankAccounts(accounts);
+          const responseData = await response.json();
+          console.log('OnboardingGate: Fetched response:', responseData);
+          
+          // Handle both response formats: array or { bankAccounts: [...] }
+          const accounts = responseData.bankAccounts || responseData;
+          const accountsArray = Array.isArray(accounts) ? accounts : [];
+          setBankAccounts(accountsArray);
           
           // Check if user needs onboarding
-          const hasAccounts = accounts.length > 0;
-          const hasVerifiedAccount = accounts.some((account: BankAccount) => account.isVerified);
+          const hasAccounts = accountsArray.length > 0;
+          const hasVerifiedAccount = accountsArray.some((account: BankAccount) => account.isVerified);
+          
+          console.log('OnboardingGate: Has accounts:', hasAccounts, 'Has verified:', hasVerifiedAccount);
           
           // For transfer flows, always require verified accounts
           if (requireVerification || blockTransfersUntilVerified) {
-            setNeedsOnboarding(!hasVerifiedAccount);
+            const needsOnboarding = !hasVerifiedAccount;
+            console.log('OnboardingGate: Transfer flow - needs onboarding:', needsOnboarding);
+            setNeedsOnboarding(needsOnboarding);
           } else {
-            setNeedsOnboarding(!hasAccounts);
+            const needsOnboarding = !hasAccounts;
+            console.log('OnboardingGate: Regular flow - needs onboarding:', needsOnboarding);
+            setNeedsOnboarding(needsOnboarding);
           }
         } else if (response.status === 401) {
           // User not authenticated, let them proceed (auth will be handled elsewhere)
@@ -107,10 +127,18 @@ export default function OnboardingGate({
   };
 
   const handleOnboardingComplete = () => {
-    setNeedsOnboarding(false);
+    console.log('OnboardingGate: Onboarding completed, refreshing status...');
+    // Refresh the onboarding status
+    checkOnboardingStatus();
     if (onOnboardingComplete) {
       onOnboardingComplete();
     }
+  };
+
+  const handleAccountAdded = () => {
+    console.log('OnboardingGate: Account added, refreshing status...');
+    // Refresh the onboarding status when an account is added
+    checkOnboardingStatus();
   };
 
   const handleSkip = () => {
@@ -133,10 +161,11 @@ export default function OnboardingGate({
 
   if (needsOnboarding) {
     return (
-      <BankAccountOnboarding
+      <BankAccountOnboardingV2
         onComplete={handleOnboardingComplete}
         onSkip={(!requireVerification && !blockTransfersUntilVerified) ? handleSkip : undefined}
         requireVerification={requireVerification || blockTransfersUntilVerified}
+        onAccountAdded={handleAccountAdded}
       />
     );
   }

@@ -17,14 +17,14 @@ const CURRENCY_CONFIGS = {
     accountTypes: ['checking', 'savings']
   },
   EUR: {
-    country: 'DE', // Default to Germany, can be expanded
-    requiredFields: ['iban', 'bic'],
-    accountTypes: ['checking', 'savings']
+    country: null, // EUR is multinational, country must be provided
+    requiredFields: ['iban'], // BIC/SWIFT can be derived from IBAN
+    accountTypes: ['checking', 'savings', 'current']
   },
   CLP: {
     country: 'CL',
-    requiredFields: ['rut', 'bankCode', 'accountNumber'],
-    accountTypes: ['checking', 'savings']
+    requiredFields: ['rut', 'accountNumber'], // bankCode is now provided by bank selection
+    accountTypes: ['checking', 'savings', 'vista', 'rut']
   },
   MXN: {
     country: 'MX',
@@ -385,6 +385,14 @@ router.post('/me/bank-accounts', requireAuth, syncUser, async (req: Request, res
       });
     }
 
+    // EUR requires country to be specified
+    if (currency === 'EUR' && !country) {
+      return res.status(400).json({
+        error: 'Country required for EUR accounts',
+        message: 'Please specify the country for your EUR account'
+      });
+    }
+
     // Validate bank account data for the currency
     const validation = validateBankAccountData(currency, req.body);
     if (!validation.isValid) {
@@ -398,7 +406,7 @@ router.post('/me/bank-accounts', requireAuth, syncUser, async (req: Request, res
       userId: authReq.userId,
       accountName,
       currency,
-      country: country || CURRENCY_CONFIGS[currency as keyof typeof CURRENCY_CONFIGS].country,
+      country: country || CURRENCY_CONFIGS[currency as keyof typeof CURRENCY_CONFIGS].country || 'US',
       bankName,
       accountHolderName,
       accountType,

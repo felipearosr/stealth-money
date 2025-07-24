@@ -283,9 +283,17 @@ export class DatabaseService {
     sortCode?: string;
     ukAccountNumber?: string;
   }): Promise<BankAccount> {
+    console.log('Creating bank account with data:', {
+      userId: data.userId,
+      currency: data.currency,
+      isPrimary: data.isPrimary,
+      bankName: data.bankName
+    });
+
     // If this is set as primary, unset other primary accounts for this currency
     if (data.isPrimary) {
-      await this.prisma.bankAccount.updateMany({
+      console.log(`Unsetting primary accounts for user ${data.userId}, currency ${data.currency}`);
+      const result = await this.prisma.bankAccount.updateMany({
         where: {
           userId: data.userId,
           currency: data.currency,
@@ -293,6 +301,7 @@ export class DatabaseService {
         },
         data: { isPrimary: false }
       });
+      console.log(`Unset ${result.count} primary accounts`);
     }
 
     return this.prisma.bankAccount.create({

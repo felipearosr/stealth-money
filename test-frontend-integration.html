@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🇨🇱 Frontend Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .test-step { margin: 15px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>🇨🇱 Frontend Integration Test - Chilean Bank Account Flow</h1>
+    
+    <div class="section success">
+        <h2>✅ All Backend Issues Fixed!</h2>
+        <ul>
+            <li>✅ Database constraint removed (multiple accounts allowed)</li>
+            <li>✅ OnboardingGate API response parsing fixed</li>
+            <li>✅ BankAccountOnboardingV2 API response parsing fixed</li>
+            <li>✅ Country-first bank selection implemented</li>
+            <li>✅ Chilean configuration with 11 banks ready</li>
+            <li>✅ RUT validation and formatting working</li>
+            <li>✅ Verification flow integration complete</li>
+        </ul>
+    </div>
+
+    <div class="section info">
+        <h2>🧪 Manual Frontend Test Instructions</h2>
+        <p>Follow these steps to test the complete flow:</p>
+        
+        <div class="test-step">
+            <h3>Step 1: Open Transfer Process</h3>
+            <p>1. Go to <strong>http://localhost:3000</strong></p>
+            <p>2. Enter a transfer amount (e.g., $100)</p>
+            <p>3. Click "Continue with this rate"</p>
+            <p>4. Should redirect to <strong>/transfer/process</strong></p>
+        </div>
+
+        <div class="test-step">
+            <h3>Step 2: Verify Onboarding Detection</h3>
+            <p>5. Page should show "Bank Account Setup" (if no verified accounts)</p>
+            <p>6. Open browser console and check for:</p>
+            <pre>OnboardingGate: Fetched response: { bankAccounts: [...], total: X }
+OnboardingGate: Has accounts: true/false, Has verified: false
+OnboardingGate: Transfer flow - needs onboarding: true</pre>
+        </div>
+
+        <div class="test-step">
+            <h3>Step 3: Test Chilean Account Creation</h3>
+            <p>7. Click "Add Bank Account"</p>
+            <p>8. Select Country: <strong>🇨🇱 Chile (CLP)</strong></p>
+            <p>9. Select Bank: <strong>Banco de Chile</strong> (or any other)</p>
+            <p>10. Select Account Type: <strong>Cuenta Corriente</strong></p>
+            <p>11. Fill in:</p>
+            <ul>
+                <li>Account Nickname: "My Chilean Account"</li>
+                <li>Account Holder: Your full name</li>
+                <li>RUT: "12.345.678-9" (should format automatically)</li>
+                <li>Account Number: "1234567890"</li>
+            </ul>
+            <p>12. Click "Add Account"</p>
+        </div>
+
+        <div class="test-step">
+            <h3>Step 4: Verify Success Flow</h3>
+            <p>13. Should see: <strong>"✅ Banco de Chile account added successfully!"</strong></p>
+            <p>14. Console should show:</p>
+            <pre>Bank account created successfully: { id: "...", bankName: "Banco de Chile", ... }
+OnboardingGate: Account added, refreshing status...</pre>
+            <p>15. Page should refresh and show: <strong>"Verify Your Bank Account"</strong></p>
+            <p>16. Blue card: <strong>"Bank Account Added Successfully!"</strong></p>
+            <p>17. Account should appear with "Pending" badge</p>
+            <p>18. <strong>"Verify Account"</strong> button should be prominent</p>
+        </div>
+
+        <div class="test-step">
+            <h3>Step 5: Test Verification Flow</h3>
+            <p>19. Click "Verify Account" button</p>
+            <p>20. Should show verification options:</p>
+            <ul>
+                <li>"Micro-deposits (2-3 business days)"</li>
+                <li>"Instant Verification (Connect bank)"</li>
+            </ul>
+            <p>21. Can click "← Back to Account List" to return</p>
+            <p>22. Choose a verification method and complete the process</p>
+        </div>
+
+        <div class="test-step">
+            <h3>Step 6: Verify Completion</h3>
+            <p>23. After verification, console should show:</p>
+            <pre>Verification completed for account: [account-id]
+All requirements met, calling onComplete</pre>
+            <p>24. Should redirect to transfer process (children components)</p>
+            <p>25. OnboardingGate should no longer block</p>
+            <p>26. Transfer calculator should be visible</p>
+        </div>
+
+        <div class="test-step">
+            <h3>Step 7: Final Test - No More Onboarding</h3>
+            <p>27. Go back to landing page (http://localhost:3000)</p>
+            <p>28. Calculate another transfer</p>
+            <p>29. Should proceed directly to transfer (no onboarding)</p>
+            <p>30. Console should show: <strong>needs onboarding: false</strong></p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🔍 API Tests</h2>
+        <p>Test the backend APIs directly:</p>
+        
+        <button onclick="testAPIHealth()">Test API Health</button>
+        <button onclick="testBankAccounts()">Test Bank Accounts API</button>
+        <button onclick="testCreateChileanAccount()">Test Create Chilean Account</button>
+        
+        <div id="api-results"></div>
+    </div>
+
+    <div class="section warning">
+        <h2>🚨 Common Issues to Check</h2>
+        <ul>
+            <li><strong>OnboardingGate doesn't refresh:</strong> Check console for "Account added, refreshing status..."</li>
+            <li><strong>Verification doesn't work:</strong> Ensure BankAccountVerification component loads</li>
+            <li><strong>Stuck in onboarding loop:</strong> Check hasVerifiedAccount logic in console</li>
+            <li><strong>API errors:</strong> Check network tab for 401 errors or missing Authorization headers</li>
+            <li><strong>Array/Object errors:</strong> Should be fixed with the response parsing updates</li>
+        </ul>
+    </div>
+
+    <div class="section success">
+        <h2>✅ Expected Success Indicators</h2>
+        <ol>
+            <li><strong>Add Account:</strong> Success message appears</li>
+            <li><strong>State Refresh:</strong> UI changes from "Setup" to "Verify"</li>
+            <li><strong>Verification Flow:</strong> Opens when clicking verify</li>
+            <li><strong>Completion:</strong> Redirects to transfer after verification</li>
+            <li><strong>No Loops:</strong> Going back to landing doesn't ask for bank again</li>
+        </ol>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4000';
+        const MOCK_TOKEN = 'mock-test-token-for-user-123';
+
+        async function testAPIHealth() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                showResult(`✅ API Health: ${data.status}`, 'success');
+            } catch (error) {
+                showResult(`❌ API Health Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBankAccounts() {
+            try {
+                const response = await fetch(`${API_URL}/api/users/me/bank-accounts`, {
+                    headers: { 'Authorization': `Bearer ${MOCK_TOKEN}` }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const accounts = data.bankAccounts || data;
+                    showResult(`✅ Retrieved ${accounts.length} bank accounts`, 'success');
+                    showResult(`Response format: ${data.bankAccounts ? 'Object with bankAccounts' : 'Direct array'}`, 'info');
+                } else {
+                    showResult(`❌ Failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Bank Accounts Test Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCreateChileanAccount() {
+            try {
+                const testData = {
+                    accountName: 'Test Chilean Account Frontend',
+                    currency: 'CLP',
+                    country: 'CL',
+                    bankName: 'Banco de Chile',
+                    bankCode: '001',
+                    accountHolderName: 'Test User Frontend',
+                    accountType: 'checking',
+                    isPrimary: false, // Set to false to avoid conflicts
+                    rut: '12.345.678-9',
+                    accountNumber: '9999999999'
+                };
+
+                const response = await fetch(`${API_URL}/api/users/me/bank-accounts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${MOCK_TOKEN}`
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Chilean account created: ${result.bankName}`, 'success');
+                    showResult(`RUT: ${result.rut}, Account: ${result.accountNumber}`, 'info');
+                } else {
+                    showResult(`❌ Creation failed: ${result.message || result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Create Chilean Account Failed: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('api-results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show initial status
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('🚀 Ready to test! Both API and frontend fixes have been applied.', 'success');
+            showResult('Use the manual steps above to test the complete frontend flow.', 'info');
+        });
+    </script>
+</body>
+</html>

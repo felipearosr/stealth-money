@@ -26,6 +26,11 @@ model User {
   onboardingCompleted   Boolean  @default(false) // Has completed initial onboarding
   hasVerifiedAccount    Boolean  @default(false) // Computed field for quick checks
   
+  // Chilean-specific fields
+  country               String?  @default("CL") // ISO country code, defaults to Chile
+  rut                   String?  @unique // Chilean RUT (Rol Único Tributario)
+  preferredCurrency     String?  @default("CLP") // Default currency preference
+  
   // Bank accounts owned by this user
   bankAccounts          BankAccount[]
   
@@ -42,6 +47,9 @@ model User {
   updatedAt             DateTime @updatedAt
   
   @@index([email])
+  @@index([username])
+  @@index([country])
+  @@index([rut])
 }
 
 model BankAccount {
@@ -66,6 +74,7 @@ model BankAccount {
   // Chilean accounts (CLP)
   rut                   String?
   bankCode              String?
+  chileanAccountNumber  String? // Chilean bank account number
   
   // Mexican accounts (MXN)
   clabe                 String?
@@ -96,7 +105,7 @@ model BankAccount {
   
   @@index([userId])
   @@index([currency])
-  @@unique([userId, currency, isPrimary], name: "unique_primary_per_currency")
+  @@index([userId, currency, isPrimary])
 }
 
 model SavedRecipient {
@@ -120,6 +129,7 @@ model SavedRecipient {
   accountNumber         String?
   rut                   String?
   bankCode              String?
+  chileanAccountNumber  String? // Chilean bank account number
   clabe                 String?
   sortCode              String?
   ukAccountNumber       String?
@@ -149,12 +159,30 @@ model Transaction {
   sender                User?    @relation("SentTransactions", fields: [userId], references: [id])
   recipient             User?    @relation("ReceivedTransactions", fields: [recipientUserId], references: [id])
   
-  amount                Float
-  sourceCurrency        String
-  destCurrency          String
-  exchangeRate          Float
-  recipientAmount       Float
-  status                String   @default("PENDING") // e.g., PENDING, PROCESSING, COMPLETED, FAILED
+  // Transfer amounts and currency
+  amount                Float    // Send amount
+  sourceCurrency        String   // Source currency (e.g., CLP)
+  destCurrency          String   // Destination currency (e.g., CLP)
+  exchangeRate          Float    // Exchange rate (1.0 for CLP to CLP)
+  recipientAmount       Float    // Amount recipient receives
+  fees                  Float    @default(0) // Total fees charged
+  
+  // Transfer status and tracking
+  status                String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
+  statusHistory         Json     @default("[]") // Array of status changes with timestamps
+  description           String?  // Optional transfer description
+  
+  // Payment method information
+  paymentMethodId       String?  // ID of the bank account used for payment
+  senderBankAccount     String?  // Sender's bank account identifier
+  recipientBankAccount  String?  // Recipient's bank account identifier
+  
+  // Processing references
+  calculationId         String?  // Reference to transfer calculation
+  processingReference   String?  @unique // Unique processing reference
+  bankTransactionId     String?  // Bank transaction ID
+  
+  // Legacy payment integration IDs
   stripePaymentIntentId String?  @unique // To link with Stripe
   blockchainTxHash      String?  @unique // To link with the on-chain tx
   
@@ -170,10 +198,15 @@ model Transaction {
   payoutMethod          String?
   payoutDetails         Json?
   
+  // Timestamps
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  completedAt           DateTime? // When the transfer was completed
   
   @@index([userId]) // Index for efficient user-specific queries
   @@index([recipientUserId])
   @@index([recipientEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@index([sourceCurrency, destCurrency])
 }

@@ -3,10 +3,14 @@ import { Router, Request, Response } from 'express';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { syncUser } from '../middleware/user-sync.middleware';
 import { DatabaseService } from '../services/database.service';
+import { CircleVerificationService, VerificationBankAccount, CreateMicroDepositRequest } from '../services/circle-verification.service';
+import { HybridVerificationService, VerificationRequest } from '../services/hybrid-verification.service';
 import { logger } from '../middleware/logging.middleware';
 
 const router = Router();
 const dbService = new DatabaseService();
+const circleVerificationService = new CircleVerificationService();
+const hybridVerificationService = new HybridVerificationService();
 
 // POST /api/users/me/bank-accounts/:id/verify/micro-deposits - Start micro-deposit verification
 router.post('/users/me/bank-accounts/:id/verify/micro-deposits', requireAuth, syncUser, async (req: Request, res: Response) => {
@@ -30,40 +34,98 @@ router.post('/users/me/bank-accounts/:id/verify/micro-deposits', requireAuth, sy
       });
     }
 
-    // Generate random micro-deposit amounts (between $0.01 and $0.99)
-    const amount1 = Math.floor(Math.random() * 99) + 1; // 1-99 cents
-    const amount2 = Math.floor(Math.random() * 99) + 1; // 1-99 cents
-    const amounts = [amount1, amount2];
-
-    // Store verification data
-    const verificationData = {
-      amounts: amounts,
-      attempts: 0,
-      maxAttempts: 3,
-      startedAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+    // Build verification request for hybrid service
+    const verificationRequest: VerificationRequest = {
+      bankAccount: {
+        id: account.id,
+        accountNumber: account.accountNumber || '',
+        routingNumber: account.routingNumber || undefined,
+        country: account.country,
+        currency: account.currency,
+        accountHolderName: account.accountHolderName,
+        bankName: account.bankName,
+        iban: account.iban || undefined,
+        bic: account.bic || undefined,
+        rut: account.rut || undefined,
+        clabe: account.clabe || undefined,
+        sortCode: account.sortCode || undefined
+      },
+      userId: authReq.userId,
+      metadata: {
+        accountId: id,
+        accountName: account.accountName,
+        initiatedAt: new Date().toISOString()
+      }
     };
 
-    // Update account with verification method and data
-    await dbService.updateBankAccount(id, {
-      verificationMethod: 'micro_deposits',
-      verificationData: verificationData
-    });
+    try {
+      // Use hybrid verification service (smart routing by country)
+      const verificationResponse = await hybridVerificationService.startVerification(verificationRequest);
+      
+      // Store verification data
+      const verificationData = {
+        hybridVerificationId: verificationResponse.id,
+        method: verificationResponse.method,
+        provider: verificationResponse.provider,
+        cost: verificationResponse.cost,
+        attempts: 0,
+        maxAttempts: 3,
+        startedAt: new Date().toISOString(),
+        expiresAt: verificationResponse.expiresAt,
+        status: verificationResponse.status,
+        metadata: verificationResponse.metadata
+      };
 
-    // In a real system, you would actually send the micro-deposits here
-    // For now, we'll simulate this step
-    logger.info('Micro-deposit verification started', {
-      userId: authReq.userId,
-      accountId: id,
-      amounts: amounts // In production, don't log actual amounts
-    });
+      // Update account with verification method and data
+      await dbService.updateBankAccount(id, {
+        verificationMethod: verificationResponse.method,
+        verificationData: verificationData
+      });
 
-    res.json({
-      message: 'Micro-deposits have been initiated',
-      estimatedArrival: '1-2 business days',
-      expiresAt: verificationData.expiresAt,
-      attemptsRemaining: verificationData.maxAttempts
-    });
+      logger.info('Smart verification initiated', {
+        userId: authReq.userId,
+        accountId: id,
+        country: account.country,
+        provider: verificationResponse.provider,
+        method: verificationResponse.method,
+        cost: verificationResponse.cost,
+        estimatedTime: verificationResponse.estimatedTime
+      });
+
+      // Build response based on verification method
+      const response: any = {
+        message: `Bank account verification started with ${verificationResponse.provider}`,
+        verificationId: verificationResponse.id,
+        method: verificationResponse.method,
+        provider: verificationResponse.provider,
+        cost: verificationResponse.cost,
+        estimatedTime: `${verificationResponse.estimatedTime.min}-${verificationResponse.estimatedTime.max} ${verificationResponse.estimatedTime.unit}`,
+        instructions: verificationResponse.instructions,
+        expiresAt: verificationResponse.expiresAt,
+        attemptsRemaining: verificationData.maxAttempts
+      };
+
+      // Add OAuth redirect URL if needed
+      if (verificationResponse.redirectUrl) {
+        response.redirectUrl = verificationResponse.redirectUrl;
+        response.oauthFlow = true;
+      }
+
+      res.json(response);
+
+    } catch (error) {
+      logger.error('Hybrid verification failed', {
+        userId: authReq.userId,
+        accountId: id,
+        country: account.country,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+
+      res.status(500).json({
+        error: 'Verification initiation failed',
+        message: 'Unable to start bank account verification. Please try again.'
+      });
+    }
   } catch (error) {
     logger.error('Failed to start micro-deposit verification', {
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -304,6 +366,90 @@ router.get('/users/me/bank-accounts/:id/verification-status', requireAuth, syncU
     res.status(500).json({
       error: 'Failed to get verification status',
       message: 'Unable to retrieve verification status'
+    });
+  }
+});
+
+// GET /api/verification/wallet-status - Get verification wallet status (admin/debug endpoint)
+router.get('/verification/wallet-status', requireAuth, syncUser, async (req: Request, res: Response) => {
+  try {
+    const wallet = await circleVerificationService.getVerificationWalletBalance();
+    
+    res.json({
+      walletId: wallet.walletId,
+      balance: wallet.balance,
+      minimumBalance: wallet.minimumBalance,
+      status: parseFloat(wallet.balance.amount) >= parseFloat(wallet.minimumBalance) 
+        ? 'sufficient' : 'low_balance',
+      canSendVerifications: parseFloat(wallet.balance.amount) >= parseFloat(wallet.minimumBalance),
+      environment: circleVerificationService.getEnvironment()
+    });
+  } catch (error) {
+    logger.error('Failed to get verification wallet status', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+
+    res.status(500).json({
+      error: 'Failed to get wallet status',
+      message: 'Unable to retrieve verification wallet status'
+    });
+  }
+});
+
+// GET /api/verification/cost-estimate/:country - Get verification cost estimate by country
+router.get('/verification/cost-estimate/:country', async (req: Request, res: Response) => {
+  try {
+    const { country } = req.params;
+    
+    if (!country || country.length !== 2) {
+      return res.status(400).json({
+        error: 'Invalid country code',
+        message: 'Please provide a valid 2-letter country code (e.g., US, CL, DE)'
+      });
+    }
+
+    const estimate = await hybridVerificationService.getCostEstimate(country.toUpperCase());
+    
+    res.json({
+      country: country.toUpperCase(),
+      provider: estimate.provider,
+      cost: estimate.cost,
+      method: estimate.method,
+      estimatedTime: estimate.estimatedTime,
+      currency: 'USD'
+    });
+  } catch (error) {
+    logger.error('Failed to get verification cost estimate', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      country: req.params.country
+    });
+
+    res.status(500).json({
+      error: 'Failed to get cost estimate',
+      message: 'Unable to retrieve verification cost estimate'
+    });
+  }
+});
+
+// GET /api/verification/supported-countries - Get all supported countries and their verification methods
+router.get('/verification/supported-countries', async (req: Request, res: Response) => {
+  try {
+    const supportedCountries = hybridVerificationService.getSupportedCountries();
+    
+    res.json({
+      supportedCountries,
+      totalCountries: Object.keys(supportedCountries).length,
+      averageCost: Object.values(supportedCountries).reduce((sum, country) => sum + country.cost, 0) / Object.keys(supportedCountries).length,
+      providers: [...new Set(Object.values(supportedCountries).map(c => c.provider))]
+    });
+  } catch (error) {
+    logger.error('Failed to get supported countries', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+
+    res.status(500).json({
+      error: 'Failed to get supported countries',
+      message: 'Unable to retrieve supported countries list'
     });
   }
 });
