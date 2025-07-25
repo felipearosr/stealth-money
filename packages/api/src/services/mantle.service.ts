@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import crypto from 'crypto';
 import { mantleConfig, MantleConfig } from '../config/mantle.config';
 
 export interface MantleWallet {
@@ -6,12 +7,30 @@ export interface MantleWallet {
   address: string;
   userId: string;
   createdAt: Date;
+  encryptedPrivateKey?: string; // Only for internal use, never exposed
 }
 
 export interface WalletBalance {
   native: string; // MNT balance
   stablecoin: string; // USDC balance
   address: string;
+  nativeUSD?: string; // USD value of native balance
+  stablecoinUSD?: string; // USD value of stablecoin balance
+  totalUSD?: string; // Total USD value
+}
+
+export interface WalletCreationResult {
+  wallet: MantleWallet;
+  mnemonic?: string; // Only returned during creation for backup
+}
+
+export interface TokenBalance {
+  address: string;
+  symbol: string;
+  name: string;
+  balance: string;
+  decimals: number;
+  balanceUSD?: string;
 }
 
 export interface NetworkStatus {
@@ -104,23 +123,106 @@ export class MantleService {
     return { ...this.config };
   }
 
+  // ============================================================================
+  // WALLET MANAGEMENT METHODS
+  // ============================================================================
+
   /**
-   * Create a new wallet for a user
-   * In a production environment, this would integrate with secure key management
+   * Create a new wallet for a user with secure private key handling
    */
-  public async createWallet(userId: string): Promise<MantleWallet> {
+  public async createWallet(userId: string, options?: { 
+    generateMnemonic?: boolean;
+    encryptPrivateKey?: boolean;
+  }): Promise<WalletCreationResult> {
     if (!this.isEnabled()) {
       throw new Error('Mantle service is not enabled or not properly initialized');
     }
 
     try {
-      // Generate a new wallet
-      const wallet = ethers.Wallet.createRandom();
+      let wallet: ethers.HDNodeWallet | ethers.Wallet;
+      let mnemonic: string | undefined;
+
+      if (options?.generateMnemonic) {
+        // Generate wallet from mnemonic for better backup/recovery
+        wallet = ethers.Wallet.createRandom();
+        if (wallet.mnemonic) {
+          mnemonic = wallet.mnemonic.phrase;
+        }
+      } else {
+        // Generate simple random wallet
+        wallet = ethers.Wallet.createRandom();
+      }
+
+      // Encrypt private key if requested (for secure storage)
+      let encryptedPrivateKey: string | undefined;
+      if (options?.encryptPrivateKey) {
+        encryptedPrivateKey = await this.encryptPrivateKey(wallet.privateKey, userId);
+      }
+
+      const mantleWallet: MantleWallet = {
+        id: `mantle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        address: wallet.address,
+        userId,
+        createdAt: new Date(),
+        encryptedPrivateKey
+      };
+
+      console.log(`✅ Created Mantle wallet for user ${userId}: ${wallet.address}`);
       
-      // In production, you would:
-      // 1. Encrypt the private key
-      // 2. Store it securely (HSM, encrypted database, etc.)
-      // 3. Never log the private key
+      return {
+        wallet: mantleWallet,
+        mnemonic: options?.generateMnemonic ? mnemonic : undefined
+      };
+    } catch (error) {
+      console.error('❌ Failed to create Mantle wallet:', error);
+      throw new Error(`Failed to create Mantle wallet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Create wallet from existing mnemonic phrase
+   */
+  public async createWalletFromMnemonic(userId: string, mnemonic: string, derivationPath?: string): Promise<MantleWallet> {
+    if (!this.isEnabled()) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      // Validate mnemonic
+      if (!ethers.Mnemonic.isValidMnemonic(mnemonic)) {
+        throw new Error('Invalid mnemonic phrase');
+      }
+
+      // Create wallet from mnemonic
+      const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic, undefined, derivationPath || "m/44'/60'/0'/0/0");
+      
+      const mantleWallet: MantleWallet = {
+        id: `mantle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        address: hdNode.address,
+        userId,
+        createdAt: new Date()
+      };
+
+      console.log(`✅ Created Mantle wallet from mnemonic for user ${userId}: ${hdNode.address}`);
+      
+      return mantleWallet;
+    } catch (error) {
+      console.error('❌ Failed to create wallet from mnemonic:', error);
+      throw new Error(`Failed to create wallet from mnemonic: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Create wallet from private key
+   */
+  public async createWalletFromPrivateKey(userId: string, privateKey: string): Promise<MantleWallet> {
+    if (!this.isEnabled()) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      // Validate and create wallet from private key
+      const wallet = new ethers.Wallet(privateKey);
       
       const mantleWallet: MantleWallet = {
         id: `mantle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -129,19 +231,129 @@ export class MantleService {
         createdAt: new Date()
       };
 
-      console.log(`✅ Created Mantle wallet for user ${userId}: ${wallet.address}`);
+      console.log(`✅ Created Mantle wallet from private key for user ${userId}: ${wallet.address}`);
       
       return mantleWallet;
     } catch (error) {
-      console.error('❌ Failed to create Mantle wallet:', error);
-      throw new Error(`Failed to create Mantle wallet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('❌ Failed to create wallet from private key:', error);
+      throw new Error(`Failed to create wallet from private key: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Get wallet balance for native token and stablecoin
+   * Derive wallet address from public key or other identifier
    */
-  public async getWalletBalance(walletAddress: string): Promise<WalletBalance> {
+  public deriveWalletAddress(publicKey: string): string {
+    try {
+      // For Ethereum-compatible addresses, derive from public key
+      const address = ethers.computeAddress(publicKey);
+      return address;
+    } catch (error) {
+      console.error('❌ Failed to derive wallet address:', error);
+      throw new Error(`Failed to derive wallet address: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Validate if an address is a valid Ethereum address
+   */
+  public isValidAddress(address: string): boolean {
+    try {
+      return ethers.isAddress(address);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get wallet information without sensitive data
+   */
+  public async getWalletInfo(walletAddress: string): Promise<{
+    address: string;
+    isContract: boolean;
+    balance: WalletBalance;
+    transactionCount: number;
+  }> {
+    if (!this.isEnabled() || !this.provider) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      const [balance, transactionCount, code] = await Promise.all([
+        this.getWalletBalance(walletAddress),
+        this.provider.getTransactionCount(walletAddress),
+        this.provider.getCode(walletAddress)
+      ]);
+
+      return {
+        address: walletAddress,
+        isContract: code !== '0x',
+        balance,
+        transactionCount
+      };
+    } catch (error) {
+      console.error('❌ Failed to get wallet info:', error);
+      throw new Error(`Failed to get wallet info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Encrypt private key for secure storage
+   */
+  private async encryptPrivateKey(privateKey: string, userId: string): Promise<string> {
+    try {
+      // In production, use a proper key derivation function and secure key management
+      // This is a simplified example - use HSM or proper key management in production
+      const password = `${userId}_${process.env.ENCRYPTION_KEY || 'default_key'}`;
+      const algorithm = 'aes-256-cbc';
+      const iv = crypto.randomBytes(16);
+      
+      // Create a key from the password (in production, use proper key derivation)
+      const key = crypto.createHash('sha256').update(password).digest();
+      
+      const cipher = crypto.createCipheriv(algorithm, key, iv);
+      
+      let encrypted = cipher.update(privateKey, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      
+      return `${iv.toString('hex')}:${encrypted}`;
+    } catch (error) {
+      console.error('❌ Failed to encrypt private key:', error);
+      throw new Error('Failed to encrypt private key');
+    }
+  }
+
+  /**
+   * Decrypt private key (for internal use only)
+   */
+  private async decryptPrivateKey(encryptedPrivateKey: string, userId: string): Promise<string> {
+    try {
+      const password = `${userId}_${process.env.ENCRYPTION_KEY || 'default_key'}`;
+      const algorithm = 'aes-256-cbc';
+      const [ivHex, encrypted] = encryptedPrivateKey.split(':');
+      
+      if (!ivHex || !encrypted) {
+        throw new Error('Invalid encrypted private key format');
+      }
+      
+      const iv = Buffer.from(ivHex, 'hex');
+      const key = crypto.createHash('sha256').update(password).digest();
+      
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      
+      return decrypted;
+    } catch (error) {
+      console.error('❌ Failed to decrypt private key:', error);
+      throw new Error('Failed to decrypt private key');
+    }
+  }
+
+  /**
+   * Get wallet balance for native token and stablecoin with USD values
+   */
+  public async getWalletBalance(walletAddress: string, includeUSDValues: boolean = true): Promise<WalletBalance> {
     if (!this.isEnabled() || !this.provider) {
       throw new Error('Mantle service is not enabled or not properly initialized');
     }
@@ -177,14 +389,117 @@ export class MantleService {
         }
       }
 
+      // Calculate USD values if requested
+      let nativeUSD: string | undefined;
+      let stablecoinUSD: string | undefined;
+      let totalUSD: string | undefined;
+
+      if (includeUSDValues) {
+        try {
+          // Get current prices (in production, use a proper price oracle)
+          const mntPriceUSD = await this.getMNTPriceUSD();
+          const usdcPriceUSD = 1.0; // USDC is pegged to USD
+          
+          nativeUSD = (parseFloat(nativeBalanceFormatted) * mntPriceUSD).toFixed(6);
+          stablecoinUSD = (parseFloat(stablecoinBalance) * usdcPriceUSD).toFixed(6);
+          totalUSD = (parseFloat(nativeUSD) + parseFloat(stablecoinUSD)).toFixed(6);
+        } catch (priceError) {
+          console.warn(`⚠️  Could not fetch USD prices: ${priceError}`);
+        }
+      }
+
       return {
         native: nativeBalanceFormatted,
         stablecoin: stablecoinBalance,
-        address: walletAddress
+        address: walletAddress,
+        nativeUSD,
+        stablecoinUSD,
+        totalUSD
       };
     } catch (error) {
       console.error('❌ Failed to get wallet balance:', error);
       throw new Error(`Failed to get wallet balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get balance for a specific ERC20 token
+   */
+  public async getTokenBalance(walletAddress: string, tokenAddress: string): Promise<TokenBalance> {
+    if (!this.isEnabled() || !this.provider) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      // ERC20 ABI for token information
+      const erc20ABI = [
+        'function balanceOf(address owner) view returns (uint256)',
+        'function decimals() view returns (uint8)',
+        'function symbol() view returns (string)',
+        'function name() view returns (string)'
+      ];
+      
+      const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, this.provider);
+      
+      const [balance, decimals, symbol, name] = await Promise.all([
+        tokenContract.balanceOf(walletAddress),
+        tokenContract.decimals(),
+        tokenContract.symbol(),
+        tokenContract.name()
+      ]);
+      
+      const balanceFormatted = ethers.formatUnits(balance, decimals);
+
+      return {
+        address: tokenAddress,
+        symbol,
+        name,
+        balance: balanceFormatted,
+        decimals: Number(decimals)
+      };
+    } catch (error) {
+      console.error('❌ Failed to get token balance:', error);
+      throw new Error(`Failed to get token balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get balances for multiple tokens
+   */
+  public async getMultipleTokenBalances(walletAddress: string, tokenAddresses: string[]): Promise<TokenBalance[]> {
+    if (!this.isEnabled() || !this.provider) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      const balancePromises = tokenAddresses.map(tokenAddress => 
+        this.getTokenBalance(walletAddress, tokenAddress).catch(error => {
+          console.warn(`⚠️  Failed to get balance for token ${tokenAddress}: ${error}`);
+          return null;
+        })
+      );
+
+      const results = await Promise.all(balancePromises);
+      return results.filter((balance): balance is TokenBalance => balance !== null);
+    } catch (error) {
+      console.error('❌ Failed to get multiple token balances:', error);
+      throw new Error(`Failed to get multiple token balances: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get MNT price in USD (simplified implementation)
+   * In production, integrate with a proper price oracle like Chainlink or CoinGecko
+   */
+  private async getMNTPriceUSD(): Promise<number> {
+    try {
+      // This is a simplified implementation
+      // In production, you would fetch from a reliable price oracle
+      // For now, return a mock price
+      return 0.50; // $0.50 per MNT
+    } catch (error) {
+      console.warn('⚠️  Failed to fetch MNT price, using fallback');
+      return 0.50; // Fallback price
     }
   }
 
