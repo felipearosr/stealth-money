@@ -16,7 +16,8 @@ import {
   Globe,
   DollarSign,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Calculator
 } from "lucide-react";
 
 type DemoStep = 'verification' | 'selection' | 'payment' | 'results';
@@ -163,6 +164,17 @@ export default function MVPDemo() {
     return () => clearTimeout(timer);
   }, [currentMessageIndex, verificationStep, isProcessing]);
 
+  // Handle payment processing timeout in results page
+  useEffect(() => {
+    if (currentStep === 'results' && isProcessing) {
+      const timer = setTimeout(() => {
+        setIsProcessing(false);
+      }, 23000); // 23 seconds for pending state
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, isProcessing]);
+
 
 
   const handleSendMicroDeposit = () => {
@@ -215,10 +227,7 @@ export default function MVPDemo() {
 
   const handlePayment = () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setCurrentStep('results');
-    }, 3000);
+    setCurrentStep('results');
   };
 
 
@@ -447,119 +456,173 @@ export default function MVPDemo() {
 
 
   const renderPaymentStep = () => (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="text-green-500" />
-          Transfer Calculator
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {selectedUser && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Sending to:</h3>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
-                getProfileColor(selectedUser.firstName, selectedUser.lastName)
-              }`}>
-                {getInitials(selectedUser.firstName, selectedUser.lastName)}
-              </div>
-              <div>
-                <p className="font-medium">{selectedUser.name}</p>
-                <p className="text-sm text-gray-600">{selectedUser.email}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Calculator Interface */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">You send</label>
-              <div className="relative">
-                <input 
-                  type="number" 
-                  placeholder="50,000"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="w-full p-3 pr-16 border rounded-lg text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium text-gray-500">
-                  CLP
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">They receive</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  value={paymentAmount ? (parseInt(paymentAmount) - 2500).toLocaleString() : '0'}
-                  readOnly
-                  className="w-full p-3 pr-16 border rounded-lg text-lg font-semibold bg-gray-50 text-gray-700"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium text-gray-500">
-                  CLP
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Exchange Rate Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-700">Exchange rate</span>
-              <span className="text-sm font-semibold text-blue-600">1 USD = 950.00 CLP</span>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Transfer fee</span>
-                <span className="font-medium">2,500 CLP</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Processing time</span>
-                <span className="font-medium">2-5 minutes</span>
-              </div>
-              <div className="border-t pt-2 flex justify-between">
-                <span className="font-semibold text-gray-900">Total cost</span>
-                <span className="font-bold text-lg text-gray-900">
-                  {paymentAmount ? parseInt(paymentAmount).toLocaleString() : '0'} CLP
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Method */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Payment method</label>
-            <div className="p-3 border rounded-lg bg-white">
+    <div className="w-full max-w-2xl mx-auto">
+      <Card className="shadow-2xl border-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center space-x-2 text-center justify-center">
+            <Calculator className="h-5 w-5 text-blue-600" />
+            <span>Calculate Your Transfer</span>
+          </CardTitle>
+          <p className="text-sm text-gray-600 text-center">
+            Get real-time exchange rates and see exactly what you'll pay
+          </p>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-6">
+          {selectedUser && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold mb-2">Sending to:</h3>
               <div className="flex items-center gap-3">
-                <CreditCard className="text-blue-500 w-5 h-5" />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">Banco de Chile</p>
-                  <p className="text-sm text-gray-600">Cuenta Corriente •••• 1234</p>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${
+                  getProfileColor(selectedUser.firstName, selectedUser.lastName)
+                }`}>
+                  {getInitials(selectedUser.firstName, selectedUser.lastName)}
                 </div>
-                <Badge variant="outline" className="text-green-600 border-green-200">Verified</Badge>
+                <div>
+                  <p className="font-medium">{selectedUser.name}</p>
+                  <p className="text-sm text-gray-600">{selectedUser.email}</p>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* Mock Transfer Calculator Interface */}
+          <div className="space-y-6">
+            {/* Currency Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">From</label>
+                <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                      $
+                    </div>
+                    <span className="font-medium">CLP</span>
+                  </div>
+                  <span className="text-sm text-gray-500">Chilean Peso</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">To</label>
+                <div className="p-3 border rounded-lg bg-white flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                      $
+                    </div>
+                    <span className="font-medium">CLP</span>
+                  </div>
+                  <span className="text-sm text-gray-500">Chilean Peso</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Amount Input */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">You send</label>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    placeholder="50,000"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-full p-4 pr-16 border-2 rounded-lg text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm font-medium text-gray-500">
+                    CLP
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">They receive</label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={paymentAmount ? (parseInt(paymentAmount) - 2500).toLocaleString() : '0'}
+                    readOnly
+                    className="w-full p-4 pr-16 border-2 rounded-lg text-xl font-bold bg-gray-50 text-gray-700"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm font-medium text-gray-500">
+                    CLP
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Exchange Rate and Fees Breakdown */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Exchange rate</span>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-blue-600">1.00000</span>
+                    <p className="text-xs text-gray-500">1 CLP = 1 CLP</p>
+                  </div>
+                </div>
+                
+                <div className="border-t border-blue-200 pt-4 space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Transfer amount</span>
+                    <span className="font-medium">{paymentAmount ? (parseInt(paymentAmount) - 2500).toLocaleString() : '0'} CLP</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Transfer fee</span>
+                    <span className="font-medium">2,500 CLP</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Processing time</span>
+                    <span className="font-medium text-green-600">2-5 minutes</span>
+                  </div>
+                </div>
+                
+                <div className="border-t border-blue-200 pt-4 flex justify-between">
+                  <span className="font-bold text-gray-900">Total you pay</span>
+                  <span className="font-bold text-xl text-gray-900">
+                    {paymentAmount ? parseInt(paymentAmount).toLocaleString() : '0'} CLP
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700">Payment method</label>
+              <div className="p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="text-green-600 w-6 h-6" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">Banco de Chile</p>
+                    <p className="text-sm text-gray-600">Cuenta Corriente •••• 1234</p>
+                  </div>
+                  <Badge variant="outline" className="text-green-600 border-green-300 bg-green-100">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Verified
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Continue Button */}
+            <Button 
+              onClick={handlePayment} 
+              disabled={!paymentAmount || parseInt(paymentAmount) < 1000}
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            >
+              Send {paymentAmount ? parseInt(paymentAmount).toLocaleString() : '0'} CLP
+              <Send className="ml-2 h-5 w-5" />
+            </Button>
+
+            {parseInt(paymentAmount || '0') > 0 && parseInt(paymentAmount || '0') < 1000 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600 text-center flex items-center justify-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Minimum transfer amount is 1,000 CLP
+                </p>
+              </div>
+            )}
           </div>
-        </div>
-
-        <Button 
-          onClick={handlePayment} 
-          disabled={!paymentAmount || parseInt(paymentAmount) < 1000}
-          className="w-full h-12 text-lg font-semibold"
-        >
-          Send {paymentAmount ? parseInt(paymentAmount).toLocaleString() : '0'} CLP
-          <Send className="ml-2 h-5 w-5" />
-        </Button>
-
-        {parseInt(paymentAmount || '0') > 0 && parseInt(paymentAmount || '0') < 1000 && (
-          <p className="text-sm text-red-600 text-center">Minimum transfer amount is 1,000 CLP</p>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderResultsStep = () => (
