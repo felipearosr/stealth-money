@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import {
   CreditCard, 
   Send, 
   ArrowRight, 
+  ArrowLeft,
   Shield, 
   Globe,
   DollarSign,
@@ -98,6 +99,8 @@ export default function MVPDemo() {
   const [showUsers, setShowUsers] = useState(false);
   const [verificationMessages, setVerificationMessages] = useState<string[]>([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [verificationStep, setVerificationStep] = useState<'form' | 'sending' | 'waiting' | 'verifying'>('form');
+  const [microDepositSent, setMicroDepositSent] = useState(false);
 
   const steps = [
     { id: 'verification', title: 'Bank Verification', icon: Shield },
@@ -106,47 +109,80 @@ export default function MVPDemo() {
     { id: 'results', title: 'Results', icon: CheckCircle }
   ];
 
-  const verificationSteps = [
-    'Connecting to Chilean banking network...',
-    'Validating RUT with Registro Civil...',
-    'Verifying account ownership with bank...',
-    'Checking account status and permissions...',
-    'Confirming transaction capabilities...',
-    'Finalizing security protocols...',
-    'Bank account successfully verified!'
-  ];
+  const verificationSteps = {
+    sending: [
+      'Connecting to Chilean banking network...',
+      'Validating RUT with Registro Civil...',
+      'Preparing micro-deposit of 1 CLP...',
+      'Sending verification deposit to your account...',
+      'Micro-deposit sent successfully!'
+    ],
+    verifying: ['Account verified!']
+  };
+
+  const canGoBack = () => {
+    if (currentStep === 'verification') return false;
+    if (currentStep === 'selection') return true;
+    if (currentStep === 'payment') return true;
+    if (currentStep === 'results') return !isProcessing;
+    return true;
+  };
+
+  const handleGoBack = () => {
+    if (!canGoBack()) return;
+    
+    if (currentStep === 'selection') {
+      setCurrentStep('verification');
+    } else if (currentStep === 'payment') {
+      setCurrentStep('selection');
+    } else if (currentStep === 'results') {
+      setCurrentStep('payment');
+    }
+  };
 
   const getCurrentStepIndex = () => steps.findIndex(step => step.id === currentStep);
   const progressPercentage = ((getCurrentStepIndex() + 1) / steps.length) * 100;
 
-  const handleVerification = () => {
+  useEffect(() => {
+    if (verificationStep !== 'sending' || !isProcessing) return;
+
+    const currentSteps = verificationSteps.sending;
+    const timer = setTimeout(() => {
+      if (currentMessageIndex < currentSteps.length) {
+        setVerificationMessages(prev => [...prev, currentSteps[currentMessageIndex]]);
+        setVerificationProgress(prev => prev + (100 / currentSteps.length));
+        setCurrentMessageIndex(prev => prev + 1);
+      } else {
+        setIsProcessing(false);
+        setMicroDepositSent(true);
+        setVerificationStep('waiting');
+        setVerificationProgress(100);
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [currentMessageIndex, verificationStep, isProcessing]);
+
+
+
+  const handleSendMicroDeposit = () => {
+    setVerificationStep('sending');
     setIsProcessing(true);
     setVerificationProgress(0);
     setVerificationMessages([]);
     setCurrentMessageIndex(0);
-    
-    const messageInterval = setInterval(() => {
-      setCurrentMessageIndex(prev => {
-        if (prev < verificationSteps.length - 1) {
-          setVerificationMessages(msgs => [...msgs, verificationSteps[prev]]);
-          return prev + 1;
-        }
-        clearInterval(messageInterval);
-        return prev;
-      });
-    }, 1200);
-    
-    const progressInterval = setInterval(() => {
-      setVerificationProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setIsProcessing(false);
-          setTimeout(() => setCurrentStep('selection'), 1500);
-          return 100;
-        }
-        return prev + (100 / verificationSteps.length);
-      });
-    }, 1200);
+  };
+
+  const handleVerifyDeposit = () => {
+    setVerificationStep('verifying');
+    setIsProcessing(true);
+    setVerificationMessages(['Account verified!']);
+    setVerificationProgress(100);
+
+    setTimeout(() => {
+      setIsProcessing(false);
+      setCurrentStep('selection');
+    }, 1500);
   };
 
   const handleSearch = (query: string) => {
@@ -196,74 +232,85 @@ export default function MVPDemo() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="text-blue-600" />
-            <div>
-              <h3 className="font-semibold text-blue-800">Chilean Bank Verification</h3>
-              <p className="text-blue-600">We'll verify your Chilean bank account for CLP transactions</p>
+        {verificationStep === 'form' && (
+          <>
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-3">
+                <DollarSign className="text-blue-600" />
+                <div>
+                  <h3 className="font-semibold text-blue-800">Micro-Deposit Verification</h3>
+                  <p className="text-blue-600">We'll send 1 CLP ($0.01 USD) to verify your account ownership</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bank Name</label>
-              <select className="w-full p-2 border rounded-md bg-white">
-                <option>Banco de Chile</option>
-                <option>BancoEstado</option>
-                <option>Banco Santander</option>
-                <option>Banco BCI</option>
-              </select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Bank Name</label>
+                  <select className="w-full p-2 border rounded-md bg-white">
+                    <option>Banco de Chile</option>
+                    <option>BancoEstado</option>
+                    <option>Banco Santander</option>
+                    <option>Banco BCI</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Account Type</label>
+                  <select className="w-full p-2 border rounded-md bg-white">
+                    <option>Cuenta Corriente</option>
+                    <option>Cuenta Vista</option>
+                    <option>Cuenta de Ahorro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">RUT</label>
+                <input 
+                  type="text" 
+                  placeholder="12.345.678-9"
+                  className="w-full p-2 border rounded-md"
+                  defaultValue="12.345.678-9"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Account Number</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter your account number"
+                  className="w-full p-2 border rounded-md"
+                  defaultValue="****1234"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Type</label>
-              <select className="w-full p-2 border rounded-md bg-white">
-                <option>Cuenta Corriente</option>
-                <option>Cuenta Vista</option>
-                <option>Cuenta de Ahorro</option>
-              </select>
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">RUT</label>
-            <input 
-              type="text" 
-              placeholder="12.345.678-9"
-              className="w-full p-2 border rounded-md"
-              defaultValue="12.345.678-9"
-            />
-          </div>
+            <Button 
+              onClick={handleSendMicroDeposit} 
+              disabled={isProcessing}
+              className="w-full"
+            >
+              Send 1 CLP Verification Deposit
+              <DollarSign className="ml-2 h-4 w-4" />
+            </Button>
+          </>
+        )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Account Number</label>
-            <input 
-              type="text" 
-              placeholder="Enter your account number"
-              className="w-full p-2 border rounded-md"
-              defaultValue="****1234"
-            />
-          </div>
-        </div>
-
-        {isProcessing && (
+        {(verificationStep === 'sending' || verificationStep === 'verifying') && (
           <div className="space-y-4">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <div className="space-y-2">
                 {verificationMessages.map((message, index) => (
                   <div key={index} className="flex items-center gap-2 text-sm text-blue-700">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    {isProcessing && index === verificationMessages.length - 1 ? (
+                      <Clock className="w-4 h-4 animate-spin text-blue-600" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    )}
                     <span>{message}</span>
                   </div>
                 ))}
-                {currentMessageIndex < verificationSteps.length - 1 && (
-                  <div className="flex items-center gap-2 text-sm text-blue-600">
-                    <Clock className="w-4 h-4 animate-spin" />
-                    <span>{verificationSteps[currentMessageIndex]}</span>
-                  </div>
-                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -276,14 +323,39 @@ export default function MVPDemo() {
           </div>
         )}
 
-        <Button 
-          onClick={handleVerification} 
-          disabled={isProcessing}
-          className="w-full"
-        >
-          {isProcessing ? 'Verifying...' : 'Verify Bank Account'}
-          {!isProcessing && <Shield className="ml-2 h-4 w-4" />}
-        </Button>
+        {verificationStep === 'waiting' && (
+          <>
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="text-green-600" />
+                <div>
+                  <h3 className="font-semibold text-green-800">Micro-Deposit Sent!</h3>
+                  <p className="text-green-600">1 CLP has been sent to your account. Check your bank statement.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <div className="flex items-center gap-3">
+                <Clock className="text-yellow-600" />
+                <div>
+                  <h3 className="font-semibold text-yellow-800">Waiting for Confirmation</h3>
+                  <p className="text-yellow-600">Please check your bank account and confirm you received the 1 CLP deposit.</p>
+                  <p className="text-sm text-yellow-500 mt-1">This usually takes 1-2 minutes to appear in your account.</p>
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleVerifyDeposit} 
+              disabled={isProcessing}
+              className="w-full"
+            >
+              I've Received the 1 CLP Deposit
+              <CheckCircle className="ml-2 h-4 w-4" />
+            </Button>
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -639,6 +711,18 @@ export default function MVPDemo() {
 
         {/* Progress Indicator */}
         <div className="mb-8">
+          {canGoBack() && (
+            <div className="mb-4">
+              <Button 
+                variant="ghost" 
+                onClick={handleGoBack}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-4">
             {steps.map((step, index) => {
               const StepIcon = step.icon;

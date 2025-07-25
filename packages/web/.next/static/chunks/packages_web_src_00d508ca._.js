@@ -309,10 +309,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$credit$2d$card$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CreditCard$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/credit-card.js [app-client] (ecmascript) <export default as CreditCard>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$send$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Send$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/send.js [app-client] (ecmascript) <export default as Send>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/arrow-right.js [app-client] (ecmascript) <export default as ArrowRight>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowLeft$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/arrow-left.js [app-client] (ecmascript) <export default as ArrowLeft>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/shield.js [app-client] (ecmascript) <export default as Shield>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/globe.js [app-client] (ecmascript) <export default as Globe>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$dollar$2d$sign$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__DollarSign$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/dollar-sign.js [app-client] (ecmascript) <export default as DollarSign>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/clock.js [app-client] (ecmascript) <export default as Clock>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-alert.js [app-client] (ecmascript) <export default as AlertCircle>");
 ;
 var _s = __turbopack_context__.k.signature();
 "use client";
@@ -407,6 +408,8 @@ function MVPDemo() {
     const [showUsers, setShowUsers] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [verificationMessages, setVerificationMessages] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [currentMessageIndex, setCurrentMessageIndex] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
+    const [verificationStep, setVerificationStep] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('form');
+    const [microDepositSent, setMicroDepositSent] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const steps = [
         {
             id: 'verification',
@@ -429,46 +432,91 @@ function MVPDemo() {
             icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"]
         }
     ];
-    const verificationSteps = [
-        'Connecting to Chilean banking network...',
-        'Validating RUT with Registro Civil...',
-        'Verifying account ownership with bank...',
-        'Checking account status and permissions...',
-        'Confirming transaction capabilities...',
-        'Finalizing security protocols...',
-        'Bank account successfully verified!'
-    ];
+    const verificationSteps = {
+        sending: [
+            'Connecting to Chilean banking network...',
+            'Validating RUT with Registro Civil...',
+            'Preparing micro-deposit of 1 CLP...',
+            'Sending verification deposit to your account...',
+            'Micro-deposit sent successfully!'
+        ],
+        verifying: [
+            'Account verified!'
+        ]
+    };
+    const canGoBack = ()=>{
+        if (currentStep === 'verification') return false;
+        if (currentStep === 'selection') return true;
+        if (currentStep === 'payment') return true;
+        if (currentStep === 'results') return !isProcessing;
+        return true;
+    };
+    const handleGoBack = ()=>{
+        if (!canGoBack()) return;
+        if (currentStep === 'selection') {
+            setCurrentStep('verification');
+        } else if (currentStep === 'payment') {
+            setCurrentStep('selection');
+        } else if (currentStep === 'results') {
+            setCurrentStep('payment');
+        }
+    };
     const getCurrentStepIndex = ()=>steps.findIndex((step)=>step.id === currentStep);
     const progressPercentage = (getCurrentStepIndex() + 1) / steps.length * 100;
-    const handleVerification = ()=>{
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "MVPDemo.useEffect": ()=>{
+            if (verificationStep !== 'sending' || !isProcessing) return;
+            const currentSteps = verificationSteps.sending;
+            const timer = setTimeout({
+                "MVPDemo.useEffect.timer": ()=>{
+                    if (currentMessageIndex < currentSteps.length) {
+                        setVerificationMessages({
+                            "MVPDemo.useEffect.timer": (prev)=>[
+                                    ...prev,
+                                    currentSteps[currentMessageIndex]
+                                ]
+                        }["MVPDemo.useEffect.timer"]);
+                        setVerificationProgress({
+                            "MVPDemo.useEffect.timer": (prev)=>prev + 100 / currentSteps.length
+                        }["MVPDemo.useEffect.timer"]);
+                        setCurrentMessageIndex({
+                            "MVPDemo.useEffect.timer": (prev)=>prev + 1
+                        }["MVPDemo.useEffect.timer"]);
+                    } else {
+                        setIsProcessing(false);
+                        setMicroDepositSent(true);
+                        setVerificationStep('waiting');
+                        setVerificationProgress(100);
+                    }
+                }
+            }["MVPDemo.useEffect.timer"], 1200);
+            return ({
+                "MVPDemo.useEffect": ()=>clearTimeout(timer)
+            })["MVPDemo.useEffect"];
+        }
+    }["MVPDemo.useEffect"], [
+        currentMessageIndex,
+        verificationStep,
+        isProcessing
+    ]);
+    const handleSendMicroDeposit = ()=>{
+        setVerificationStep('sending');
         setIsProcessing(true);
         setVerificationProgress(0);
         setVerificationMessages([]);
         setCurrentMessageIndex(0);
-        const messageInterval = setInterval(()=>{
-            setCurrentMessageIndex((prev)=>{
-                if (prev < verificationSteps.length - 1) {
-                    setVerificationMessages((msgs)=>[
-                            ...msgs,
-                            verificationSteps[prev]
-                        ]);
-                    return prev + 1;
-                }
-                clearInterval(messageInterval);
-                return prev;
-            });
-        }, 1200);
-        const progressInterval = setInterval(()=>{
-            setVerificationProgress((prev)=>{
-                if (prev >= 100) {
-                    clearInterval(progressInterval);
-                    setIsProcessing(false);
-                    setTimeout(()=>setCurrentStep('selection'), 1500);
-                    return 100;
-                }
-                return prev + 100 / verificationSteps.length;
-            });
-        }, 1200);
+    };
+    const handleVerifyDeposit = ()=>{
+        setVerificationStep('verifying');
+        setIsProcessing(true);
+        setVerificationMessages([
+            'Account verified!'
+        ]);
+        setVerificationProgress(100);
+        setTimeout(()=>{
+            setIsProcessing(false);
+            setCurrentStep('selection');
+        }, 1500);
     };
     const handleSearch = (query)=>{
         setSearchQuery(query);
@@ -516,307 +564,311 @@ function MVPDemo() {
                                 className: "text-blue-500"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                lineNumber: 194,
+                                lineNumber: 230,
                                 columnNumber: 11
                             }, this),
                             "Bank Account Verification - Chile"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                        lineNumber: 193,
+                        lineNumber: 229,
                         columnNumber: 9
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 192,
+                    lineNumber: 228,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
                     className: "space-y-6",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "bg-blue-50 p-4 rounded-lg border border-blue-200",
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "flex items-center gap-3",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
-                                        className: "text-blue-600"
-                                    }, void 0, false, {
-                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                        lineNumber: 201,
-                                        columnNumber: 13
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        verificationStep === 'form' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "bg-blue-50 p-4 rounded-lg border border-blue-200",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "flex items-center gap-3",
                                         children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                className: "font-semibold text-blue-800",
-                                                children: "Chilean Bank Verification"
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$dollar$2d$sign$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__DollarSign$3e$__["DollarSign"], {
+                                                className: "text-blue-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 203,
-                                                columnNumber: 15
+                                                lineNumber: 239,
+                                                columnNumber: 17
                                             }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                className: "text-blue-600",
-                                                children: "We'll verify your Chilean bank account for CLP transactions"
-                                            }, void 0, false, {
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                        className: "font-semibold text-blue-800",
+                                                        children: "Micro-Deposit Verification"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 241,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-blue-600",
+                                                        children: "We'll send 1 CLP ($0.01 USD) to verify your account ownership"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 242,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 204,
-                                                columnNumber: 15
+                                                lineNumber: 240,
+                                                columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                        lineNumber: 202,
-                                        columnNumber: 13
+                                        lineNumber: 238,
+                                        columnNumber: 15
                                     }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                lineNumber: 200,
-                                columnNumber: 11
-                            }, this)
-                        }, void 0, false, {
-                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 199,
-                            columnNumber: 9
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "space-y-4",
-                            children: [
+                                }, void 0, false, {
+                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                    lineNumber: 237,
+                                    columnNumber: 13
+                                }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "grid grid-cols-2 gap-4",
+                                    className: "space-y-4",
                                     children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "grid grid-cols-2 gap-4",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "space-y-2",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                            className: "text-sm font-medium",
+                                                            children: "Bank Name"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                            lineNumber: 250,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
+                                                            className: "w-full p-2 border rounded-md bg-white",
+                                                            children: [
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                                    children: "Banco de Chile"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                                    lineNumber: 252,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                                    children: "BancoEstado"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                                    lineNumber: 253,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                                    children: "Banco Santander"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                                    lineNumber: 254,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                                    children: "Banco BCI"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                                    lineNumber: 255,
+                                                                    columnNumber: 21
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                            lineNumber: 251,
+                                                            columnNumber: 19
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                    lineNumber: 249,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "space-y-2",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                            className: "text-sm font-medium",
+                                                            children: "Account Type"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                            lineNumber: 259,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
+                                                            className: "w-full p-2 border rounded-md bg-white",
+                                                            children: [
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                                    children: "Cuenta Corriente"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                                    lineNumber: 261,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                                    children: "Cuenta Vista"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                                    lineNumber: 262,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                                    children: "Cuenta de Ahorro"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                                    lineNumber: 263,
+                                                                    columnNumber: 21
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                            lineNumber: 260,
+                                                            columnNumber: 19
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                    lineNumber: 258,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                            lineNumber: 248,
+                                            columnNumber: 15
+                                        }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "space-y-2",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                                     className: "text-sm font-medium",
-                                                    children: "Bank Name"
+                                                    children: "RUT"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 212,
-                                                    columnNumber: 15
+                                                    lineNumber: 269,
+                                                    columnNumber: 17
                                                 }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
-                                                    className: "w-full p-2 border rounded-md bg-white",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                            children: "Banco de Chile"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 214,
-                                                            columnNumber: 17
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                            children: "BancoEstado"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 215,
-                                                            columnNumber: 17
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                            children: "Banco Santander"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 216,
-                                                            columnNumber: 17
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                            children: "Banco BCI"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 217,
-                                                            columnNumber: 17
-                                                        }, this)
-                                                    ]
-                                                }, void 0, true, {
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                    type: "text",
+                                                    placeholder: "12.345.678-9",
+                                                    className: "w-full p-2 border rounded-md",
+                                                    defaultValue: "12.345.678-9"
+                                                }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 213,
-                                                    columnNumber: 15
+                                                    lineNumber: 270,
+                                                    columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 211,
-                                            columnNumber: 13
+                                            lineNumber: 268,
+                                            columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "space-y-2",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                                     className: "text-sm font-medium",
-                                                    children: "Account Type"
+                                                    children: "Account Number"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 221,
-                                                    columnNumber: 15
+                                                    lineNumber: 279,
+                                                    columnNumber: 17
                                                 }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
-                                                    className: "w-full p-2 border rounded-md bg-white",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                            children: "Cuenta Corriente"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 223,
-                                                            columnNumber: 17
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                            children: "Cuenta Vista"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 224,
-                                                            columnNumber: 17
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                            children: "Cuenta de Ahorro"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 225,
-                                                            columnNumber: 17
-                                                        }, this)
-                                                    ]
-                                                }, void 0, true, {
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                    type: "text",
+                                                    placeholder: "Enter your account number",
+                                                    className: "w-full p-2 border rounded-md",
+                                                    defaultValue: "****1234"
+                                                }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 222,
-                                                    columnNumber: 15
+                                                    lineNumber: 280,
+                                                    columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 220,
-                                            columnNumber: 13
+                                            lineNumber: 278,
+                                            columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 210,
-                                    columnNumber: 11
+                                    lineNumber: 247,
+                                    columnNumber: 13
                                 }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "space-y-2",
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                    onClick: handleSendMicroDeposit,
+                                    disabled: isProcessing,
+                                    className: "w-full",
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                            className: "text-sm font-medium",
-                                            children: "RUT"
+                                        "Send 1 CLP Verification Deposit",
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$dollar$2d$sign$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__DollarSign$3e$__["DollarSign"], {
+                                            className: "ml-2 h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 231,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                            type: "text",
-                                            placeholder: "12.345.678-9",
-                                            className: "w-full p-2 border rounded-md",
-                                            defaultValue: "12.345.678-9"
-                                        }, void 0, false, {
-                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 232,
-                                            columnNumber: 13
+                                            lineNumber: 295,
+                                            columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 230,
-                                    columnNumber: 11
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "space-y-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                            className: "text-sm font-medium",
-                                            children: "Account Number"
-                                        }, void 0, false, {
-                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 241,
-                                            columnNumber: 13
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                            type: "text",
-                                            placeholder: "Enter your account number",
-                                            className: "w-full p-2 border rounded-md",
-                                            defaultValue: "****1234"
-                                        }, void 0, false, {
-                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 242,
-                                            columnNumber: 13
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 240,
-                                    columnNumber: 11
+                                    lineNumber: 289,
+                                    columnNumber: 13
                                 }, this)
                             ]
-                        }, void 0, true, {
-                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 209,
-                            columnNumber: 9
-                        }, this),
-                        isProcessing && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        }, void 0, true),
+                        (verificationStep === 'sending' || verificationStep === 'verifying') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "space-y-4",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "bg-blue-50 p-4 rounded-lg border border-blue-200",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "space-y-2",
-                                        children: [
-                                            verificationMessages.map((message, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "flex items-center gap-2 text-sm text-blue-700",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
-                                                            className: "w-4 h-4 text-green-500"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 257,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            children: message
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 258,
-                                                            columnNumber: 21
-                                                        }, this)
-                                                    ]
-                                                }, index, true, {
-                                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 256,
-                                                    columnNumber: 19
-                                                }, this)),
-                                            currentMessageIndex < verificationSteps.length - 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "flex items-center gap-2 text-sm text-blue-600",
+                                        children: verificationMessages.map((message, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "flex items-center gap-2 text-sm text-blue-700",
                                                 children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
-                                                        className: "w-4 h-4 animate-spin"
+                                                    isProcessing && index === verificationMessages.length - 1 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
+                                                        className: "w-4 h-4 animate-spin text-blue-600"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 263,
-                                                        columnNumber: 21
+                                                        lineNumber: 307,
+                                                        columnNumber: 23
+                                                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                                        className: "w-4 h-4 text-green-500"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 309,
+                                                        columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        children: verificationSteps[currentMessageIndex]
+                                                        children: message
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 264,
+                                                        lineNumber: 311,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
-                                            }, void 0, true, {
+                                            }, index, true, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 262,
+                                                lineNumber: 305,
                                                 columnNumber: 19
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
+                                            }, this))
+                                    }, void 0, false, {
                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                        lineNumber: 254,
+                                        lineNumber: 303,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 253,
+                                    lineNumber: 302,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -829,7 +881,7 @@ function MVPDemo() {
                                                     children: "Verification Progress"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 271,
+                                                    lineNumber: 318,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -839,13 +891,13 @@ function MVPDemo() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 272,
+                                                    lineNumber: 319,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 270,
+                                            lineNumber: 317,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$progress$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Progress"], {
@@ -853,50 +905,156 @@ function MVPDemo() {
                                             className: "w-full"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 274,
+                                            lineNumber: 321,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 269,
+                                    lineNumber: 316,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 252,
+                            lineNumber: 301,
                             columnNumber: 11
                         }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                            onClick: handleVerification,
-                            disabled: isProcessing,
-                            className: "w-full",
+                        verificationStep === 'waiting' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                             children: [
-                                isProcessing ? 'Verifying...' : 'Verify Bank Account',
-                                !isProcessing && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__["Shield"], {
-                                    className: "ml-2 h-4 w-4"
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "bg-green-50 p-4 rounded-lg border border-green-200",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "flex items-center gap-3",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                                className: "text-green-600"
+                                            }, void 0, false, {
+                                                fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                lineNumber: 330,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                        className: "font-semibold text-green-800",
+                                                        children: "Micro-Deposit Sent!"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 332,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-green-600",
+                                                        children: "1 CLP has been sent to your account. Check your bank statement."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 333,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                lineNumber: 331,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                        lineNumber: 329,
+                                        columnNumber: 15
+                                    }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 285,
-                                    columnNumber: 29
+                                    lineNumber: 328,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "bg-yellow-50 p-4 rounded-lg border border-yellow-200",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "flex items-center gap-3",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
+                                                className: "text-yellow-600"
+                                            }, void 0, false, {
+                                                fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                lineNumber: 340,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                        className: "font-semibold text-yellow-800",
+                                                        children: "Waiting for Confirmation"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 342,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-yellow-600",
+                                                        children: "Please check your bank account and confirm you received the 1 CLP deposit."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 343,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-sm text-yellow-500 mt-1",
+                                                        children: "This usually takes 1-2 minutes to appear in your account."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                        lineNumber: 344,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                                lineNumber: 341,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                        lineNumber: 339,
+                                        columnNumber: 15
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                    lineNumber: 338,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                    onClick: handleVerifyDeposit,
+                                    disabled: isProcessing,
+                                    className: "w-full",
+                                    children: [
+                                        "I've Received the 1 CLP Deposit",
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
+                                            className: "ml-2 h-4 w-4"
+                                        }, void 0, false, {
+                                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                            lineNumber: 355,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                    lineNumber: 349,
+                                    columnNumber: 13
                                 }, this)
                             ]
-                        }, void 0, true, {
-                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 279,
-                            columnNumber: 9
-                        }, this)
+                        }, void 0, true)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 198,
+                    lineNumber: 234,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-            lineNumber: 191,
+            lineNumber: 227,
             columnNumber: 5
         }, this);
     const renderSelectionStep = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -910,19 +1068,19 @@ function MVPDemo() {
                                 className: "text-purple-500"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                lineNumber: 295,
+                                lineNumber: 367,
                                 columnNumber: 11
                             }, this),
                             "Select Recipient"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                        lineNumber: 294,
+                        lineNumber: 366,
                         columnNumber: 9
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 293,
+                    lineNumber: 365,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -933,7 +1091,7 @@ function MVPDemo() {
                             children: "Search for a user to send money to:"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 300,
+                            lineNumber: 372,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -947,7 +1105,7 @@ function MVPDemo() {
                                     className: "w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 303,
+                                    lineNumber: 375,
                                     columnNumber: 11
                                 }, this),
                                 searchQuery.length > 0 && searchQuery.length < 2 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -955,13 +1113,13 @@ function MVPDemo() {
                                     children: "Type at least 2 characters to search"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 311,
+                                    lineNumber: 383,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 302,
+                            lineNumber: 374,
                             columnNumber: 9
                         }, this),
                         showUsers && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -980,7 +1138,7 @@ function MVPDemo() {
                                                         children: getInitials(user.firstName, user.lastName)
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 330,
+                                                        lineNumber: 402,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -990,7 +1148,7 @@ function MVPDemo() {
                                                                 children: user.name
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                                lineNumber: 336,
+                                                                lineNumber: 408,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -998,7 +1156,7 @@ function MVPDemo() {
                                                                 children: user.email
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                                lineNumber: 337,
+                                                                lineNumber: 409,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1006,19 +1164,19 @@ function MVPDemo() {
                                                                 children: user.country
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                                lineNumber: 338,
+                                                                lineNumber: 410,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 335,
+                                                        lineNumber: 407,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 329,
+                                                lineNumber: 401,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1031,40 +1189,40 @@ function MVPDemo() {
                                                             children: currency
                                                         }, currency, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 344,
+                                                            lineNumber: 416,
                                                             columnNumber: 27
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 342,
+                                                    lineNumber: 414,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 341,
+                                                lineNumber: 413,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                        lineNumber: 328,
+                                        lineNumber: 400,
                                         columnNumber: 19
                                     }, this)
                                 }, user.id, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 319,
+                                    lineNumber: 391,
                                     columnNumber: 17
                                 }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-gray-500 text-center py-4",
                                 children: "No users found matching your search"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                lineNumber: 358,
+                                lineNumber: 430,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 316,
+                            lineNumber: 388,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1077,25 +1235,25 @@ function MVPDemo() {
                                     className: "ml-2 h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 369,
+                                    lineNumber: 441,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 363,
+                            lineNumber: 435,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 299,
+                    lineNumber: 371,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-            lineNumber: 292,
+            lineNumber: 364,
             columnNumber: 5
         }, this);
     const renderPaymentStep = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1109,19 +1267,19 @@ function MVPDemo() {
                                 className: "text-green-500"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                lineNumber: 381,
+                                lineNumber: 453,
                                 columnNumber: 11
                             }, this),
                             "Transfer Calculator"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                        lineNumber: 380,
+                        lineNumber: 452,
                         columnNumber: 9
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 379,
+                    lineNumber: 451,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1135,7 +1293,7 @@ function MVPDemo() {
                                     children: "Sending to:"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 388,
+                                    lineNumber: 460,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1146,7 +1304,7 @@ function MVPDemo() {
                                             children: getInitials(selectedUser.firstName, selectedUser.lastName)
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 390,
+                                            lineNumber: 462,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1156,7 +1314,7 @@ function MVPDemo() {
                                                     children: selectedUser.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 396,
+                                                    lineNumber: 468,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1164,25 +1322,25 @@ function MVPDemo() {
                                                     children: selectedUser.email
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 397,
+                                                    lineNumber: 469,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 395,
+                                            lineNumber: 467,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 389,
+                                    lineNumber: 461,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 387,
+                            lineNumber: 459,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1199,7 +1357,7 @@ function MVPDemo() {
                                                     children: "You send"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 407,
+                                                    lineNumber: 479,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1213,7 +1371,7 @@ function MVPDemo() {
                                                             className: "w-full p-3 pr-16 border rounded-lg text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 409,
+                                                            lineNumber: 481,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1221,19 +1379,19 @@ function MVPDemo() {
                                                             children: "CLP"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 416,
+                                                            lineNumber: 488,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 408,
+                                                    lineNumber: 480,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 406,
+                                            lineNumber: 478,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1244,7 +1402,7 @@ function MVPDemo() {
                                                     children: "They receive"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 422,
+                                                    lineNumber: 494,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1257,7 +1415,7 @@ function MVPDemo() {
                                                             className: "w-full p-3 pr-16 border rounded-lg text-lg font-semibold bg-gray-50 text-gray-700"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 424,
+                                                            lineNumber: 496,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1265,25 +1423,25 @@ function MVPDemo() {
                                                             children: "CLP"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 430,
+                                                            lineNumber: 502,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 423,
+                                                    lineNumber: 495,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 421,
+                                            lineNumber: 493,
                                             columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 405,
+                                    lineNumber: 477,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1297,7 +1455,7 @@ function MVPDemo() {
                                                     children: "Exchange rate"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 440,
+                                                    lineNumber: 512,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1305,13 +1463,13 @@ function MVPDemo() {
                                                     children: "1 USD = 950.00 CLP"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 441,
+                                                    lineNumber: 513,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 439,
+                                            lineNumber: 511,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1325,7 +1483,7 @@ function MVPDemo() {
                                                             children: "Transfer fee"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 445,
+                                                            lineNumber: 517,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1333,13 +1491,13 @@ function MVPDemo() {
                                                             children: "2,500 CLP"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 446,
+                                                            lineNumber: 518,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 444,
+                                                    lineNumber: 516,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1350,7 +1508,7 @@ function MVPDemo() {
                                                             children: "Processing time"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 449,
+                                                            lineNumber: 521,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1358,13 +1516,13 @@ function MVPDemo() {
                                                             children: "2-5 minutes"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 450,
+                                                            lineNumber: 522,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 448,
+                                                    lineNumber: 520,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1375,7 +1533,7 @@ function MVPDemo() {
                                                             children: "Total cost"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 453,
+                                                            lineNumber: 525,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1386,25 +1544,25 @@ function MVPDemo() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 454,
+                                                            lineNumber: 526,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 452,
+                                                    lineNumber: 524,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 443,
+                                            lineNumber: 515,
                                             columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 438,
+                                    lineNumber: 510,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1415,7 +1573,7 @@ function MVPDemo() {
                                             children: "Payment method"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 463,
+                                            lineNumber: 535,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1427,7 +1585,7 @@ function MVPDemo() {
                                                         className: "text-blue-500 w-5 h-5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 466,
+                                                        lineNumber: 538,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1438,7 +1596,7 @@ function MVPDemo() {
                                                                 children: "Banco de Chile"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                                lineNumber: 468,
+                                                                lineNumber: 540,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1446,13 +1604,13 @@ function MVPDemo() {
                                                                 children: "Cuenta Corriente •••• 1234"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                                lineNumber: 469,
+                                                                lineNumber: 541,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 467,
+                                                        lineNumber: 539,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1461,30 +1619,30 @@ function MVPDemo() {
                                                         children: "Verified"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 471,
+                                                        lineNumber: 543,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 465,
+                                                lineNumber: 537,
                                                 columnNumber: 15
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 464,
+                                            lineNumber: 536,
                                             columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 462,
+                                    lineNumber: 534,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 404,
+                            lineNumber: 476,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1499,13 +1657,13 @@ function MVPDemo() {
                                     className: "ml-2 h-5 w-5"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 483,
+                                    lineNumber: 555,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 477,
+                            lineNumber: 549,
                             columnNumber: 9
                         }, this),
                         parseInt(paymentAmount || '0') > 0 && parseInt(paymentAmount || '0') < 1000 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1513,19 +1671,19 @@ function MVPDemo() {
                             children: "Minimum transfer amount is 1,000 CLP"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 487,
+                            lineNumber: 559,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 385,
+                    lineNumber: 457,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-            lineNumber: 378,
+            lineNumber: 450,
             columnNumber: 5
         }, this);
     const renderResultsStep = ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -1539,25 +1697,25 @@ function MVPDemo() {
                                 className: "text-yellow-500 animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                lineNumber: 498,
+                                lineNumber: 570,
                                 columnNumber: 13
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                 className: "text-green-500"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                lineNumber: 500,
+                                lineNumber: 572,
                                 columnNumber: 13
                             }, this),
                             isProcessing ? 'Processing Transfer...' : 'Transfer Completed Successfully!'
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                        lineNumber: 496,
+                        lineNumber: 568,
                         columnNumber: 9
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 495,
+                    lineNumber: 567,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1575,12 +1733,12 @@ function MVPDemo() {
                                                 className: "w-8 h-8 text-yellow-600 animate-spin"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 510,
+                                                lineNumber: 582,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 509,
+                                            lineNumber: 581,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -1588,7 +1746,7 @@ function MVPDemo() {
                                             children: "Processing Your Transfer"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 512,
+                                            lineNumber: 584,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1596,13 +1754,13 @@ function MVPDemo() {
                                             children: "Please wait while we securely process your payment"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 513,
+                                            lineNumber: 585,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 508,
+                                    lineNumber: 580,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1617,20 +1775,20 @@ function MVPDemo() {
                                                         className: "w-4 h-4 text-green-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 519,
+                                                        lineNumber: 591,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Payment authorized"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 520,
+                                                        lineNumber: 592,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 518,
+                                                lineNumber: 590,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1640,20 +1798,20 @@ function MVPDemo() {
                                                         className: "w-4 h-4 text-green-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 523,
+                                                        lineNumber: 595,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Funds debited from your account"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 524,
+                                                        lineNumber: 596,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 522,
+                                                lineNumber: 594,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1663,37 +1821,37 @@ function MVPDemo() {
                                                         className: "w-4 h-4 animate-spin"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 527,
+                                                        lineNumber: 599,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Transferring to recipient..."
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                        lineNumber: 528,
+                                                        lineNumber: 600,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 526,
+                                                lineNumber: 598,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                        lineNumber: 517,
+                                        lineNumber: 589,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 516,
+                                    lineNumber: 588,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 507,
+                            lineNumber: 579,
                             columnNumber: 11
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "bg-green-50 p-6 rounded-lg border border-green-200 text-center",
@@ -1704,12 +1862,12 @@ function MVPDemo() {
                                         className: "w-8 h-8 text-green-600"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                        lineNumber: 536,
+                                        lineNumber: 608,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 535,
+                                    lineNumber: 607,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -1717,7 +1875,7 @@ function MVPDemo() {
                                     children: "Payment Successful!"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 538,
+                                    lineNumber: 610,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1725,13 +1883,13 @@ function MVPDemo() {
                                     children: "Your money has been sent successfully"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 539,
+                                    lineNumber: 611,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 534,
+                            lineNumber: 606,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1745,7 +1903,7 @@ function MVPDemo() {
                                             children: "Transaction Details"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 545,
+                                            lineNumber: 617,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1758,7 +1916,7 @@ function MVPDemo() {
                                                             children: "Transaction ID:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 548,
+                                                            lineNumber: 620,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1769,13 +1927,13 @@ function MVPDemo() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 549,
+                                                            lineNumber: 621,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 547,
+                                                    lineNumber: 619,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1785,7 +1943,7 @@ function MVPDemo() {
                                                             children: "Amount Sent:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 552,
+                                                            lineNumber: 624,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1796,13 +1954,13 @@ function MVPDemo() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 553,
+                                                            lineNumber: 625,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 551,
+                                                    lineNumber: 623,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1812,20 +1970,20 @@ function MVPDemo() {
                                                             children: "Transfer Fee:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 556,
+                                                            lineNumber: 628,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: "2,500 CLP"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 557,
+                                                            lineNumber: 629,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 555,
+                                                    lineNumber: 627,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1835,7 +1993,7 @@ function MVPDemo() {
                                                             children: "Total Charged:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 560,
+                                                            lineNumber: 632,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1846,13 +2004,13 @@ function MVPDemo() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 561,
+                                                            lineNumber: 633,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 559,
+                                                    lineNumber: 631,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1862,20 +2020,20 @@ function MVPDemo() {
                                                             children: "Recipient:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 564,
+                                                            lineNumber: 636,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: selectedUser?.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 565,
+                                                            lineNumber: 637,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 563,
+                                                    lineNumber: 635,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1885,7 +2043,7 @@ function MVPDemo() {
                                                             children: "Status:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 568,
+                                                            lineNumber: 640,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1894,13 +2052,13 @@ function MVPDemo() {
                                                             children: "Completed"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 569,
+                                                            lineNumber: 641,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 567,
+                                                    lineNumber: 639,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1910,32 +2068,32 @@ function MVPDemo() {
                                                             children: "Completed At:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 572,
+                                                            lineNumber: 644,
                                                             columnNumber: 17
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: new Date().toLocaleString()
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                            lineNumber: 573,
+                                                            lineNumber: 645,
                                                             columnNumber: 17
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 571,
+                                                    lineNumber: 643,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 546,
+                                            lineNumber: 618,
                                             columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 544,
+                                    lineNumber: 616,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1946,7 +2104,7 @@ function MVPDemo() {
                                             children: "What's Next?"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 579,
+                                            lineNumber: 651,
                                             columnNumber: 13
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -1960,46 +2118,46 @@ function MVPDemo() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 581,
+                                                    lineNumber: 653,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                     children: "• Funds will be available in their account within 2-5 minutes"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 582,
+                                                    lineNumber: 654,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                     children: "• You'll receive an email confirmation shortly"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 583,
+                                                    lineNumber: 655,
                                                     columnNumber: 15
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                     children: "• Track this transfer in your transaction history"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                    lineNumber: 584,
+                                                    lineNumber: 656,
                                                     columnNumber: 15
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 580,
+                                            lineNumber: 652,
                                             columnNumber: 13
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 578,
+                                    lineNumber: 650,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 543,
+                            lineNumber: 615,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2011,7 +2169,7 @@ function MVPDemo() {
                                     children: "View Receipt"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 590,
+                                    lineNumber: 662,
                                     columnNumber: 11
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2028,25 +2186,25 @@ function MVPDemo() {
                                     children: "Send Another Transfer"
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 593,
+                                    lineNumber: 665,
                                     columnNumber: 11
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 589,
+                            lineNumber: 661,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 505,
+                    lineNumber: 577,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-            lineNumber: 494,
+            lineNumber: 566,
             columnNumber: 5
         }, this);
     const renderCurrentStep = ()=>{
@@ -2076,7 +2234,7 @@ function MVPDemo() {
                             children: "Stealth Money MVP Demo"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 632,
+                            lineNumber: 704,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2084,18 +2242,44 @@ function MVPDemo() {
                             children: "Complete Payment Flow - From Account Creation to Final Results"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 635,
+                            lineNumber: 707,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 631,
+                    lineNumber: 703,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "mb-8",
                     children: [
+                        canGoBack() && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "mb-4",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                variant: "ghost",
+                                onClick: handleGoBack,
+                                className: "flex items-center gap-2 text-gray-600 hover:text-gray-900",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowLeft$3e$__["ArrowLeft"], {
+                                        className: "w-4 h-4"
+                                    }, void 0, false, {
+                                        fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                        lineNumber: 721,
+                                        columnNumber: 17
+                                    }, this),
+                                    "Back"
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                                lineNumber: 716,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
+                            lineNumber: 715,
+                            columnNumber: 13
+                        }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "flex justify-between items-center mb-4",
                             children: steps.map((step, index)=>{
@@ -2111,12 +2295,12 @@ function MVPDemo() {
                                                 className: "w-6 h-6"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                                lineNumber: 657,
+                                                lineNumber: 741,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 650,
+                                            lineNumber: 734,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2124,19 +2308,19 @@ function MVPDemo() {
                                             children: step.title
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                            lineNumber: 659,
+                                            lineNumber: 743,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, step.id, true, {
                                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                                    lineNumber: 649,
+                                    lineNumber: 733,
                                     columnNumber: 17
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 642,
+                            lineNumber: 726,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$progress$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Progress"], {
@@ -2144,13 +2328,13 @@ function MVPDemo() {
                             className: "w-full"
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                            lineNumber: 668,
+                            lineNumber: 752,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 641,
+                    lineNumber: 713,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2158,22 +2342,22 @@ function MVPDemo() {
                     children: renderCurrentStep()
                 }, void 0, false, {
                     fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-                    lineNumber: 672,
+                    lineNumber: 756,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-            lineNumber: 629,
+            lineNumber: 701,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/packages/web/src/app/mvp-demo/page.tsx",
-        lineNumber: 628,
+        lineNumber: 700,
         columnNumber: 5
     }, this);
 }
-_s(MVPDemo, "5oPFftj2zVDiQTd331M1SyJh0/s=");
+_s(MVPDemo, "DYUdPWIKRk/Ev1scq40S8vxJNSE=");
 _c = MVPDemo;
 var _c;
 __turbopack_context__.k.register(_c, "MVPDemo");
