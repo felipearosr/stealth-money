@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   CheckCircle, 
   User, 
@@ -94,6 +95,30 @@ const mockUsers: MockUser[] = [
 
 type CalculatorMode = 'send' | 'receive';
 
+// Currency definitions
+const SUPPORTED_CURRENCIES = {
+  CLP: { flag: '🇨🇱', name: 'Chilean Peso', symbol: '$', minAmount: 1000, maxAmount: 10000000 },
+  USD: { flag: '🇺🇸', name: 'US Dollar', symbol: '$', minAmount: 1, maxAmount: 10000 },
+  EUR: { flag: '🇪🇺', name: 'Euro', symbol: '€', minAmount: 1, maxAmount: 10000 },
+  GBP: { flag: '🇬🇧', name: 'British Pound', symbol: '£', minAmount: 1, maxAmount: 10000 },
+  MXN: { flag: '🇲🇽', name: 'Mexican Peso', symbol: '$', minAmount: 20, maxAmount: 200000 }
+};
+
+const SEND_CURRENCIES = ['CLP', 'USD', 'EUR', 'GBP'] as const;
+const RECEIVE_CURRENCIES = ['CLP', 'USD', 'EUR', 'GBP', 'MXN'] as const;
+
+type SendCurrency = typeof SEND_CURRENCIES[number];
+type ReceiveCurrency = typeof RECEIVE_CURRENCIES[number];
+
+// Mock exchange rates
+const EXCHANGE_RATES: Record<string, Record<string, number>> = {
+  CLP: { USD: 0.00105, EUR: 0.00095, GBP: 0.00082, MXN: 0.021, CLP: 1 },
+  USD: { CLP: 950, EUR: 0.85, GBP: 0.78, MXN: 20, USD: 1 },
+  EUR: { CLP: 1050, USD: 1.18, GBP: 0.92, MXN: 23.5, EUR: 1 },
+  GBP: { CLP: 1220, USD: 1.28, EUR: 1.09, MXN: 25.6, GBP: 1 },
+  MXN: { CLP: 47.6, USD: 0.05, EUR: 0.043, GBP: 0.039, MXN: 1 }
+};
+
 interface TransferCalculation {
   sendAmount: number;
   receiveAmount: number;
@@ -134,6 +159,8 @@ export default function MVPDemo() {
   
   // Calculator state
   const [calculatorMode, setCalculatorMode] = useState<CalculatorMode>('send');
+  const [sendCurrency, setSendCurrency] = useState<SendCurrency>('CLP');
+  const [receiveCurrency, setReceiveCurrency] = useState<ReceiveCurrency>('CLP');
   const [calculation, setCalculation] = useState<TransferCalculation | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
@@ -260,43 +287,64 @@ export default function MVPDemo() {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
 
-  // Mock calculation function (simulating TransferCalculator logic)
-  const calculateTransfer = (amount: string, mode: CalculatorMode) => {
+  // Mock calculation function with currency support
+  const calculateTransfer = (amount: string, mode: CalculatorMode, fromCurrency: SendCurrency, toCurrency: ReceiveCurrency) => {
     if (!amount || amount === '0' || amount === '') {
       setCalculation(null);
       return;
     }
 
     const numericAmount = parseFloat(amount);
-    if (numericAmount < 1000) return; // Minimum amount
+    const minAmount = SUPPORTED_CURRENCIES[mode === 'send' ? fromCurrency : toCurrency].minAmount;
+    if (numericAmount < minAmount) return; // Minimum amount check
 
     setIsCalculating(true);
     setCalculationError(null);
 
-    // Mock calculation with realistic fees
+    // Mock calculation with realistic fees and exchange rates
     setTimeout(() => {
+      const exchangeRate = EXCHANGE_RATES[fromCurrency]?.[toCurrency] || 1;
+      
+      let sendAmount: number;
+      let receiveAmount: number;
+      
+      if (mode === 'send') {
+        sendAmount = numericAmount;
+        receiveAmount = Math.round(numericAmount * exchangeRate);
+      } else {
+        receiveAmount = numericAmount;
+        sendAmount = Math.round(numericAmount / exchangeRate);
+      }
+
       const mockFees = {
-        cardProcessing: Math.round(numericAmount * 0.029), // 2.9% card processing
-        transfer: 2500, // Fixed transfer fee
-        payout: Math.round(numericAmount * 0.01), // 1% payout fee
+        cardProcessing: Math.round(sendAmount * 0.029), // 2.9% card processing
+        transfer: fromCurrency === 'CLP' ? 2500 : fromCurrency === 'USD' ? 3 : fromCurrency === 'EUR' ? 2.5 : 2, // Currency-specific transfer fee
+        payout: Math.round(sendAmount * 0.01), // 1% payout fee
         total: 0
       };
       mockFees.total = mockFees.cardProcessing + mockFees.transfer + mockFees.payout;
 
+      // Adjust receive amount for fees if in send mode
+      if (mode === 'send') {
+        receiveAmount = Math.round((sendAmount - mockFees.total) * exchangeRate);
+      } else {
+        sendAmount = sendAmount + mockFees.total;
+      }
+
       const mockCalculation: TransferCalculation = {
-        sendAmount: mode === 'send' ? numericAmount : numericAmount + mockFees.total,
-        receiveAmount: mode === 'receive' ? numericAmount : numericAmount - mockFees.total,
-        sendCurrency: 'CLP',
-        receiveCurrency: 'CLP',
-        exchangeRate: 1.0,
+        sendAmount,
+        receiveAmount,
+        sendCurrency: fromCurrency,
+        receiveCurrency: toCurrency,
+        exchangeRate,
         fees: mockFees.total,
         rateValidUntil: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
         breakdown: {
-          sendAmountUSD: numericAmount / 800, // Mock USD conversion
+          sendAmountUSD: sendAmount * (EXCHANGE_RATES[fromCurrency]?.USD || 1),
           fees: mockFees,
-          netAmountUSD: (numericAmount - mockFees.total) / 800,
-          exchangeRate: 1.0,
-          receiveAmount: mode === 'receive' ? numericAmount : numericAmount - mockFees.total
+          netAmountUSD: (sendAmount - mockFees.total) * (EXCHANGE_RATES[fromCurrency]?.USD || 1),
+          exchangeRate,
+          receiveAmount
         },
         estimatedArrival: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes
         rateId: `rate_${Date.now()}`
@@ -322,12 +370,12 @@ export default function MVPDemo() {
     }
   };
 
-  // Effect to calculate when amount changes
+  // Effect to calculate when amount or currencies change
   useEffect(() => {
     if (paymentAmount && paymentAmount !== '0' && paymentAmount !== '') {
-      calculateTransfer(paymentAmount, calculatorMode);
+      calculateTransfer(paymentAmount, calculatorMode, sendCurrency, receiveCurrency);
     }
-  }, [paymentAmount, calculatorMode]);
+  }, [paymentAmount, calculatorMode, sendCurrency, receiveCurrency]);
 
   const handlePayment = () => {
     setIsProcessing(true);
@@ -648,19 +696,43 @@ export default function MVPDemo() {
                     placeholder={calculatorMode === 'send' ? "50,000" : "47,500"}
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full p-4 pr-16 border-2 rounded-lg text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-4 border-2 rounded-lg text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm font-medium text-gray-500">
-                    CLP
-                  </div>
                 </div>
-                <div className="w-20 flex items-center justify-center">
-                  <div className="p-3 border rounded-lg bg-white flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                      $
-                    </div>
-                    <span className="font-medium text-sm">CLP</span>
-                  </div>
+                <div className="w-32">
+                  {calculatorMode === 'send' ? (
+                    <Select value={sendCurrency} onValueChange={(value) => setSendCurrency(value as SendCurrency)}>
+                      <SelectTrigger className="h-16 border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SEND_CURRENCIES.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            <div className="flex items-center gap-2">
+                              <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                              <span>{currency}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select value={receiveCurrency} onValueChange={(value) => setReceiveCurrency(value as ReceiveCurrency)}>
+                      <SelectTrigger className="h-16 border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RECEIVE_CURRENCIES.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            <div className="flex items-center gap-2">
+                              <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                              <span>{currency}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
             </div>
@@ -712,13 +784,40 @@ export default function MVPDemo() {
                     )}
                   </div>
                 </div>
-                <div className="w-20 flex items-center justify-center">
-                  <div className="p-3 border rounded-lg bg-white flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                      $
-                    </div>
-                    <span className="font-medium text-sm">CLP</span>
-                  </div>
+                <div className="w-32">
+                  {calculatorMode === 'send' ? (
+                    <Select value={receiveCurrency} onValueChange={(value) => setReceiveCurrency(value as ReceiveCurrency)}>
+                      <SelectTrigger className="h-16 border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RECEIVE_CURRENCIES.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            <div className="flex items-center gap-2">
+                              <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                              <span>{currency}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select value={sendCurrency} onValueChange={(value) => setSendCurrency(value as SendCurrency)}>
+                      <SelectTrigger className="h-16 border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SEND_CURRENCIES.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            <div className="flex items-center gap-2">
+                              <span>{SUPPORTED_CURRENCIES[currency].flag}</span>
+                              <span>{currency}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
             </div>
@@ -731,12 +830,12 @@ export default function MVPDemo() {
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">🇨🇱</span>
+                        <span className="text-lg">{SUPPORTED_CURRENCIES[receiveCurrency].flag}</span>
                         <span className="text-sm font-medium text-green-700">Recipient gets</span>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-green-700">
-                          {calculation.receiveAmount.toLocaleString()} CLP
+                          {calculation.receiveAmount.toLocaleString()} {receiveCurrency}
                         </div>
                       </div>
                     </div>
@@ -746,8 +845,10 @@ export default function MVPDemo() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Exchange rate</span>
                     <div className="text-right">
-                      <span className="text-lg font-bold text-blue-600">1.00000</span>
-                      <p className="text-xs text-gray-500">1 CLP = 1 CLP</p>
+                      <span className="text-lg font-bold text-blue-600">
+                        {calculation.exchangeRate.toFixed(sendCurrency === receiveCurrency ? 5 : 4)}
+                      </span>
+                      <p className="text-xs text-gray-500">1 {sendCurrency} = {calculation.exchangeRate.toFixed(sendCurrency === receiveCurrency ? 5 : 4)} {receiveCurrency}</p>
                     </div>
                   </div>
                   
@@ -755,19 +856,19 @@ export default function MVPDemo() {
                   <div className="border-t border-blue-200 pt-4 space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Card processing (2.9%)</span>
-                      <span className="font-medium">{calculation.breakdown.fees.cardProcessing.toLocaleString()} CLP</span>
+                      <span className="font-medium">{calculation.breakdown.fees.cardProcessing.toLocaleString()} {sendCurrency}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Transfer fee</span>
-                      <span className="font-medium">{calculation.breakdown.fees.transfer.toLocaleString()} CLP</span>
+                      <span className="font-medium">{calculation.breakdown.fees.transfer.toLocaleString()} {sendCurrency}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Payout fee (1%)</span>
-                      <span className="font-medium">{calculation.breakdown.fees.payout.toLocaleString()} CLP</span>
+                      <span className="font-medium">{calculation.breakdown.fees.payout.toLocaleString()} {sendCurrency}</span>
                     </div>
                     <div className="flex justify-between text-sm border-t border-blue-200 pt-2">
                       <span className="text-gray-600 font-medium">Total fees</span>
-                      <span className="font-bold">{calculation.fees.toLocaleString()} CLP</span>
+                      <span className="font-bold">{calculation.fees.toLocaleString()} {sendCurrency}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Processing time</span>
@@ -778,7 +879,7 @@ export default function MVPDemo() {
                   <div className="border-t border-blue-200 pt-4 flex justify-between">
                     <span className="font-bold text-gray-900">Total you pay</span>
                     <span className="font-bold text-xl text-gray-900">
-                      {(calculation.sendAmount + calculation.fees).toLocaleString()} CLP
+                      {(calculation.sendAmount + calculation.fees).toLocaleString()} {sendCurrency}
                     </span>
                   </div>
                 </div>
@@ -833,18 +934,27 @@ export default function MVPDemo() {
             {/* Continue Button */}
             <Button 
               onClick={handlePayment} 
-              disabled={!paymentAmount || parseInt(paymentAmount) < 1000}
+              disabled={!calculation || !paymentAmount}
               className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
-              Send {paymentAmount ? parseInt(paymentAmount).toLocaleString() : '0'} CLP
-              <Send className="ml-2 h-5 w-5" />
+              {calculation ? (
+                <>
+                  Send {calculation.sendAmount.toLocaleString()} {sendCurrency}
+                  <Send className="ml-2 h-5 w-5" />
+                </>
+              ) : (
+                <>
+                  Enter amount to continue
+                  <Send className="ml-2 h-5 w-5" />
+                </>
+              )}
             </Button>
 
-            {parseInt(paymentAmount || '0') > 0 && parseInt(paymentAmount || '0') < 1000 && (
+            {paymentAmount && parseFloat(paymentAmount) > 0 && parseFloat(paymentAmount) < SUPPORTED_CURRENCIES[calculatorMode === 'send' ? sendCurrency : receiveCurrency].minAmount && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-sm text-red-600 text-center flex items-center justify-center gap-2">
                   <AlertCircle className="w-4 h-4" />
-                  Minimum transfer amount is 1,000 CLP
+                  Minimum transfer amount is {SUPPORTED_CURRENCIES[calculatorMode === 'send' ? sendCurrency : receiveCurrency].minAmount.toLocaleString()} {calculatorMode === 'send' ? sendCurrency : receiveCurrency}
                 </p>
               </div>
             )}
