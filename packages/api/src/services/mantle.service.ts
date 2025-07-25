@@ -48,6 +48,52 @@ export interface GasEstimate {
   totalCostUSD: string;
 }
 
+export interface MantleTransferRequest {
+  fromAddress: string;
+  toAddress: string;
+  amount: string; // Amount in token units (e.g., "1.5" for 1.5 USDC)
+  tokenAddress?: string; // If not provided, uses native token (MNT)
+  gasPrice?: string; // Optional custom gas price
+  gasLimit?: string; // Optional custom gas limit
+  userId: string; // For tracking and encryption
+}
+
+export interface MantleTransferResult {
+  transferId: string;
+  transactionHash?: string;
+  status: 'PENDING' | 'CONFIRMED' | 'FAILED' | 'CANCELLED';
+  gasEstimate: GasEstimate;
+  actualGasCost?: string;
+  actualGasCostUSD?: string;
+  blockNumber?: number;
+  confirmations?: number;
+  error?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TransferStatus {
+  transferId: string;
+  transactionHash?: string;
+  status: 'PENDING' | 'CONFIRMED' | 'FAILED' | 'CANCELLED';
+  blockNumber?: number;
+  confirmations: number;
+  gasUsed?: string;
+  gasCost?: string;
+  gasCostUSD?: string;
+  error?: string;
+  updatedAt: Date;
+}
+
+export interface ConversionResult {
+  fromAmount: string;
+  toAmount: string;
+  exchangeRate: string;
+  slippage: string;
+  estimatedGas: GasEstimate;
+  route?: string[]; // Token addresses in conversion path
+}
+
 /**
  * Mantle L2 Service
  * Handles all Mantle blockchain interactions including wallet management,
@@ -716,6 +762,583 @@ export class MantleService {
     } catch (error) {
       console.error('❌ Error waiting for confirmations:', error);
       return false;
+    }
+  }
+
+  // ============================================================================
+  // TRANSFER INITIATION AND MONITORING METHODS
+  // ============================================================================
+
+  /**
+   * Initiate a Mantle L2 transfer
+   */
+  public async initiateTransfer(request: MantleTransferRequest): Promise<MantleTransferResult> {
+    if (!this.isEnabled() || !this.provider) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    const transferId = `mantle_transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date();
+
+    try {
+      console.log(`🚀 Initiating Mantle transfer ${transferId}...`);
+      console.log(`   From: ${request.fromAddress}`);
+      console.log(`   To: ${request.toAddress}`);
+      console.log(`   Amount: ${request.amount}`);
+      console.log(`   Token: ${request.tokenAddress || 'Native MNT'}`);
+
+      // Validate addresses
+      if (!this.isValidAddress(request.fromAddress)) {
+        throw new Error(`Invalid sender address: ${request.fromAddress}`);
+      }
+      if (!this.isValidAddress(request.toAddress)) {
+        throw new Error(`Invalid recipient address: ${request.toAddress}`);
+      }
+
+      // Get gas estimate for the transfer
+      const gasEstimate = await this.estimateTransferGas(request);
+      console.log(`💰 Gas estimate: ${gasEstimate.totalCostUSD} USD`);
+
+      // Check if sender has sufficient balance
+      await this.validateSufficientBalance(request, gasEstimate);
+
+      // Create and sign the transaction
+      const transaction = await this.createTransferTransaction(request, gasEstimate);
+      
+      // Send the transaction
+      const txResponse = await this.sendTransaction(transaction, request.userId);
+      
+      console.log(`✅ Transaction sent: ${txResponse.hash}`);
+      console.log(`   Block: ${txResponse.blockNumber || 'Pending'}`);
+      console.log(`   Gas Price: ${txResponse.gasPrice} wei`);
+
+      return {
+        transferId,
+        transactionHash: txResponse.hash,
+        status: 'PENDING',
+        gasEstimate,
+        createdAt: now,
+        updatedAt: now
+      };
+
+    } catch (error) {
+      console.error(`❌ Failed to initiate transfer ${transferId}:`, error);
+      
+      return {
+        transferId,
+        status: 'FAILED',
+        gasEstimate: await this.estimateTransferGas(request).catch(() => ({
+          gasLimit: '0',
+          gasPrice: '0',
+          totalCost: '0',
+          totalCostUSD: '0'
+        })),
+        error: error instanceof Error ? error.message : 'Unknown error',
+        createdAt: now,
+        updatedAt: now
+      };
+    }
+  }
+
+  /**
+   * Get the current status of a transfer
+   */
+  public async getTransferStatus(transferId: string): Promise<TransferStatus> {
+    if (!this.isEnabled() || !this.provider) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      // In a real implementation, you would fetch this from your database
+      // For now, we'll simulate the status check
+      console.log(`🔍 Checking status for transfer ${transferId}...`);
+
+      // This is a placeholder - in production, you'd query your database
+      // to get the transaction hash associated with this transferId
+      const transactionHash = await this.getTransactionHashForTransfer(transferId);
+      
+      if (!transactionHash) {
+        return {
+          transferId,
+          status: 'PENDING',
+          confirmations: 0,
+          updatedAt: new Date()
+        };
+      }
+
+      // Get transaction details from the blockchain
+      const txDetails = await this.getTransactionDetails(transactionHash);
+      
+      if (!txDetails) {
+        return {
+          transferId,
+          transactionHash,
+          status: 'PENDING',
+          confirmations: 0,
+          updatedAt: new Date()
+        };
+      }
+
+      // Determine status based on confirmations
+      const requiredConfirmations = this.config.confirmationBlocks;
+      const isConfirmed = txDetails.confirmations >= requiredConfirmations;
+      const status = txDetails.status === 1 
+        ? (isConfirmed ? 'CONFIRMED' : 'PENDING')
+        : 'FAILED';
+
+      // Calculate gas cost in USD
+      const gasCostWei = BigInt(txDetails.gasUsed) * BigInt(txDetails.gasPrice);
+      const gasCost = ethers.formatEther(gasCostWei);
+      const mntPriceUSD = await this.getMNTPriceUSD();
+      const gasCostUSD = (parseFloat(gasCost) * mntPriceUSD).toFixed(6);
+
+      return {
+        transferId,
+        transactionHash,
+        status,
+        blockNumber: txDetails.blockNumber,
+        confirmations: txDetails.confirmations,
+        gasUsed: txDetails.gasUsed,
+        gasCost,
+        gasCostUSD,
+        updatedAt: new Date()
+      };
+
+    } catch (error) {
+      console.error(`❌ Failed to get transfer status for ${transferId}:`, error);
+      
+      return {
+        transferId,
+        status: 'FAILED',
+        confirmations: 0,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        updatedAt: new Date()
+      };
+    }
+  }
+
+  /**
+   * Estimate gas cost for a specific transfer
+   */
+  public async estimateTransferGas(request: MantleTransferRequest): Promise<GasEstimate> {
+    if (!this.isEnabled() || !this.provider) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      let gasLimit: bigint;
+      let gasPrice: bigint;
+
+      // Get current gas price or use provided one
+      if (request.gasPrice) {
+        gasPrice = BigInt(request.gasPrice);
+      } else {
+        const feeData = await this.provider.getFeeData();
+        gasPrice = feeData.gasPrice || ethers.parseUnits('0.001', 'gwei');
+      }
+
+      // Estimate gas limit based on transfer type
+      if (request.tokenAddress) {
+        // ERC20 token transfer
+        gasLimit = request.gasLimit 
+          ? BigInt(request.gasLimit)
+          : BigInt(this.config.gasLimit.transfer);
+
+        // For more accurate estimation, we could simulate the transaction
+        try {
+          const erc20ABI = [
+            'function transfer(address to, uint256 amount) returns (bool)'
+          ];
+          const tokenContract = new ethers.Contract(request.tokenAddress, erc20ABI, this.provider);
+          
+          // Parse amount based on token decimals
+          const tokenInfo = await this.getTokenBalance(request.fromAddress, request.tokenAddress);
+          const amountWei = ethers.parseUnits(request.amount, tokenInfo.decimals);
+          
+          // Estimate gas for the actual transaction
+          const estimatedGas = await tokenContract.transfer.estimateGas(request.toAddress, amountWei);
+          gasLimit = estimatedGas + BigInt(10000); // Add buffer for safety
+          
+        } catch (estimationError) {
+          console.warn(`⚠️  Could not estimate gas for token transfer, using default: ${estimationError}`);
+          // Use default gas limit if estimation fails
+        }
+      } else {
+        // Native token (MNT) transfer
+        gasLimit = BigInt(21000); // Standard ETH transfer gas limit
+        
+        try {
+          // Estimate gas for native transfer
+          const amountWei = ethers.parseEther(request.amount);
+          const estimatedGas = await this.provider.estimateGas({
+            to: request.toAddress,
+            value: amountWei,
+            from: request.fromAddress
+          });
+          gasLimit = estimatedGas + BigInt(5000); // Add buffer
+          
+        } catch (estimationError) {
+          console.warn(`⚠️  Could not estimate gas for native transfer, using default: ${estimationError}`);
+        }
+      }
+
+      // Calculate total cost
+      const totalCostWei = gasLimit * gasPrice;
+      const totalCost = ethers.formatEther(totalCostWei);
+      
+      // Convert to USD
+      const mntPriceUSD = await this.getMNTPriceUSD();
+      const totalCostUSD = (parseFloat(totalCost) * mntPriceUSD).toFixed(6);
+
+      return {
+        gasLimit: gasLimit.toString(),
+        gasPrice: gasPrice.toString(),
+        totalCost,
+        totalCostUSD
+      };
+
+    } catch (error) {
+      console.error('❌ Failed to estimate transfer gas:', error);
+      throw new Error(`Failed to estimate transfer gas: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Monitor a transfer until completion or failure
+   */
+  public async monitorTransfer(
+    transferId: string, 
+    onStatusUpdate?: (status: TransferStatus) => void,
+    maxWaitTime: number = 600000 // 10 minutes default
+  ): Promise<TransferStatus> {
+    if (!this.isEnabled()) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    const startTime = Date.now();
+    const pollInterval = 5000; // 5 seconds
+
+    console.log(`👀 Monitoring transfer ${transferId}...`);
+
+    try {
+      while (Date.now() - startTime < maxWaitTime) {
+        const status = await this.getTransferStatus(transferId);
+        
+        // Call status update callback if provided
+        if (onStatusUpdate) {
+          onStatusUpdate(status);
+        }
+
+        // Check if transfer is in a final state
+        if (status.status === 'CONFIRMED') {
+          console.log(`✅ Transfer ${transferId} confirmed!`);
+          return status;
+        }
+        
+        if (status.status === 'FAILED') {
+          console.log(`❌ Transfer ${transferId} failed: ${status.error}`);
+          return status;
+        }
+
+        // Log progress for pending transfers
+        if (status.status === 'PENDING' && status.confirmations !== undefined) {
+          const required = this.config.confirmationBlocks;
+          console.log(`⏳ Transfer ${transferId}: ${status.confirmations}/${required} confirmations`);
+        }
+
+        // Wait before next poll
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+      }
+
+      // Timeout reached
+      const finalStatus = await this.getTransferStatus(transferId);
+      console.warn(`⏰ Transfer ${transferId} monitoring timed out after ${maxWaitTime}ms`);
+      
+      return {
+        ...finalStatus,
+        error: finalStatus.error || 'Monitoring timeout - transfer may still be processing'
+      };
+
+    } catch (error) {
+      console.error(`❌ Error monitoring transfer ${transferId}:`, error);
+      
+      return {
+        transferId,
+        status: 'FAILED',
+        confirmations: 0,
+        error: error instanceof Error ? error.message : 'Monitoring error',
+        updatedAt: new Date()
+      };
+    }
+  }
+
+  // ============================================================================
+  // PRIVATE HELPER METHODS FOR TRANSFERS
+  // ============================================================================
+
+  /**
+   * Validate that sender has sufficient balance for the transfer
+   */
+  private async validateSufficientBalance(request: MantleTransferRequest, gasEstimate: GasEstimate): Promise<void> {
+    try {
+      const balance = await this.getWalletBalance(request.fromAddress);
+      
+      if (request.tokenAddress) {
+        // ERC20 token transfer - check token balance
+        const tokenBalance = await this.getTokenBalance(request.fromAddress, request.tokenAddress);
+        const requestedAmount = parseFloat(request.amount);
+        const availableAmount = parseFloat(tokenBalance.balance);
+        
+        if (requestedAmount > availableAmount) {
+          throw new Error(`Insufficient token balance. Requested: ${request.amount} ${tokenBalance.symbol}, Available: ${tokenBalance.balance} ${tokenBalance.symbol}`);
+        }
+        
+        // Also check native balance for gas
+        const gasNeeded = parseFloat(gasEstimate.totalCost);
+        const nativeAvailable = parseFloat(balance.native);
+        
+        if (gasNeeded > nativeAvailable) {
+          throw new Error(`Insufficient MNT for gas. Needed: ${gasEstimate.totalCost} MNT, Available: ${balance.native} MNT`);
+        }
+      } else {
+        // Native token transfer - check total needed (amount + gas)
+        const requestedAmount = parseFloat(request.amount);
+        const gasNeeded = parseFloat(gasEstimate.totalCost);
+        const totalNeeded = requestedAmount + gasNeeded;
+        const available = parseFloat(balance.native);
+        
+        if (totalNeeded > available) {
+          throw new Error(`Insufficient MNT balance. Needed: ${totalNeeded.toFixed(6)} MNT (${request.amount} + ${gasEstimate.totalCost} gas), Available: ${balance.native} MNT`);
+        }
+      }
+      
+      console.log(`✅ Balance validation passed for ${request.fromAddress}`);
+      
+    } catch (error) {
+      console.error('❌ Balance validation failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a transaction object for the transfer
+   */
+  private async createTransferTransaction(request: MantleTransferRequest, gasEstimate: GasEstimate): Promise<ethers.TransactionRequest> {
+    try {
+      const transaction: ethers.TransactionRequest = {
+        from: request.fromAddress,
+        gasLimit: gasEstimate.gasLimit,
+        gasPrice: gasEstimate.gasPrice
+      };
+
+      if (request.tokenAddress) {
+        // ERC20 token transfer
+        const erc20ABI = [
+          'function transfer(address to, uint256 amount) returns (bool)'
+        ];
+        
+        // Get token decimals for proper amount formatting
+        const tokenInfo = await this.getTokenBalance(request.fromAddress, request.tokenAddress);
+        const amountWei = ethers.parseUnits(request.amount, tokenInfo.decimals);
+        
+        // Create contract interface for encoding
+        const iface = new ethers.Interface(erc20ABI);
+        const data = iface.encodeFunctionData('transfer', [request.toAddress, amountWei]);
+        
+        transaction.to = request.tokenAddress;
+        transaction.data = data;
+        transaction.value = '0';
+        
+      } else {
+        // Native token (MNT) transfer
+        const amountWei = ethers.parseEther(request.amount);
+        
+        transaction.to = request.toAddress;
+        transaction.value = amountWei.toString();
+      }
+
+      return transaction;
+      
+    } catch (error) {
+      console.error('❌ Failed to create transfer transaction:', error);
+      throw new Error(`Failed to create transfer transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Send a signed transaction to the network
+   */
+  private async sendTransaction(transaction: ethers.TransactionRequest, userId: string): Promise<{ hash: string; blockNumber?: number; gasPrice: bigint }> {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+
+    try {
+      // In a real implementation, you would:
+      // 1. Retrieve the encrypted private key from secure storage
+      // 2. Decrypt it using the userId
+      // 3. Create a wallet instance
+      // 4. Sign and send the transaction
+      
+      // For this implementation, we'll simulate the process
+      // In production, you MUST implement proper key management
+      
+      console.log('🔐 Signing transaction...');
+      
+      // This is a placeholder - in production you would:
+      // const encryptedKey = await this.getEncryptedPrivateKey(userId, transaction.from);
+      // const privateKey = await this.decryptPrivateKey(encryptedKey, userId);
+      // const wallet = new ethers.Wallet(privateKey, this.provider);
+      // const signedTx = await wallet.sendTransaction(transaction);
+      
+      // For now, we'll simulate a successful transaction
+      const mockTxResponse = {
+        hash: `0x${crypto.randomBytes(32).toString('hex')}`,
+        blockNumber: undefined, // Will be set when mined
+        gasPrice: BigInt(transaction.gasPrice!)
+      };
+
+      console.log(`📡 Transaction sent: ${mockTxResponse.hash}`);
+      
+      return mockTxResponse;
+      
+    } catch (error) {
+      console.error('❌ Failed to send transaction:', error);
+      throw new Error(`Failed to send transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get transaction hash for a transfer ID (placeholder for database lookup)
+   */
+  private async getTransactionHashForTransfer(transferId: string): Promise<string | null> {
+    // In a real implementation, this would query your database
+    // to get the transaction hash associated with the transfer ID
+    
+    // For now, we'll simulate this by extracting from the transferId
+    // In production, you would do something like:
+    // const transfer = await db.mantleTransfer.findUnique({ where: { id: transferId } });
+    // return transfer?.transactionHash || null;
+    
+    console.log(`🔍 Looking up transaction hash for transfer ${transferId}...`);
+    
+    // Simulate database lookup delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Return null to simulate a transfer that hasn't been sent yet
+    // In a real implementation, this would return the actual transaction hash
+    return null;
+  }
+
+  // ============================================================================
+  // CONVERSION AND EXCHANGE METHODS
+  // ============================================================================
+
+  /**
+   * Convert fiat currency to stablecoin for Mantle transfers
+   */
+  public async convertToStablecoin(amount: number, fromCurrency: string): Promise<ConversionResult> {
+    if (!this.isEnabled()) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      console.log(`💱 Converting ${amount} ${fromCurrency} to stablecoin...`);
+      
+      // In production, integrate with a proper DEX or exchange API
+      // For now, we'll simulate the conversion
+      
+      let exchangeRate: number;
+      let toAmount: number;
+      
+      if (fromCurrency === 'USD') {
+        // Direct 1:1 conversion to USDC
+        exchangeRate = 1.0;
+        toAmount = amount;
+      } else {
+        // Simulate exchange rate lookup
+        // In production, fetch from a reliable price feed
+        const rates: { [key: string]: number } = {
+          'EUR': 1.08, // 1 EUR = 1.08 USD
+          'GBP': 1.25, // 1 GBP = 1.25 USD
+          'CLP': 0.001, // 1 CLP = 0.001 USD
+          'MXN': 0.055 // 1 MXN = 0.055 USD
+        };
+        
+        exchangeRate = rates[fromCurrency] || 1.0;
+        toAmount = amount * exchangeRate;
+      }
+      
+      // Estimate gas for the conversion (if swapping is needed)
+      const gasEstimate = await this.estimateGasCost(toAmount, 'USDC');
+      
+      // Calculate slippage (simplified)
+      const slippage = '0.5'; // 0.5% slippage
+      
+      return {
+        fromAmount: amount.toString(),
+        toAmount: toAmount.toString(),
+        exchangeRate: exchangeRate.toString(),
+        slippage,
+        estimatedGas: gasEstimate,
+        route: fromCurrency === 'USD' ? ['USDC'] : [fromCurrency, 'USD', 'USDC']
+      };
+      
+    } catch (error) {
+      console.error('❌ Failed to convert to stablecoin:', error);
+      throw new Error(`Failed to convert to stablecoin: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Convert stablecoin back to fiat currency
+   */
+  public async convertFromStablecoin(amount: number, toCurrency: string): Promise<ConversionResult> {
+    if (!this.isEnabled()) {
+      throw new Error('Mantle service is not enabled or not properly initialized');
+    }
+
+    try {
+      console.log(`💱 Converting ${amount} USDC to ${toCurrency}...`);
+      
+      let exchangeRate: number;
+      let toAmount: number;
+      
+      if (toCurrency === 'USD') {
+        // Direct 1:1 conversion from USDC
+        exchangeRate = 1.0;
+        toAmount = amount;
+      } else {
+        // Simulate exchange rate lookup
+        const rates: { [key: string]: number } = {
+          'EUR': 0.926, // 1 USD = 0.926 EUR
+          'GBP': 0.80, // 1 USD = 0.80 GBP
+          'CLP': 1000, // 1 USD = 1000 CLP
+          'MXN': 18.18 // 1 USD = 18.18 MXN
+        };
+        
+        exchangeRate = rates[toCurrency] || 1.0;
+        toAmount = amount * exchangeRate;
+      }
+      
+      // Estimate gas for the conversion
+      const gasEstimate = await this.estimateGasCost(amount, 'USDC');
+      
+      // Calculate slippage
+      const slippage = '0.5'; // 0.5% slippage
+      
+      return {
+        fromAmount: amount.toString(),
+        toAmount: toAmount.toString(),
+        exchangeRate: exchangeRate.toString(),
+        slippage,
+        estimatedGas: gasEstimate,
+        route: toCurrency === 'USD' ? ['USDC'] : ['USDC', 'USD', toCurrency]
+      };
+      
+    } catch (error) {
+      console.error('❌ Failed to convert from stablecoin:', error);
+      throw new Error(`Failed to convert from stablecoin: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }
