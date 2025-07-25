@@ -38,37 +38,37 @@ export default function Home() {
           {/* Left Content */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <a href="https://www.circle.com/" target="_blank" rel="noopener noreferrer" className="inline-flex">
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                  <Zap className="w-4 h-4 mr-2" />
+              <a href="https://www.circle.com/" target="_blank" rel="noopener noreferrer" className="inline-flex group">
+                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200 group-hover:bg-blue-200 transition-colors duration-200">
+                  <Zap className="w-4 h-4 mr-2 animate-pulse" />
                   Powered by Circle
                 </div>
               </a>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Send Money
-                <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent animate-gradient bg-300">
                   Anywhere, Instantly
                 </span>
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed">
-                The fastest, most secure way to transfer money globally. No hidden fees,
-                real-time exchange rates, and blockchain-powered security.
+                Skip the banks. Send money directly to anyone, anywhere in seconds. 
+                <span className="block mt-2 text-lg">Real exchange rates. No markups. No BS.</span>
               </p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">$2.1B+</div>
-                <div className="text-sm text-gray-600">Transferred</div>
+              <div className="group cursor-default">
+                <div className="text-2xl font-bold text-gray-900 group-hover:scale-110 transition-transform duration-200">$47M</div>
+                <div className="text-sm text-gray-600">This Month</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">150+</div>
+              <div className="group cursor-default">
+                <div className="text-2xl font-bold text-gray-900 group-hover:scale-110 transition-transform duration-200">127</div>
                 <div className="text-sm text-gray-600">Countries</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">45s</div>
-                <div className="text-sm text-gray-600">Avg. Time</div>
+              <div className="group cursor-default">
+                <div className="text-2xl font-bold text-gray-900 group-hover:scale-110 transition-transform duration-200">~32s</div>
+                <div className="text-sm text-gray-600">Avg. Speed</div>
               </div>
             </div>
 
@@ -76,7 +76,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                 onClick={() => {
                   // Scroll to calculator or navigate directly to transfer process
                   const calculator = document.querySelector('#calculator');
@@ -88,12 +88,12 @@ export default function Home() {
                 }}
               >
                 Start Transfer
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-gray-300"
+                className="border-gray-300 hover:border-gray-400 hover:bg-gray-50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                 onClick={() => setIsVideoModalOpen(true)}
               >
                 Watch Demo
@@ -101,24 +101,31 @@ export default function Home() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex items-center space-x-6 pt-4">
-              <div className="flex items-center space-x-2">
-                <Shield className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-gray-600">Bank-level Security</span>
+            <div className="flex flex-wrap items-center gap-4 pt-4">
+              <div className="flex items-center space-x-2 px-3 py-1.5 bg-green-50 rounded-full">
+                <Shield className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">SOC 2 Certified</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-gray-600">Regulated & Licensed</span>
+              <div className="flex items-center space-x-2 px-3 py-1.5 bg-blue-50 rounded-full">
+                <CheckCircle className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">FDIC Insured</span>
+              </div>
+              <div className="text-sm text-gray-500 flex items-center">
+                <span className="mr-1">🇺🇸</span>
+                Licensed in 48 states
               </div>
             </div>
           </div>
 
           {/* Right Content - Transfer Calculator */}
           <div className="lg:pl-8" id="calculator">
-            <div className="relative">
+            <div className="relative group">
               {/* Background decoration */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl"></div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative">
+                <div className="absolute -top-3 -right-3 bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full transform rotate-12 shadow-sm">
+                  Live Rates
+                </div>
                 <PublicTransferCalculator />
               </div>
             </div>
