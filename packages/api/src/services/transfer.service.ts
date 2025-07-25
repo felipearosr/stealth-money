@@ -633,7 +633,7 @@ export class TransferService {
       // Get recommendation
       const recommendation = await this.getTransferMethodRecommendation(
         request.sendAmount,
-        { from: request.sendCurrency, to: request.receiveCurrency },
+        { send: request.sendCurrency, receive: request.receiveCurrency },
         request.preferredMethod
       );
 
@@ -654,107 +654,6 @@ export class TransferService {
   /**
    * Get transfer method recommendation based on amount and preferences
    */
-  async getTransferMethodRecommendation(
-    amount: number,
-    currencies: { from: string; to: string },
-    preferredMethod?: TransferMethod
-  ): Promise<MethodRecommendation> {
-    try {
-      // Check if Mantle is available first
-      const mantleAvailable = await this.isMethodAvailable(TransferMethod.MANTLE, amount);
-
-      // If user has a preferred method and it's available, recommend it
-      if (preferredMethod) {
-        const isAvailable = await this.isMethodAvailable(preferredMethod, amount);
-        if (isAvailable) {
-          return {
-            recommendedMethod: preferredMethod,
-            reason: 'Based on your preference',
-            alternatives: [{
-              method: preferredMethod === TransferMethod.CIRCLE ? TransferMethod.MANTLE : TransferMethod.CIRCLE,
-              reason: 'Alternative option available'
-            }]
-          };
-        }
-      }
-
-      // If Mantle is not available, default to Circle
-      if (!mantleAvailable) {
-        return {
-          recommendedMethod: TransferMethod.CIRCLE,
-          reason: 'Mantle service not available, using reliable Circle option',
-          alternatives: [{
-            method: TransferMethod.MANTLE,
-            reason: 'Blockchain option (currently unavailable)'
-          }]
-        };
-      }
-
-      // Get cost comparison
-      const costComparison = await this.compareTransferCosts(amount, currencies);
-
-      // Recommendation logic based on requirements
-      if (amount < 100) {
-        // For amounts below $100, recommend Mantle for cost efficiency
-        return {
-          recommendedMethod: TransferMethod.MANTLE,
-          reason: 'Lower fees for smaller amounts',
-          costSavings: costComparison.mantleSavings,
-          timeSavings: 'Up to 3 days faster',
-          alternatives: [{
-            method: TransferMethod.CIRCLE,
-            reason: 'More regulatory compliance and reliability'
-          }]
-        };
-      } else if (amount > 1000) {
-        // For amounts above $1000, recommend Circle for regulatory compliance
-        return {
-          recommendedMethod: TransferMethod.CIRCLE,
-          reason: 'Better regulatory compliance and reliability for larger amounts',
-          alternatives: [{
-            method: TransferMethod.MANTLE,
-            reason: `Save approximately $${costComparison.mantleSavings?.toFixed(2)} in fees`
-          }]
-        };
-      } else {
-        // For medium amounts, recommend based on cost savings
-        const significantSavings = (costComparison.mantleSavings || 0) > (amount * 0.01); // 1% savings threshold
-
-        if (significantSavings) {
-          return {
-            recommendedMethod: TransferMethod.MANTLE,
-            reason: 'Significant cost savings with fast settlement',
-            costSavings: costComparison.mantleSavings,
-            timeSavings: 'Up to 3 days faster',
-            alternatives: [{
-              method: TransferMethod.CIRCLE,
-              reason: 'Traditional banking with established regulatory framework'
-            }]
-          };
-        } else {
-          return {
-            recommendedMethod: TransferMethod.CIRCLE,
-            reason: 'Established reliability with minimal cost difference',
-            alternatives: [{
-              method: TransferMethod.MANTLE,
-              reason: 'Faster settlement with blockchain technology'
-            }]
-          };
-        }
-      }
-    } catch (error) {
-      console.error('❌ Failed to get method recommendation:', error);
-      // Default to Circle if recommendation fails
-      return {
-        recommendedMethod: TransferMethod.CIRCLE,
-        reason: 'Default recommendation due to system error',
-        alternatives: [{
-          method: TransferMethod.MANTLE,
-          reason: 'Alternative blockchain option'
-        }]
-      };
-    }
-  }
 
   /**
    * Create a Mantle transfer
@@ -1104,6 +1003,183 @@ export class TransferService {
     const completion = new Date();
     completion.setMinutes(completion.getMinutes() + 3); // Average 3 minutes
     return completion;
+  }
+
+  /**
+   * Calculate Mantle transfer costs and details
+   */
+  async calculateMantleTransfer(request: CalculateTransferRequest): Promise<any> {
+    try {
+      // Wait for Mantle service initialization
+      await this.mantleService.waitForInitialization();
+
+      if (!this.mantleService.isEnabled()) {
+        throw new Error('Mantle service is not enabled');
+      }
+
+      // Import FX service for currency conversion
+      const { FXService } = await import('./fx.service');
+      const fxService = new FXService();
+
+      // For Mantle transfers, we need to convert to USD first (for Circle integration)
+      // then handle the final conversion on the recipient side
+      let calculation;
+      if (request.sendCurrency !== 'USD') {
+        // Convert send currency to USD
+        calculation = await fxService.calculateTransfer({
+          sendAmount: request.sendAmount,
+          sendCurrency: request.sendCurrency,
+          receiveCurrency: 'USD'
+        });
+      } else {
+        calculation = {
+          sendAmount: request.sendAmount,
+          receiveAmount: request.sendAmount,
+          exchangeRate: 1,
+          fees: { total: 0, cardProcessing: 0, transfer: 0, payout: 0 },
+          rateValidUntil: new Date(Date.now() + 300000), // 5 minutes
+          breakdown: {
+            sendAmountUSD: request.sendAmount,
+            netAmountUSD: request.sendAmount,
+            finalAmountReceive: request.sendAmount
+          }
+        };
+      }
+
+      // Get gas estimate for the Mantle transfer
+      const gasEstimate = await this.mantleService.estimateGasCost(
+        calculation.receiveAmount, // USD amount
+        'USD'
+      );
+
+      // If final currency is not USD, calculate the final conversion
+      let finalCalculation = calculation;
+      if (request.receiveCurrency !== 'USD') {
+        finalCalculation = await fxService.calculateTransfer({
+          sendAmount: calculation.receiveAmount,
+          sendCurrency: 'USD',
+          receiveCurrency: request.receiveCurrency
+        });
+      }
+
+      // Calculate total fees including gas costs
+      const gasCostUSD = parseFloat(gasEstimate.totalCostUSD);
+      const totalFees = calculation.fees.total + gasCostUSD;
+
+      // Adjust receive amount for gas costs
+      const adjustedReceiveAmount = finalCalculation.receiveAmount - (gasCostUSD * finalCalculation.exchangeRate);
+
+      return {
+        sendAmount: request.sendAmount,
+        receiveAmount: Math.max(0, adjustedReceiveAmount), // Ensure non-negative
+        sendCurrency: request.sendCurrency,
+        receiveCurrency: request.receiveCurrency,
+        exchangeRate: finalCalculation.exchangeRate,
+        fees: {
+          total: totalFees,
+          cardProcessing: calculation.fees.cardProcessing || 0,
+          transfer: calculation.fees.transfer || 0,
+          payout: calculation.fees.payout || 0,
+          gas: gasCostUSD
+        },
+        gasEstimate,
+        rateValidUntil: calculation.rateValidUntil,
+        rateId: calculation.rateId,
+        breakdown: {
+          ...finalCalculation.breakdown,
+          gasEstimate,
+          adjustedForGas: true
+        },
+        estimatedArrival: '2-5 minutes',
+        method: 'mantle'
+      };
+    } catch (error) {
+      console.error('Failed to calculate Mantle transfer:', error);
+      throw new Error(`Mantle calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get transfer method recommendation based on amount and preferences
+   */
+  async getTransferMethodRecommendation(
+    amount: number, 
+    currencies: { send: string; receive: string },
+    userId?: string
+  ): Promise<MethodRecommendation> {
+    try {
+      // Calculate both methods if available
+      const [circleCalc, mantleCalc] = await Promise.allSettled([
+        // Circle calculation
+        (async () => {
+          const { FXService } = await import('./fx.service');
+          const fxService = new FXService();
+          return await fxService.calculateTransfer({
+            sendAmount: amount,
+            sendCurrency: currencies.send,
+            receiveCurrency: currencies.receive
+          });
+        })(),
+        // Mantle calculation
+        this.mantleService.isEnabled() 
+          ? this.calculateMantleTransfer({
+              sendAmount: amount,
+              sendCurrency: currencies.send,
+              receiveCurrency: currencies.receive,
+              userId
+            })
+          : Promise.reject(new Error('Mantle not available'))
+      ]);
+
+      // Default to Circle
+      let recommendedMethod = TransferMethod.CIRCLE;
+      let reason = 'Reliable traditional banking option';
+      let costSavings = 0;
+      let timeSavings: string | undefined;
+
+      // Compare if both are available
+      if (circleCalc.status === 'fulfilled' && mantleCalc.status === 'fulfilled') {
+        const circleCost = circleCalc.value.fees.total;
+        const mantleCost = mantleCalc.value.fees.total;
+        costSavings = circleCost - mantleCost;
+
+        // Recommend Mantle for smaller amounts if it's cheaper
+        if (amount < 1000 && costSavings > 0) {
+          recommendedMethod = TransferMethod.MANTLE;
+          reason = 'Lower fees and faster processing for this amount';
+          timeSavings = 'Save 3-5 business days';
+        }
+        // Recommend Circle for larger amounts
+        else if (amount >= 1000) {
+          recommendedMethod = TransferMethod.CIRCLE;
+          reason = 'Recommended for larger amounts due to regulatory compliance';
+        }
+      }
+
+      return {
+        recommendedMethod,
+        reason,
+        costSavings: Math.max(0, costSavings),
+        timeSavings,
+        alternatives: [
+          {
+            method: recommendedMethod === TransferMethod.CIRCLE ? TransferMethod.MANTLE : TransferMethod.CIRCLE,
+            reason: recommendedMethod === TransferMethod.CIRCLE 
+              ? 'Faster but newer technology'
+              : 'More established but slower'
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('Failed to get transfer method recommendation:', error);
+      
+      // Fallback to Circle
+      return {
+        recommendedMethod: TransferMethod.CIRCLE,
+        reason: 'Default reliable option',
+        alternatives: []
+      };
+    }
   }
 
   /**
