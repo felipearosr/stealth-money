@@ -854,6 +854,115 @@ export class DatabaseService {
     });
   }
 
+  // Cookathon metrics methods
+  async getTransfersByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
+    return this.prisma.transaction.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: {
+        mantleTransfer: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async getTotalUserCount(): Promise<number> {
+    return this.prisma.user.count();
+  }
+
+  async getActiveUserCount(): Promise<number> {
+    // Users who have made a transaction in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    return this.prisma.user.count({
+      where: {
+        OR: [
+          {
+            sentTransactions: {
+              some: {
+                createdAt: {
+                  gte: thirtyDaysAgo
+                }
+              }
+            }
+          },
+          {
+            receivedTransactions: {
+              some: {
+                createdAt: {
+                  gte: thirtyDaysAgo
+                }
+              }
+            }
+          }
+        ]
+      }
+    });
+  }
+
+  async getMantleTransferStats(startDate: Date, endDate: Date) {
+    const mantleTransfers = await this.prisma.mantleTransfer.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      include: {
+        transaction: true
+      }
+    });
+
+    const totalTransfers = await this.prisma.transaction.count({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      }
+    });
+
+    return {
+      mantleTransfers,
+      totalTransfers,
+      mantleAdoption: totalTransfers > 0 ? (mantleTransfers.length / totalTransfers) * 100 : 0
+    };
+  }
+
+  async getRecentMantleTransactions(limit: number = 10) {
+    return this.prisma.mantleTransfer.findMany({
+      take: limit,
+      include: {
+        transaction: {
+          include: {
+            sender: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            },
+            recipient: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
   async close(): Promise<void> {
     await this.prisma.$disconnect();
   }

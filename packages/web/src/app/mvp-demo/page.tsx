@@ -21,7 +21,9 @@ import {
   Calculator,
   ArrowRightLeft,
   Euro,
-  RefreshCw
+  RefreshCw,
+  Trophy,
+  ExternalLink
 } from "lucide-react";
 
 type DemoStep = 'verification' | 'selection' | 'payment' | 'results';
@@ -1103,9 +1105,21 @@ export default function MVPDemo() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Stealth Money MVP Demo
-          </h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Stealth Money MVP Demo
+            </h1>
+            <a
+              href="/cookathon-demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200 hover:from-green-200 hover:to-emerald-200 transition-all duration-200 group"
+            >
+              <Trophy className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-800">Cookathon Dashboard</span>
+              <ExternalLink className="w-3 h-3 text-green-600 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+          </div>
           <p className="text-gray-600">
             Complete Payment Flow - From Account Creation to Final Results
           </p>

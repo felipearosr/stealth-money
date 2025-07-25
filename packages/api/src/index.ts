@@ -12,6 +12,7 @@ import accountRoutes from './routes/account.controller';
 import currencyRoutes from './routes/currencies.controller';
 import userRoutes from './routes/users.controller';
 import verificationRoutes from './routes/verification.controller';
+import cookathonRoutes from './routes/cookathon.routes';
 import { SimpleDatabaseService } from './services/database-simple.service';
 import { 
   helmetConfig, 
@@ -215,6 +216,8 @@ app.use('/api/currencies', currencyRoutes);
 app.use('/api/users', userRoutes);
 // Wire up the verification routes with /api prefix
 app.use('/api', verificationRoutes);
+// Wire up the cookathon routes with /api prefix
+app.use('/api/cookathon', cookathonRoutes);
 
 // Error logging middleware
 app.use(errorLogger);

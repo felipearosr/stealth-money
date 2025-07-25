@@ -9,9 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  SUPPORTED_CURRENCIES, 
-  SEND_CURRENCIES, 
+import {
+  SUPPORTED_CURRENCIES,
+  SEND_CURRENCIES,
   RECEIVE_CURRENCIES,
   formatCurrency,
   formatNumberInput,
@@ -23,7 +23,7 @@ import {
 const createTransferCalculationSchema = (currency: string, mode: CalculatorMode) => {
   const currencyConfig = SUPPORTED_CURRENCIES[currency];
   const fieldName = mode === 'send' ? 'sendAmount' : 'receiveAmount';
-  
+
   return z.object({
     [fieldName]: z.number()
       .min(currencyConfig.minAmount, `Amount must be at least ${formatCurrency(currencyConfig.minAmount, currency)}`)
@@ -76,11 +76,11 @@ interface TransferCalculatorProps {
   publicMode?: boolean;
 }
 
-export function TransferCalculator({ 
-  onContinue, 
-  isNavigating = false, 
-  showTitle = true, 
-  publicMode = false 
+export function TransferCalculator({
+  onContinue,
+  isNavigating = false,
+  showTitle = true,
+  publicMode = false
 }: TransferCalculatorProps) {
   // Component state
   const [calculatorMode, setCalculatorMode] = useState<CalculatorMode>('send');
@@ -107,7 +107,7 @@ export function TransferCalculator({
     }
 
     const numericAmount = parseFloat(amount);
-    
+
     // Validate amount using dynamic schema based on mode
     try {
       const validationCurrency = mode === 'send' ? fromCurrency : toCurrency;
@@ -128,22 +128,22 @@ export function TransferCalculator({
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      
+
       // TEMPORARY: Backend only supports sendAmount mode currently
       // For "receive" mode, we need to estimate the send amount first
       let requestBody;
       let estimatedSendAmount = numericAmount;
-      
+
       if (mode === 'receive') {
         // Rough estimation: assume 10% fees and current exchange rate of ~0.85 for USD->EUR
         // This is a temporary workaround until backend supports receiveAmount
-        const roughExchangeRate = toCurrency === 'EUR' ? 0.85 : 
-                                 toCurrency === 'GBP' ? 0.80 : 
-                                 toCurrency === 'CLP' ? 800 : 
-                                 toCurrency === 'MXN' ? 20 : 0.85;
+        const roughExchangeRate = toCurrency === 'EUR' ? 0.85 :
+          toCurrency === 'GBP' ? 0.80 :
+            toCurrency === 'CLP' ? 800 :
+              toCurrency === 'MXN' ? 20 : 0.85;
         estimatedSendAmount = Math.ceil((numericAmount / roughExchangeRate) * 1.1);
       }
-      
+
       requestBody = {
         sendAmount: estimatedSendAmount,
         sendCurrency: fromCurrency,
@@ -165,18 +165,18 @@ export function TransferCalculator({
       }
 
       const data: TransferCalculation = await response.json();
-      
+
       // If we're in "receive" mode, we need to adjust the calculation
       // to match the desired receive amount as closely as possible
       if (mode === 'receive') {
         const actualReceiveAmount = data.receiveAmount;
         const targetReceiveAmount = numericAmount;
-        
+
         if (Math.abs(actualReceiveAmount - targetReceiveAmount) > targetReceiveAmount * 0.05) {
           // If we're off by more than 5%, try to adjust
           const adjustmentFactor = targetReceiveAmount / actualReceiveAmount;
           const adjustedSendAmount = Math.ceil(data.sendAmount * adjustmentFactor);
-          
+
           // Make a second API call with the adjusted amount
           const adjustedRequestBody = {
             sendAmount: adjustedSendAmount,
@@ -184,7 +184,7 @@ export function TransferCalculator({
             receiveCurrency: toCurrency,
             calculatorMode: 'send'
           };
-          
+
           const adjustedResponse = await fetch(`${API_URL}/api/transfers/calculate`, {
             method: 'POST',
             headers: {
@@ -192,7 +192,7 @@ export function TransferCalculator({
             },
             body: JSON.stringify(adjustedRequestBody),
           });
-          
+
           if (adjustedResponse.ok) {
             const adjustedData = await adjustedResponse.json();
             setCalculation(adjustedData);
@@ -201,7 +201,7 @@ export function TransferCalculator({
           }
         }
       }
-      
+
       setCalculation(data);
       setLastUpdated(new Date());
     } catch (err) {
@@ -232,7 +232,7 @@ export function TransferCalculator({
   const handleModeToggle = () => {
     const newMode = calculatorMode === 'send' ? 'receive' : 'send';
     setCalculatorMode(newMode);
-    
+
     // If we have a calculation, preserve the amount by switching to the opposite field
     if (calculation) {
       if (newMode === 'receive') {
@@ -265,7 +265,7 @@ export function TransferCalculator({
   };
 
   // Check if rate is about to expire (within 2 minutes)
-  const isRateExpiringSoon = calculation && calculation.rateValidUntil ? 
+  const isRateExpiringSoon = calculation && calculation.rateValidUntil ?
     new Date(calculation.rateValidUntil).getTime() - Date.now() < 2 * 60 * 1000 : false;
 
   return (
@@ -287,11 +287,10 @@ export function TransferCalculator({
           <div className="bg-gray-100 rounded-lg p-1 flex">
             <button
               onClick={handleModeToggle}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                calculatorMode === 'send'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${calculatorMode === 'send'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
@@ -300,11 +299,10 @@ export function TransferCalculator({
             </button>
             <button
               onClick={handleModeToggle}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                calculatorMode === 'receive'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${calculatorMode === 'receive'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <Euro className="h-4 w-4" />
@@ -331,7 +329,7 @@ export function TransferCalculator({
               )}
             </Label>
           </div>
-          
+
           <div className="flex gap-3">
             <div className="flex-1">
               <Input
@@ -383,7 +381,7 @@ export function TransferCalculator({
               )}
             </div>
           </div>
-          
+
           {validationError && (
             <p className="text-sm text-red-500 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
@@ -416,17 +414,17 @@ export function TransferCalculator({
               )}
             </Label>
           </div>
-          
+
           <div className="flex gap-3">
             <div className="flex-1">
               <div className="h-10 px-3 py-2 border border-input bg-gray-50 rounded-md flex items-center text-lg font-medium text-muted-foreground">
                 {calculation ? (
-                  calculatorMode === 'send' 
+                  calculatorMode === 'send'
                     ? formatCurrency(calculation.receiveAmount, receiveCurrency)
                     : formatCurrency(calculation.sendAmount, sendCurrency)
                 ) : (
                   <span className="text-sm">
-                    {calculatorMode === 'send' 
+                    {calculatorMode === 'send'
                       ? 'Amount recipient will receive'
                       : 'Amount you need to send'
                     }
@@ -596,7 +594,7 @@ export function TransferCalculator({
 
             {/* Continue Button */}
             {onContinue && (
-              <Button 
+              <Button
                 onClick={handleContinue}
                 disabled={isNavigating}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg"

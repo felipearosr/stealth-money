@@ -456,6 +456,11 @@ class DatabaseService {
                 recipientPhone: data.recipientPhone,
                 payoutMethod: data.payoutMethod,
                 payoutDetails: data.payoutDetails,
+                transferMethod: data.transferMethod || 'circle',
+                mantleWalletId: data.mantleWalletId,
+                mantleTxHash: data.mantleTxHash,
+                gasCostUsd: data.gasCostUsd,
+                networkFeeUsd: data.networkFeeUsd,
             },
         });
     }
@@ -518,6 +523,232 @@ class DatabaseService {
                         email: true,
                         firstName: true,
                         lastName: true
+                    }
+                },
+                mantleTransfer: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    // Mantle Transfer management
+    async createMantleTransfer(data) {
+        return this.prisma.mantleTransfer.create({
+            data: {
+                transferId: data.transferId,
+                senderWalletAddress: data.senderWalletAddress,
+                recipientWalletAddress: data.recipientWalletAddress,
+                tokenAddress: data.tokenAddress,
+                amountWei: data.amountWei,
+                gasPriceGwei: data.gasPriceGwei,
+                gasUsed: data.gasUsed,
+                blockNumber: data.blockNumber,
+                transactionHash: data.transactionHash,
+                status: data.status || 'PENDING',
+            },
+        });
+    }
+    async getMantleTransferByTransferId(transferId) {
+        return this.prisma.mantleTransfer.findUnique({
+            where: { transferId },
+            include: {
+                transaction: {
+                    include: {
+                        sender: {
+                            select: {
+                                id: true,
+                                email: true,
+                                firstName: true,
+                                lastName: true
+                            }
+                        },
+                        recipient: {
+                            select: {
+                                id: true,
+                                email: true,
+                                firstName: true,
+                                lastName: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    async getMantleTransferByTxHash(transactionHash) {
+        return this.prisma.mantleTransfer.findUnique({
+            where: { transactionHash },
+            include: {
+                transaction: true
+            }
+        });
+    }
+    async updateMantleTransfer(transferId, data) {
+        return this.prisma.mantleTransfer.update({
+            where: { transferId },
+            data: {
+                gasPriceGwei: data.gasPriceGwei,
+                gasUsed: data.gasUsed,
+                blockNumber: data.blockNumber,
+                transactionHash: data.transactionHash,
+                status: data.status,
+                updatedAt: new Date(),
+            },
+        });
+    }
+    async getMantleTransfersByStatus(status) {
+        return this.prisma.mantleTransfer.findMany({
+            where: { status },
+            include: {
+                transaction: {
+                    include: {
+                        sender: {
+                            select: {
+                                id: true,
+                                email: true,
+                                firstName: true,
+                                lastName: true
+                            }
+                        },
+                        recipient: {
+                            select: {
+                                id: true,
+                                email: true,
+                                firstName: true,
+                                lastName: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'asc' }
+        });
+    }
+    async getMantleTransfersByWallet(walletAddress) {
+        return this.prisma.mantleTransfer.findMany({
+            where: {
+                OR: [
+                    { senderWalletAddress: walletAddress },
+                    { recipientWalletAddress: walletAddress }
+                ]
+            },
+            include: {
+                transaction: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async updateTransactionWithMantleDetails(id, status, details) {
+        return this.prisma.transaction.update({
+            where: { id },
+            data: {
+                status,
+                stripePaymentIntentId: details.stripePaymentIntentId,
+                blockchainTxHash: details.blockchainTxHash,
+                circlePaymentId: details.circlePaymentId,
+                circleTransferId: details.circleTransferId,
+                circlePayoutId: details.circlePayoutId,
+                mantleWalletId: details.mantleWalletId,
+                mantleTxHash: details.mantleTxHash,
+                gasCostUsd: details.gasCostUsd,
+                networkFeeUsd: details.networkFeeUsd,
+            },
+        });
+    }
+    // Cookathon metrics methods
+    async getTransfersByDateRange(startDate, endDate) {
+        return this.prisma.transaction.findMany({
+            where: {
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            },
+            include: {
+                mantleTransfer: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async getTotalUserCount() {
+        return this.prisma.user.count();
+    }
+    async getActiveUserCount() {
+        // Users who have made a transaction in the last 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return this.prisma.user.count({
+            where: {
+                OR: [
+                    {
+                        sentTransactions: {
+                            some: {
+                                createdAt: {
+                                    gte: thirtyDaysAgo
+                                }
+                            }
+                        }
+                    },
+                    {
+                        receivedTransactions: {
+                            some: {
+                                createdAt: {
+                                    gte: thirtyDaysAgo
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        });
+    }
+    async getMantleTransferStats(startDate, endDate) {
+        const mantleTransfers = await this.prisma.mantleTransfer.findMany({
+            where: {
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            },
+            include: {
+                transaction: true
+            }
+        });
+        const totalTransfers = await this.prisma.transaction.count({
+            where: {
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            }
+        });
+        return {
+            mantleTransfers,
+            totalTransfers,
+            mantleAdoption: totalTransfers > 0 ? (mantleTransfers.length / totalTransfers) * 100 : 0
+        };
+    }
+    async getRecentMantleTransactions(limit = 10) {
+        return this.prisma.mantleTransfer.findMany({
+            take: limit,
+            include: {
+                transaction: {
+                    include: {
+                        sender: {
+                            select: {
+                                id: true,
+                                email: true,
+                                firstName: true,
+                                lastName: true
+                            }
+                        },
+                        recipient: {
+                            select: {
+                                id: true,
+                                email: true,
+                                firstName: true,
+                                lastName: true
+                            }
+                        }
                     }
                 }
             },

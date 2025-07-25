@@ -738,20 +738,24 @@ router.post('/transfers/create', security_middleware_1.transferCreationRateLimit
         });
     }
 });
-// Transfer calculation endpoint - Enhanced for multi-currency support
+// Transfer calculation endpoint - Enhanced with Mantle L2 options
 router.post('/transfers/calculate', security_middleware_1.generalRateLimit, async (req, res) => {
     try {
-        // Import currency configuration service
+        // Import services
         const { CurrencyConfigService } = await Promise.resolve().then(() => __importStar(require('../services/currency-config.service')));
+        const { TransferService } = await Promise.resolve().then(() => __importStar(require('../services/transfer.service')));
+        const { MantleService } = await Promise.resolve().then(() => __importStar(require('../services/mantle.service')));
         // Validate request body with dynamic currency support
         const calculateSchema = zod_1.z.object({
             sendAmount: zod_1.z.number().min(0.01),
             sendCurrency: zod_1.z.string().length(3).regex(/^[A-Z]{3}$/),
             receiveCurrency: zod_1.z.string().length(3).regex(/^[A-Z]{3}$/),
-            calculatorMode: zod_1.z.enum(['send', 'receive']).optional().default('send')
+            calculatorMode: zod_1.z.enum(['send', 'receive']).optional().default('send'),
+            userId: zod_1.z.string().optional(),
+            includeMantle: zod_1.z.boolean().optional().default(true)
         });
         const validatedData = calculateSchema.parse(req.body);
-        const { sendAmount, sendCurrency, receiveCurrency, calculatorMode } = validatedData;
+        const { sendAmount, sendCurrency, receiveCurrency, calculatorMode, userId, includeMantle } = validatedData;
         // Validate currencies using CurrencyConfigService
         if (!CurrencyConfigService.isSendCurrencySupported(sendCurrency)) {
             return res.status(400).json({
@@ -776,51 +780,236 @@ router.post('/transfers/calculate', security_middleware_1.generalRateLimit, asyn
                 retryable: false
             });
         }
-        // Use the FXService instance
+        // Initialize services
+        const transferService = new TransferService();
+        const mantleService = new MantleService();
         const fxServiceInstance = new fx_service_1.FXService();
-        // Calculate transfer using the FX service
-        const calculation = await fxServiceInstance.calculateTransfer({
-            sendAmount,
-            sendCurrency,
-            receiveCurrency
-        });
+        // Calculate both Circle and Mantle options in parallel
+        const [circleCalculation, mantleCalculation, mantleGasEstimate, mantleNetworkStatus] = await Promise.allSettled([
+            // Circle calculation (existing logic)
+            fxServiceInstance.calculateTransfer({
+                sendAmount,
+                sendCurrency,
+                receiveCurrency
+            }),
+            // Mantle calculation (if enabled and requested)
+            includeMantle && mantleService.isEnabled()
+                ? transferService.calculateMantleTransfer({
+                    sendAmount,
+                    sendCurrency,
+                    receiveCurrency,
+                    userId
+                })
+                : Promise.reject(new Error('Mantle not enabled')),
+            // Real-time gas price fetching
+            includeMantle && mantleService.isEnabled()
+                ? mantleService.estimateGasCost(sendAmount, sendCurrency)
+                : Promise.reject(new Error('Mantle not enabled')),
+            // Network status for completion time estimates
+            includeMantle && mantleService.isEnabled()
+                ? mantleService.getCurrentNetworkStatus()
+                : Promise.reject(new Error('Mantle not enabled'))
+        ]);
+        // Process Circle calculation
+        let circleOption = null;
+        if (circleCalculation.status === 'fulfilled') {
+            const calc = circleCalculation.value;
+            circleOption = {
+                method: 'circle',
+                sendAmount: calc.sendAmount,
+                receiveAmount: calc.receiveAmount,
+                exchangeRate: calc.exchangeRate,
+                fees: {
+                    processing: calc.fees.cardProcessing || 0,
+                    network: calc.fees.transfer || 0,
+                    exchange: calc.fees.payout || 0,
+                    total: calc.fees.total || 0
+                },
+                estimatedTime: calc.estimatedArrival || '3-5 business days',
+                benefits: [
+                    'Regulated and compliant',
+                    'Reliable traditional banking',
+                    'Wide currency support',
+                    'Established infrastructure'
+                ],
+                limitations: [
+                    'Higher fees for small amounts',
+                    'Slower processing time',
+                    'Traditional banking hours'
+                ],
+                rateValidUntil: calc.rateValidUntil?.toISOString(),
+                rateId: calc.rateId,
+                breakdown: calc.breakdown
+            };
+        }
+        // Process Mantle calculation
+        let mantleOption = null;
+        if (mantleCalculation.status === 'fulfilled' && mantleGasEstimate.status === 'fulfilled') {
+            const calc = mantleCalculation.value;
+            const gasEst = mantleGasEstimate.value;
+            const networkStatus = mantleNetworkStatus.status === 'fulfilled' ? mantleNetworkStatus.value : null;
+            mantleOption = {
+                method: 'mantle',
+                sendAmount: calc.sendAmount,
+                receiveAmount: calc.receiveAmount,
+                exchangeRate: calc.exchangeRate,
+                fees: {
+                    processing: calc.fees.cardProcessing || 0,
+                    network: parseFloat(gasEst.totalCostUSD),
+                    exchange: calc.fees.payout || 0,
+                    total: calc.fees.total + parseFloat(gasEst.totalCostUSD)
+                },
+                estimatedTime: networkStatus?.connected ? '2-5 minutes' : '5-10 minutes',
+                gasEstimate: {
+                    gasLimit: gasEst.gasLimit,
+                    gasPrice: gasEst.gasPrice,
+                    totalCost: gasEst.totalCost,
+                    totalCostUSD: gasEst.totalCostUSD
+                },
+                networkStatus: networkStatus ? {
+                    connected: networkStatus.connected,
+                    blockNumber: networkStatus.blockNumber,
+                    gasPrice: networkStatus.gasPrice,
+                    latency: networkStatus.latency
+                } : undefined,
+                benefits: [
+                    'Ultra-fast settlements (2-5 minutes)',
+                    '90% lower network fees',
+                    'Blockchain transparency',
+                    '24/7 availability'
+                ],
+                limitations: [
+                    'Newer technology',
+                    'Limited to supported currencies',
+                    'Requires blockchain knowledge'
+                ],
+                rateValidUntil: calc.rateValidUntil?.toISOString(),
+                rateId: calc.rateId,
+                breakdown: calc.breakdown
+            };
+        }
+        // Determine recommended method based on amount and cost efficiency
+        let recommendedMethod = 'circle';
+        let recommendation = {
+            method: 'circle',
+            reason: 'Reliable traditional banking option',
+            costSavings: 0,
+            timeSavings: undefined
+        };
+        if (circleOption && mantleOption) {
+            const circleTotalCost = circleOption.fees.total;
+            const mantleTotalCost = mantleOption.fees.total;
+            const costSavings = circleTotalCost - mantleTotalCost;
+            // Recommend Mantle for amounts under $1000 if it's cheaper
+            if (sendAmount < 1000 && costSavings > 0) {
+                recommendedMethod = 'mantle';
+                recommendation = {
+                    method: 'mantle',
+                    reason: 'Lower fees and faster processing for this amount',
+                    costSavings: costSavings,
+                    timeSavings: 'Save 3-5 business days'
+                };
+            }
+            // Recommend Circle for larger amounts for regulatory compliance
+            else if (sendAmount >= 1000) {
+                recommendedMethod = 'circle';
+                recommendation = {
+                    method: 'circle',
+                    reason: 'Recommended for larger amounts due to regulatory compliance',
+                    costSavings: 0,
+                    timeSavings: undefined
+                };
+            }
+        }
         // Get currency pair configuration for additional metadata
         const currencyPair = CurrencyConfigService.getCurrencyPair(sendCurrency, receiveCurrency);
-        // Format response according to design document
-        const response = {
-            sendAmount: calculation.sendAmount,
-            receiveAmount: calculation.receiveAmount,
-            sendCurrency: validatedData.sendCurrency,
-            receiveCurrency: validatedData.receiveCurrency,
-            calculatorMode: calculatorMode,
-            exchangeRate: calculation.exchangeRate,
-            fees: calculation.fees.total,
-            rateValidUntil: calculation.rateValidUntil.toISOString(),
-            breakdown: {
-                sendAmountUSD: calculation.breakdown.sendAmountUSD || 0,
-                fees: {
-                    cardProcessing: calculation.fees.cardProcessing || 0,
-                    transfer: calculation.fees.transfer || 0,
-                    payout: calculation.fees.payout || 0,
-                    total: calculation.fees.total || 0
+        // Check if enhanced features are explicitly requested (backward compatibility)
+        const isEnhancedRequest = req.body.includeMantle === true || userId || req.body.transferMethods;
+        if (isEnhancedRequest) {
+            // Build transfer method options array for enhanced response
+            const transferMethods = [];
+            if (circleOption) {
+                transferMethods.push({
+                    ...circleOption,
+                    recommended: recommendedMethod === 'circle',
+                    availableForAmount: true
+                });
+            }
+            if (mantleOption) {
+                transferMethods.push({
+                    ...mantleOption,
+                    recommended: recommendedMethod === 'mantle',
+                    availableForAmount: sendAmount <= 50000 // Mantle limit for demo
+                });
+            }
+            // Format enhanced response with both Circle and Mantle options
+            const response = {
+                sendAmount,
+                sendCurrency,
+                receiveCurrency,
+                calculatorMode,
+                transferMethods,
+                recommendedMethod,
+                recommendation,
+                comparison: circleOption && mantleOption ? {
+                    costDifference: circleOption.fees.total - mantleOption.fees.total,
+                    timeDifference: 'Mantle is ~3-5 business days faster',
+                    mantleSavings: {
+                        percentage: ((circleOption.fees.total - mantleOption.fees.total) / circleOption.fees.total * 100).toFixed(1),
+                        absolute: (circleOption.fees.total - mantleOption.fees.total).toFixed(2)
+                    }
+                } : null,
+                currencyPair: currencyPair ? {
+                    minAmount: currencyPair.minAmount,
+                    maxAmount: currencyPair.maxAmount,
+                    estimatedArrival: currencyPair.estimatedArrival
+                } : undefined,
+                timestamp: new Date().toISOString()
+            };
+            res.json(response);
+        }
+        else {
+            // Maintain backward compatibility with existing response format
+            if (circleCalculation.status !== 'fulfilled') {
+                throw new Error('Circle calculation failed');
+            }
+            const calc = circleCalculation.value;
+            // Format response according to original design document
+            const response = {
+                sendAmount: calc.sendAmount,
+                receiveAmount: calc.receiveAmount,
+                sendCurrency: validatedData.sendCurrency,
+                receiveCurrency: validatedData.receiveCurrency,
+                calculatorMode: calculatorMode,
+                exchangeRate: calc.exchangeRate,
+                fees: calc.fees.total,
+                rateValidUntil: calc.rateValidUntil.toISOString(),
+                breakdown: {
+                    sendAmountUSD: calc.breakdown.sendAmountUSD || 0,
+                    fees: {
+                        cardProcessing: calc.fees.cardProcessing || 0,
+                        transfer: calc.fees.transfer || 0,
+                        payout: calc.fees.payout || 0,
+                        total: calc.fees.total || 0
+                    },
+                    netAmountUSD: calc.breakdown.netAmountUSD || 0,
+                    exchangeRate: calc.breakdown.exchangeRate || 0,
+                    grossAmountReceive: calc.breakdown.grossAmountReceive || 0,
+                    transferFee: calc.breakdown.transferFee || 0,
+                    payoutFee: calc.breakdown.payoutFee || 0,
+                    finalAmountReceive: calc.breakdown.finalAmountReceive || 0,
+                    receiveAmount: calc.breakdown.finalAmountReceive || calc.breakdown.receiveAmount || calc.receiveAmount || 0
                 },
-                netAmountUSD: calculation.breakdown.netAmountUSD || 0,
-                exchangeRate: calculation.breakdown.exchangeRate || 0,
-                grossAmountReceive: calculation.breakdown.grossAmountReceive || 0,
-                transferFee: calculation.breakdown.transferFee || 0,
-                payoutFee: calculation.breakdown.payoutFee || 0,
-                finalAmountReceive: calculation.breakdown.finalAmountReceive || 0,
-                receiveAmount: calculation.breakdown.finalAmountReceive || calculation.breakdown.receiveAmount || calculation.receiveAmount || 0
-            },
-            estimatedArrival: calculation.estimatedArrival,
-            rateId: calculation.rateId,
-            currencyPair: currencyPair ? {
-                minAmount: currencyPair.minAmount,
-                maxAmount: currencyPair.maxAmount,
-                estimatedArrival: currencyPair.estimatedArrival
-            } : undefined
-        };
-        res.json(response);
+                estimatedArrival: calc.estimatedArrival,
+                rateId: calc.rateId,
+                currencyPair: currencyPair ? {
+                    minAmount: currencyPair.minAmount,
+                    maxAmount: currencyPair.maxAmount,
+                    estimatedArrival: currencyPair.estimatedArrival
+                } : undefined
+            };
+            res.json(response);
+        }
     }
     catch (error) {
         if (error instanceof zod_1.z.ZodError) {

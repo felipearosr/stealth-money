@@ -48,6 +48,7 @@ const account_controller_1 = __importDefault(require("./routes/account.controlle
 const currencies_controller_1 = __importDefault(require("./routes/currencies.controller"));
 const users_controller_1 = __importDefault(require("./routes/users.controller"));
 const verification_controller_1 = __importDefault(require("./routes/verification.controller"));
+const cookathon_routes_1 = __importDefault(require("./routes/cookathon.routes"));
 const database_simple_service_1 = require("./services/database-simple.service");
 const security_middleware_1 = require("./middleware/security.middleware");
 const logging_middleware_1 = require("./middleware/logging.middleware");
@@ -217,6 +218,8 @@ app.use('/api/currencies', currencies_controller_1.default);
 app.use('/api/users', users_controller_1.default);
 // Wire up the verification routes with /api prefix
 app.use('/api', verification_controller_1.default);
+// Wire up the cookathon routes with /api prefix
+app.use('/api/cookathon', cookathon_routes_1.default);
 // Error logging middleware
 app.use(logging_middleware_1.errorLogger);
 // Global error handling middleware

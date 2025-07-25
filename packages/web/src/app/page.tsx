@@ -52,6 +52,12 @@ export default function Home() {
                     Powered by Mantle L2
                   </div>
                 </a>
+                <Link href="/cookathon-demo" className="inline-flex group">
+                  <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-800 border border-orange-200 group-hover:from-yellow-200 group-hover:to-orange-200 transition-all duration-200">
+                    <Star className="w-4 h-4 mr-2 text-orange-600" />
+                    Cookathon Demo
+                  </div>
+                </Link>
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Send Money
