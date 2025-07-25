@@ -158,6 +158,7 @@ model Transaction {
   // Relations
   sender                User?    @relation("SentTransactions", fields: [userId], references: [id])
   recipient             User?    @relation("ReceivedTransactions", fields: [recipientUserId], references: [id])
+  mantleTransfer        MantleTransfer? // Relation to Mantle-specific data
   
   // Transfer amounts and currency
   amount                Float    // Send amount
@@ -166,6 +167,13 @@ model Transaction {
   exchangeRate          Float    // Exchange rate (1.0 for CLP to CLP)
   recipientAmount       Float    // Amount recipient receives
   fees                  Float    @default(0) // Total fees charged
+  
+  // Transfer method and Mantle-specific fields
+  transferMethod        String   @default("circle") // circle, mantle
+  mantleWalletId        String?  // Mantle wallet ID for blockchain transfers
+  mantleTxHash          String?  // Mantle transaction hash
+  gasCostUsd            Float?   // Gas cost in USD for Mantle transfers
+  networkFeeUsd         Float?   // Network fee in USD for Mantle transfers
   
   // Transfer status and tracking
   status                String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
@@ -209,4 +217,40 @@ model Transaction {
   @@index([status])
   @@index([createdAt])
   @@index([sourceCurrency, destCurrency])
+  @@index([transferMethod])
+  @@index([mantleWalletId])
+}
+
+model MantleTransfer {
+  id                    String   @id @default(cuid())
+  transferId            String   @unique // Foreign key to Transaction
+  transaction           Transaction @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  
+  // Wallet addresses
+  senderWalletAddress   String   // Sender's Mantle wallet address
+  recipientWalletAddress String  // Recipient's Mantle wallet address
+  
+  // Token and amount details
+  tokenAddress          String   // Contract address of the token being transferred
+  amountWei             String   // Amount in wei (as string to handle large numbers)
+  
+  // Gas and transaction details
+  gasPriceGwei          String?  // Gas price in Gwei (as string)
+  gasUsed               String?  // Gas used (as string)
+  blockNumber           BigInt?  // Block number where transaction was mined
+  transactionHash       String?  @unique // Blockchain transaction hash
+  
+  // Status tracking
+  status                String   @default("PENDING") // PENDING, CONFIRMED, FAILED, CANCELLED
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([transferId])
+  @@index([senderWalletAddress])
+  @@index([recipientWalletAddress])
+  @@index([transactionHash])
+  @@index([status])
+  @@index([createdAt])
 }

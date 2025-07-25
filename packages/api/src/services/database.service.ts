@@ -1,5 +1,5 @@
 // src/services/database.service.ts
-import { PrismaClient, User, BankAccount, SavedRecipient, Transaction } from '@prisma/client';
+import { PrismaClient, User, BankAccount, SavedRecipient, Transaction, MantleTransfer } from '@prisma/client';
 
 export class DatabaseService {
   private prisma: PrismaClient;
@@ -584,6 +584,11 @@ export class DatabaseService {
     recipientPhone?: string;
     payoutMethod?: string;
     payoutDetails?: any;
+    transferMethod?: string;
+    mantleWalletId?: string;
+    mantleTxHash?: string;
+    gasCostUsd?: number;
+    networkFeeUsd?: number;
   }): Promise<Transaction> {
     return this.prisma.transaction.create({
       data: {
@@ -599,6 +604,11 @@ export class DatabaseService {
         recipientPhone: data.recipientPhone,
         payoutMethod: data.payoutMethod,
         payoutDetails: data.payoutDetails,
+        transferMethod: data.transferMethod || 'circle',
+        mantleWalletId: data.mantleWalletId,
+        mantleTxHash: data.mantleTxHash,
+        gasCostUsd: data.gasCostUsd,
+        networkFeeUsd: data.networkFeeUsd,
       },
     });
   }
@@ -675,9 +685,172 @@ export class DatabaseService {
             firstName: true,
             lastName: true
           }
-        }
+        },
+        mantleTransfer: true
       },
       orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  // Mantle Transfer management
+  async createMantleTransfer(data: {
+    transferId: string;
+    senderWalletAddress: string;
+    recipientWalletAddress: string;
+    tokenAddress: string;
+    amountWei: string;
+    gasPriceGwei?: string;
+    gasUsed?: string;
+    blockNumber?: bigint;
+    transactionHash?: string;
+    status?: string;
+  }) {
+    return this.prisma.mantleTransfer.create({
+      data: {
+        transferId: data.transferId,
+        senderWalletAddress: data.senderWalletAddress,
+        recipientWalletAddress: data.recipientWalletAddress,
+        tokenAddress: data.tokenAddress,
+        amountWei: data.amountWei,
+        gasPriceGwei: data.gasPriceGwei,
+        gasUsed: data.gasUsed,
+        blockNumber: data.blockNumber,
+        transactionHash: data.transactionHash,
+        status: data.status || 'PENDING',
+      },
+    });
+  }
+
+  async getMantleTransferByTransferId(transferId: string) {
+    return this.prisma.mantleTransfer.findUnique({
+      where: { transferId },
+      include: {
+        transaction: {
+          include: {
+            sender: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            },
+            recipient: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  async getMantleTransferByTxHash(transactionHash: string) {
+    return this.prisma.mantleTransfer.findUnique({
+      where: { transactionHash },
+      include: {
+        transaction: true
+      }
+    });
+  }
+
+  async updateMantleTransfer(transferId: string, data: {
+    gasPriceGwei?: string;
+    gasUsed?: string;
+    blockNumber?: bigint;
+    transactionHash?: string;
+    status?: string;
+  }) {
+    return this.prisma.mantleTransfer.update({
+      where: { transferId },
+      data: {
+        gasPriceGwei: data.gasPriceGwei,
+        gasUsed: data.gasUsed,
+        blockNumber: data.blockNumber,
+        transactionHash: data.transactionHash,
+        status: data.status,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  async getMantleTransfersByStatus(status: string) {
+    return this.prisma.mantleTransfer.findMany({
+      where: { status },
+      include: {
+        transaction: {
+          include: {
+            sender: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            },
+            recipient: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+  }
+
+  async getMantleTransfersByWallet(walletAddress: string) {
+    return this.prisma.mantleTransfer.findMany({
+      where: {
+        OR: [
+          { senderWalletAddress: walletAddress },
+          { recipientWalletAddress: walletAddress }
+        ]
+      },
+      include: {
+        transaction: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async updateTransactionWithMantleDetails(
+    id: string,
+    status: string,
+    details: {
+      stripePaymentIntentId?: string;
+      blockchainTxHash?: string;
+      circlePaymentId?: string;
+      circleTransferId?: string;
+      circlePayoutId?: string;
+      mantleWalletId?: string;
+      mantleTxHash?: string;
+      gasCostUsd?: number;
+      networkFeeUsd?: number;
+    }
+  ): Promise<Transaction> {
+    return this.prisma.transaction.update({
+      where: { id },
+      data: {
+        status,
+        stripePaymentIntentId: details.stripePaymentIntentId,
+        blockchainTxHash: details.blockchainTxHash,
+        circlePaymentId: details.circlePaymentId,
+        circleTransferId: details.circleTransferId,
+        circlePayoutId: details.circlePayoutId,
+        mantleWalletId: details.mantleWalletId,
+        mantleTxHash: details.mantleTxHash,
+        gasCostUsd: details.gasCostUsd,
+        networkFeeUsd: details.networkFeeUsd,
+      },
     });
   }
 
