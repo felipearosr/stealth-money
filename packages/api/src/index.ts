@@ -27,7 +27,7 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
 
 // Create logs directory if it doesn't exist
 const logsDir = path.join(__dirname, '../logs');
