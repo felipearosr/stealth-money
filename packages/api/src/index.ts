@@ -253,25 +253,7 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 // Initialize database and start server
 async function startServer() {
   try {
-    const dbService = new SimpleDatabaseService();
-    
-    // Test database connection and initialize tables
-    console.log('🔌 Testing database connection...');
-    const connected = await dbService.testConnection();
-    
-    if (connected) {
-      console.log('📊 Initializing database tables...');
-      const initialized = await dbService.initialize();
-      
-      if (initialized) {
-        console.log('✅ Database ready!');
-      } else {
-        console.log('⚠️  Database initialization failed, but continuing...');
-      }
-    } else {
-      console.log('⚠️  Database connection failed, but continuing...');
-    }
-
+    // Start the server immediately without waiting for database
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
       console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
@@ -282,9 +264,37 @@ async function startServer() {
       console.error('❌ Server error:', error);
     });
 
+    // Initialize database in the background (non-blocking)
+    initializeDatabase();
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
+  }
+}
+
+// Background database initialization
+async function initializeDatabase() {
+  try {
+    const dbService = new SimpleDatabaseService();
+    
+    console.log('🔌 Testing database connection...');
+    const connected = await dbService.testConnection();
+    
+    if (connected) {
+      console.log('📊 Initializing database tables...');
+      const initialized = await dbService.initialize();
+      
+      if (initialized) {
+        console.log('✅ Database ready!');
+      } else {
+        console.log('⚠️  Database initialization failed, but server is running...');
+      }
+    } else {
+      console.log('⚠️  Database connection failed, but server is running...');
+    }
+  } catch (error) {
+    console.error('⚠️  Database initialization error:', error);
   }
 }
 
