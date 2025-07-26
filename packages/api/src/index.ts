@@ -27,7 +27,7 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '4000', 10);
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Create logs directory if it doesn't exist
 const logsDir = path.join(__dirname, '../logs');
@@ -76,7 +76,19 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/health', (req: Request, res: Response) => {
+  console.log('🔍 Health check requested from:', req.ip, req.get('User-Agent'));
   res.status(200).json({ status: 'ok', message: 'API is healthy' });
+});
+
+// Add additional health check endpoints that Railway might be looking for
+app.get('/healthz', (req: Request, res: Response) => {
+  console.log('🔍 Healthz check requested from:', req.ip);
+  res.status(200).send('OK');
+});
+
+app.get('/ping', (req: Request, res: Response) => {
+  console.log('🔍 Ping check requested from:', req.ip);
+  res.status(200).send('pong');
 });
 
 // Email-based balance lookup (for Clerk integration)
@@ -254,8 +266,10 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 async function startServer() {
   try {
     console.log('🔧 Starting server initialization...');
-    console.log('🔧 PORT:', PORT);
+    console.log('🔧 process.env.PORT:', process.env.PORT);
+    console.log('🔧 Parsed PORT:', PORT);
     console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
+    console.log('🔧 All environment variables:', Object.keys(process.env).filter(key => key.includes('PORT')));
     
     // Start the server immediately without waiting for database
     const server = app.listen(PORT, '0.0.0.0', () => {
