@@ -1,14 +1,38 @@
 # Stealth Money API
 
-A secure, full-stack money transfer API that integrates foreign exchange rates, payment processing via Stripe, database persistence with Prisma, and blockchain-based fund release through smart contracts.
+**Backend API for Mantle Hackathon Submission**
 
-## 🚀 Features
+A comprehensive backend service that powers seamless international money transfers using the Mantle Network. This API abstracts blockchain complexity while providing secure, fast, and cost-effective cross-border payments.
 
-- **Foreign Exchange Integration** - Real-time currency conversion using ExchangeRate-API
-- **Payment Processing** - Secure card payments via Stripe Payment Intents
-- **Database Persistence** - Transaction tracking with PostgreSQL and Prisma ORM
-- **Blockchain Integration** - Smart contract interaction for secure fund release
-- **Comprehensive API** - RESTful endpoints for transfers, payments, and blockchain operations
+## Overview
+
+The API serves as the bridge between traditional payment systems and the Mantle Network, enabling users to send money internationally without understanding blockchain mechanics. It handles everything from exchange rate calculations to smart contract interactions.
+
+## Key Features
+
+**Mantle Network Integration:**
+- Smart contract deployment and interaction on Mantle Network
+- Optimized gas usage for cost-effective transactions
+- Real-time blockchain status monitoring
+- Automated fund escrow and release mechanisms
+
+**Payment Processing:**
+- Stripe integration for traditional payment methods
+- Circle API for seamless fiat-to-crypto conversion
+- Multi-currency support with real-time exchange rates
+- Secure payment intent management
+
+**Transfer Management:**
+- End-to-end transfer orchestration
+- Real-time status tracking and updates
+- Comprehensive transaction logging
+- Automated notification system
+
+**Security & Compliance:**
+- Bank-grade security measures
+- PCI DSS compliance through Stripe
+- Comprehensive audit logging
+- Rate limiting and DDoS protection
 
 ## 📋 Prerequisites
 
@@ -165,30 +189,88 @@ GET /api/blockchain/health
 GET /api/blockchain/contract-balance
 ```
 
-## 🏗️ Architecture
+## Mantle Network Integration
 
-### Services
+### Why Mantle Network?
 
-#### 1. FxService (`src/services/fx.service.ts`)
-- Fetches real-time exchange rates from ExchangeRate-API
-- Handles rate caching and error handling
-- Supports all major world currencies
+**Cost Efficiency:**
+- Significantly lower gas fees compared to Ethereum mainnet
+- Reduced operational costs passed to users
+- Sustainable economics for micro-transactions
 
-#### 2. DatabaseService (`src/services/database.service.ts`)
-- Manages transaction records with Prisma ORM
-- Tracks transaction status throughout the payment flow
-- Links Stripe Payment Intents and blockchain transactions
+**Performance Benefits:**
+- Fast transaction finality (2-3 seconds)
+- High throughput for concurrent transfers
+- Reliable network uptime and stability
 
-#### 3. PaymentService (`src/services/payment.service.ts`)
-- Creates and manages Stripe Payment Intents
-- Handles webhook signature verification
-- Processes payment confirmations and failures
+**Developer Experience:**
+- Full EVM compatibility for seamless integration
+- Robust tooling and infrastructure support
+- Active ecosystem and community
 
-#### 4. BlockchainService (`src/services/blockchain.service.ts`)
-- Connects to Ethereum networks via Ethers.js
-- Interacts with TransferManager smart contract
-- Manages server wallet for transaction signing
-- Releases funds from escrow after payment confirmation
+### Technical Implementation
+
+**Smart Contract Architecture:**
+```solidity
+// TransferManager contract on Mantle Network
+contract TransferManager {
+    // Escrow funds securely until payment confirmation
+    // Automated release upon successful payment
+    // Gas-optimized operations for cost efficiency
+}
+```
+
+**Network Configuration:**
+```typescript
+// Mantle Network connection
+const mantleProvider = new ethers.JsonRpcProvider(MANTLE_RPC_URL);
+const mantleWallet = new ethers.Wallet(PRIVATE_KEY, mantleProvider);
+
+// Optimized gas settings for Mantle
+const gasSettings = {
+    gasLimit: 100000,  // Efficient contract calls
+    gasPrice: ethers.parseUnits('0.001', 'gwei')  // Low Mantle fees
+};
+```
+
+## Architecture
+
+### Core Services
+
+#### 1. MantleService (`src/services/mantle.service.ts`)
+**Mantle Network Integration:**
+- Direct connection to Mantle Network RPC
+- Smart contract interaction for fund escrow
+- Gas optimization for cost-effective transactions
+- Real-time network status monitoring
+
+#### 2. FxService (`src/services/fx.service.ts`)
+**Exchange Rate Management:**
+- Real-time currency conversion rates
+- Multi-currency support (150+ currencies)
+- Rate caching for performance optimization
+- Fallback providers for reliability
+
+#### 3. DatabaseService (`src/services/database.service.ts`)
+**Transaction Management:**
+- Comprehensive transaction logging
+- Status tracking throughout transfer lifecycle
+- Integration with Mantle Network transaction hashes
+- Audit trail for compliance
+
+#### 4. PaymentService (`src/services/payment.service.ts`)
+**Payment Processing:**
+- Stripe integration for traditional payments
+- Circle API for crypto-fiat conversion
+- Webhook handling for real-time updates
+- Multi-payment method support
+
+#### 5. OrchestrationService (`src/services/orchestrator.service.ts`)
+**Transfer Orchestration:**
+- End-to-end transfer coordination
+- Automatic retry mechanisms
+- Error handling and recovery
+- Status notification system
 
 ### Database Schema
 

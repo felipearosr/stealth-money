@@ -67,7 +67,7 @@ export default function Home() {
                 </span>
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed">
-                Skip the banks. Send money directly to anyone, anywhere in seconds. 
+                Skip the banks. Send money directly to anyone, anywhere in seconds.
                 <span className="block mt-2 text-lg">Real exchange rates. No markups. No BS.</span>
               </p>
             </div>
@@ -91,17 +91,17 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/mvp-demo">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                 >
                   Start Transfer
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="border-gray-300 hover:border-gray-400 hover:bg-gray-50 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                 onClick={() => setIsVideoModalOpen(true)}
               >
@@ -145,23 +145,23 @@ export default function Home() {
           <div className="absolute top-0 right-0 w-96 h-96 bg-green-400/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center space-y-8">
             <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200">
               <div className="w-6 h-6 mr-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full animate-pulse"></div>
               <span className="text-green-800 font-semibold text-lg">Powered by Mantle L2 Technology</span>
             </div>
-            
+
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900">
               Lightning-Fast Transfers with
               <span className="block bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                 90% Lower Fees
               </span>
             </h2>
-            
+
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Choose your transfer method: reliable Circle for traditional banking or ultra-fast Mantle L2 for blockchain innovation. 
+              Choose your transfer method: reliable Circle for traditional banking or ultra-fast Mantle L2 for blockchain innovation.
               <span className="block mt-2 font-semibold text-green-700">
                 2-minute settlements. 90% cheaper gas fees. The future of money movement.
               </span>
@@ -177,19 +177,19 @@ export default function Home() {
                   Live Network
                 </div>
               </div>
-              
+
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100">
                 <div className="text-3xl font-bold text-green-600">90%</div>
                 <div className="text-sm text-gray-600 mt-1">Lower Gas Fees</div>
                 <div className="text-xs text-green-500 mt-2">vs Ethereum L1</div>
               </div>
-              
+
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100">
                 <div className="text-3xl font-bold text-green-600">$0.02</div>
                 <div className="text-sm text-gray-600 mt-1">Avg Gas Cost</div>
                 <div className="text-xs text-green-500 mt-2">Per Transaction</div>
               </div>
-              
+
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-green-100">
                 <div className="text-3xl font-bold text-green-600">99.9%</div>
                 <div className="text-sm text-gray-600 mt-1">Uptime</div>
@@ -200,7 +200,7 @@ export default function Home() {
             {/* Transfer Method Comparison */}
             <div className="max-w-5xl mx-auto">
               <h3 className="text-2xl font-bold text-gray-900 mb-8">Choose Your Transfer Method</h3>
-              
+
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Traditional Circle Method */}
                 <Card className="border-2 border-blue-200 bg-white/90 backdrop-blur-sm shadow-xl">
@@ -219,7 +219,7 @@ export default function Home() {
                         Recommended for $1000+
                       </span>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Processing Time</span>
@@ -261,7 +261,7 @@ export default function Home() {
                         Recommended for $100-
                       </span>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Processing Time</span>
@@ -294,7 +294,7 @@ export default function Home() {
                 <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
                   Live Mantle Network Activity
                 </h3>
-                
+
                 <div className="grid md:grid-cols-2 gap-8">
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-4">Recent Transfers</h4>
@@ -309,7 +309,7 @@ export default function Home() {
                           <div className="text-xs text-green-600">2 min ago</div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
                         <div className="flex items-center space-x-3">
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -320,7 +320,7 @@ export default function Home() {
                           <div className="text-xs text-green-600">3 min ago</div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
                         <div className="flex items-center space-x-3">
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -333,7 +333,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-4">Network Stats</h4>
                     <div className="space-y-4">
@@ -354,11 +354,11 @@ export default function Home() {
                         <span className="font-semibold text-green-600">1,247</span>
                       </div>
                     </div>
-                    
+
                     <div className="mt-6">
-                      <a 
-                        href="https://explorer.mantle.xyz" 
-                        target="_blank" 
+                      <a
+                        href="https://explorer.mantle.xyz"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-green-600 hover:text-green-700 font-medium text-sm group"
                       >
@@ -546,40 +546,42 @@ export default function Home() {
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
         </div>
-        
+
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative">
           <div className="inline-flex items-center px-4 py-2 bg-blue-600/20 backdrop-blur-sm rounded-full text-blue-300 text-sm font-medium mb-4">
             <Zap className="w-4 h-4 mr-2" />
             Average transfer time: 32 seconds
           </div>
-          
+
           <h2 className="text-3xl sm:text-5xl font-bold text-white">
             Stop Letting Banks Rob You
           </h2>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Every international transfer you make the old way is money left on the table. 
+            Every international transfer you make the old way is money left on the table.
             <span className="block mt-2 text-gray-400">
               Join 47,000+ people who&apos;ve already made the switch.
             </span>
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button 
-              size="lg" 
-              className="bg-white text-black hover:bg-gray-100 font-semibold shadow-2xl hover:shadow-white/20 transform hover:scale-105 transition-all duration-200"
-            >
-              Send Money Now
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-gray-600 text-white hover:bg-white/10 hover:border-white/50"
+            <Link href="/mvp-demo">
+              <Button
+                size="lg"
+                className="bg-white text-black hover:bg-gray-100 font-semibold shadow-2xl hover:shadow-white/20 transform hover:scale-105 transition-all duration-200"
+              >
+                Send Money Now
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-gray-600 hover:text-white hover:bg-white/10 hover:border-white/50"
             >
               Calculate Savings
             </Button>
           </div>
-          
+
           <div className="pt-8 flex items-center justify-center space-x-8 text-sm text-gray-500">
             <div className="flex items-center">
               <CheckCircle className="w-4 h-4 mr-1 text-green-500" />
@@ -601,7 +603,7 @@ export default function Home() {
       <VideoModal
         isOpen={isVideoModalOpen}
         onClose={() => setIsVideoModalOpen(false)}
-        videoId="dQw4w9WgXcQ" // Replace with your actual YouTube video ID
+        videoId="s4xKhXWXQkY" // Replace with your actual YouTube video ID
       />
     </div>
   );
