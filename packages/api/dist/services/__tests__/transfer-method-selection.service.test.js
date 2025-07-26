@@ -86,21 +86,21 @@ describe('TransferService - Method Selection Logic', () => {
     });
     describe('getTransferMethodRecommendation', () => {
         it('should recommend Mantle for amounts below $100', async () => {
-            const result = await transferService.getTransferMethodRecommendation(50, { from: 'USD', to: 'EUR' });
+            const result = await transferService.getTransferMethodRecommendation(50, { send: 'USD', receive: 'EUR' });
             expect(result.recommendedMethod).toBe(transfer_service_1.TransferMethod.MANTLE);
             expect(result.reason).toContain('Lower fees for smaller amounts');
             expect(result.costSavings).toBeDefined();
             expect(result.timeSavings).toBeDefined();
         });
         it('should recommend Circle for amounts above $1000', async () => {
-            const result = await transferService.getTransferMethodRecommendation(1500, { from: 'USD', to: 'EUR' });
+            const result = await transferService.getTransferMethodRecommendation(1500, { send: 'USD', receive: 'EUR' });
             expect(result.recommendedMethod).toBe(transfer_service_1.TransferMethod.CIRCLE);
             expect(result.reason).toContain('regulatory compliance and reliability');
             expect(result.alternatives).toHaveLength(1);
             expect(result.alternatives[0].method).toBe(transfer_service_1.TransferMethod.MANTLE);
         });
         it('should respect user preference when method is available', async () => {
-            const result = await transferService.getTransferMethodRecommendation(500, { from: 'USD', to: 'EUR' }, transfer_service_1.TransferMethod.MANTLE);
+            const result = await transferService.getTransferMethodRecommendation(500, { send: 'USD', receive: 'EUR' }, transfer_service_1.TransferMethod.MANTLE);
             expect(result.recommendedMethod).toBe(transfer_service_1.TransferMethod.MANTLE);
             expect(result.reason).toBe('Based on your preference');
         });
@@ -112,7 +112,7 @@ describe('TransferService - Method Selection Logic', () => {
                 totalCost: '0.021',
                 totalCostUSD: '0.50' // Lower cost to trigger savings recommendation
             });
-            const result = await transferService.getTransferMethodRecommendation(500, { from: 'USD', to: 'EUR' });
+            const result = await transferService.getTransferMethodRecommendation(500, { send: 'USD', receive: 'EUR' });
             expect(result.recommendedMethod).toBe(transfer_service_1.TransferMethod.MANTLE);
             expect(result.reason).toContain('Significant cost savings');
         });
@@ -120,7 +120,7 @@ describe('TransferService - Method Selection Logic', () => {
             // Mock both services to fail to trigger the fallback logic
             mockMantleService.estimateGasCost.mockRejectedValue(new Error('Service error'));
             mockMantleService.isEnabled.mockReturnValue(false);
-            const result = await transferService.getTransferMethodRecommendation(500, { from: 'USD', to: 'EUR' });
+            const result = await transferService.getTransferMethodRecommendation(500, { send: 'USD', receive: 'EUR' });
             expect(result.recommendedMethod).toBe(transfer_service_1.TransferMethod.CIRCLE);
             expect(result.reason).toContain('Mantle service not available');
         });

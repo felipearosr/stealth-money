@@ -76,15 +76,15 @@ async function testMantleSetup() {
       console.log('6. Testing Wallet Creation...');
       const testUserId = 'test_user_' + Date.now();
       const wallet = await mantleService.createWallet(testUserId);
-      console.log(`   Wallet ID: ${wallet.id}`);
-      console.log(`   Address: ${wallet.address}`);
-      console.log(`   User ID: ${wallet.userId}`);
-      console.log(`   Created At: ${wallet.createdAt}`);
+      console.log(`   Wallet ID: ${wallet.wallet.id}`);
+      console.log(`   Address: ${wallet.wallet.address}`);
+      console.log(`   User ID: ${wallet.wallet.userId}`);
+      console.log(`   Created At: ${wallet.wallet.createdAt}`);
       console.log('   ✅ Wallet created successfully\n');
 
       // Test 7: Wallet Balance Check
       console.log('7. Testing Wallet Balance Check...');
-      const balance = await mantleService.getWalletBalance(wallet.address);
+      const balance = await mantleService.getWalletBalance(wallet.wallet.address);
       console.log(`   Address: ${balance.address}`);
       console.log(`   Native Balance: ${balance.native} MNT`);
       console.log(`   Stablecoin Balance: ${balance.stablecoin} USDC`);

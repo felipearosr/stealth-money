@@ -53,7 +53,7 @@ async function testTransferMethodSelection() {
         for (const test of recommendationTests) {
             console.log(`\n${test.description}:`);
             try {
-                const recommendation = await transferService.getTransferMethodRecommendation(test.amount, { from: 'USD', to: 'EUR' });
+                const recommendation = await transferService.getTransferMethodRecommendation(test.amount, { send: 'USD', receive: 'EUR' });
                 console.log(`   Recommended: ${recommendation.recommendedMethod}`);
                 console.log(`   Reason: ${recommendation.reason}`);
                 if (recommendation.costSavings) {
@@ -77,7 +77,7 @@ async function testTransferMethodSelection() {
         for (const test of preferenceTests) {
             console.log(`\n${test.description}:`);
             try {
-                const recommendation = await transferService.getTransferMethodRecommendation(test.amount, { from: 'USD', to: 'EUR' }, test.preferred);
+                const recommendation = await transferService.getTransferMethodRecommendation(test.amount, { send: 'USD', receive: 'EUR' }, test.preferred);
                 console.log(`   Recommended: ${recommendation.recommendedMethod}`);
                 console.log(`   Reason: ${recommendation.reason}`);
                 console.log(`   Respects Preference: ${recommendation.recommendedMethod === test.preferred}`);

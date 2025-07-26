@@ -66,7 +66,7 @@ async function testTransferMethodSelection() {
       try {
         const recommendation = await transferService.getTransferMethodRecommendation(
           test.amount,
-          { from: 'USD', to: 'EUR' }
+          { send: 'USD', receive: 'EUR' }
         );
         
         console.log(`   Recommended: ${recommendation.recommendedMethod}`);
@@ -97,7 +97,7 @@ async function testTransferMethodSelection() {
       try {
         const recommendation = await transferService.getTransferMethodRecommendation(
           test.amount,
-          { from: 'USD', to: 'EUR' },
+          { send: 'USD', receive: 'EUR' },
           test.preferred
         );
         

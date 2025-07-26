@@ -104,7 +104,7 @@ describe('TransferService - Method Selection Logic', () => {
     it('should recommend Mantle for amounts below $100', async () => {
       const result = await transferService.getTransferMethodRecommendation(
         50,
-        { from: 'USD', to: 'EUR' }
+        { send: 'USD', receive: 'EUR' }
       );
 
       expect(result.recommendedMethod).toBe(TransferMethod.MANTLE);
@@ -116,7 +116,7 @@ describe('TransferService - Method Selection Logic', () => {
     it('should recommend Circle for amounts above $1000', async () => {
       const result = await transferService.getTransferMethodRecommendation(
         1500,
-        { from: 'USD', to: 'EUR' }
+        { send: 'USD', receive: 'EUR' }
       );
 
       expect(result.recommendedMethod).toBe(TransferMethod.CIRCLE);
@@ -128,7 +128,7 @@ describe('TransferService - Method Selection Logic', () => {
     it('should respect user preference when method is available', async () => {
       const result = await transferService.getTransferMethodRecommendation(
         500,
-        { from: 'USD', to: 'EUR' },
+        { send: 'USD', receive: 'EUR' },
         TransferMethod.MANTLE
       );
 
@@ -147,7 +147,7 @@ describe('TransferService - Method Selection Logic', () => {
 
       const result = await transferService.getTransferMethodRecommendation(
         500,
-        { from: 'USD', to: 'EUR' }
+        { send: 'USD', receive: 'EUR' }
       );
 
       expect(result.recommendedMethod).toBe(TransferMethod.MANTLE);
@@ -161,7 +161,7 @@ describe('TransferService - Method Selection Logic', () => {
 
       const result = await transferService.getTransferMethodRecommendation(
         500,
-        { from: 'USD', to: 'EUR' }
+        { send: 'USD', receive: 'EUR' }
       );
 
       expect(result.recommendedMethod).toBe(TransferMethod.CIRCLE);
