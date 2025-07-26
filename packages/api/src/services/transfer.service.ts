@@ -3,6 +3,7 @@ import { CircleWalletService, WalletResponse, TransferResponse } from './circle-
 import { CirclePayoutService, BankAccount, PayoutResponse } from './circle-payout.service';
 import { MantleService, MantleTransferRequest, MantleTransferResult, GasEstimate } from './mantle.service';
 import { MantleError, MantleErrorType, FallbackStrategy } from '../utils/mantle-error-handler';
+import { TransferAnalyticsService } from './transfer-analytics.service';
 
 /**
  * Transfer status enum matching the database model
@@ -225,6 +226,7 @@ export class TransferService {
   private walletService: CircleWalletService;
   private payoutService: CirclePayoutService;
   private mantleService: MantleService;
+  private analyticsService: TransferAnalyticsService;
   private transfers: Map<string, TransferResult> = new Map(); // In-memory storage for demo
 
   constructor() {
@@ -232,6 +234,7 @@ export class TransferService {
     this.walletService = new CircleWalletService();
     this.payoutService = new CirclePayoutService();
     this.mantleService = new MantleService();
+    this.analyticsService = new TransferAnalyticsService();
   }
 
   /**
@@ -267,6 +270,15 @@ export class TransferService {
 
       this.transfers.set(transferId, transfer);
       this.addTimelineEvent(transfer, 'payment_created', 'pending', 'Transfer initiated');
+
+      // Record transfer initiation in analytics
+      this.analyticsService.recordTransferInitiation(
+        TransferMethod.CIRCLE, // Default to Circle for createTransfer
+        request.userId || 'anonymous',
+        request.sendAmount,
+        request.sendCurrency,
+        fees
+      );
 
       // Step 1: Process card payment to USDC
       await this.processPayment(transfer, request.cardDetails);
@@ -509,11 +521,30 @@ export class TransferService {
           transfer.status = TransferStatus.COMPLETED;
           transfer.updatedAt = new Date();
           this.addTimelineEvent(transfer, 'payout_completed', 'success', 'EUR received in recipient bank account');
+          
+          // Record transfer completion in analytics
+          const completionTimeMinutes = (transfer.updatedAt.getTime() - transfer.createdAt.getTime()) / (1000 * 60);
+          this.analyticsService.recordTransferCompletion(
+            TransferMethod.CIRCLE,
+            transfer.metadata?.userId || 'anonymous',
+            TransferStatus.COMPLETED,
+            completionTimeMinutes,
+            transfer.fees
+          );
         } catch (error) {
           transfer.status = TransferStatus.FAILED;
           transfer.updatedAt = new Date();
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           this.addTimelineEvent(transfer, 'payout_completed', 'failed', `Payout failed: ${errorMessage}`);
+          
+          // Record transfer failure in analytics
+          const completionTimeMinutes = (transfer.updatedAt.getTime() - transfer.createdAt.getTime()) / (1000 * 60);
+          this.analyticsService.recordTransferCompletion(
+            TransferMethod.CIRCLE,
+            transfer.metadata?.userId || 'anonymous',
+            TransferStatus.FAILED,
+            completionTimeMinutes
+          );
         }
       }, 1000); // Start monitoring after 1 second
     } catch (error) {
@@ -604,6 +635,13 @@ export class TransferService {
   }
 
   /**
+   * Get analytics service instance for external access
+   */
+  public getAnalyticsService(): TransferAnalyticsService {
+    return this.analyticsService;
+  }
+
+  /**
    * Calculate transfer options for both Circle and Mantle methods
    */
   async calculateTransfer(request: CalculateTransferRequest): Promise<TransferCalculation> {
@@ -637,6 +675,24 @@ export class TransferService {
         { send: request.sendCurrency, receive: request.receiveCurrency },
         request.preferredMethod
       );
+
+      // Log the calculation request for analytics (if user provided)
+      if (request.userId) {
+        const availableMethods = options.map(opt => opt.method);
+        const estimatedCosts: { [key in TransferMethod]?: number } = {};
+        options.forEach(opt => {
+          estimatedCosts[opt.method] = opt.totalCost;
+        });
+
+        this.analyticsService.logTransferMethodSelection(
+          request.userId,
+          recommendation.recommendedMethod,
+          availableMethods,
+          recommendation.reason,
+          request.sendAmount,
+          estimatedCosts
+        );
+      }
 
       return {
         sendAmount: request.sendAmount,
@@ -1297,6 +1353,15 @@ export class TransferService {
       this.transfers.set(transferId, transfer);
       this.addTimelineEvent(transfer, 'transfer_initiated', 'pending', 'Mantle transfer initiated');
 
+      // Record Mantle transfer initiation in analytics
+      this.analyticsService.recordTransferInitiation(
+        TransferMethod.MANTLE,
+        request.userId || 'anonymous',
+        request.sendAmount,
+        request.sendCurrency,
+        fees
+      );
+
       // Step 1: Create Mantle wallets
       await this.createMantleWallets(transfer, request.userId);
 
@@ -1451,6 +1516,16 @@ export class TransferService {
                 gasCost: status.gasCostUSD
               }
             );
+            
+            // Record Mantle transfer completion in analytics
+            const completionTimeMinutes = (transfer.updatedAt.getTime() - transfer.createdAt.getTime()) / (1000 * 60);
+            this.analyticsService.recordTransferCompletion(
+              TransferMethod.MANTLE,
+              transfer.metadata?.userId || 'anonymous',
+              TransferStatus.COMPLETED,
+              completionTimeMinutes,
+              parseFloat(status.gasCostUSD || '0')
+            );
           } else if (status.status === 'FAILED') {
             transfer.status = TransferStatus.FAILED;
             transfer.updatedAt = new Date();
@@ -1460,6 +1535,15 @@ export class TransferService {
               'failed', 
               `Blockchain transfer failed: ${status.error}`,
               { error: status.error }
+            );
+            
+            // Record Mantle transfer failure in analytics
+            const completionTimeMinutes = (transfer.updatedAt.getTime() - transfer.createdAt.getTime()) / (1000 * 60);
+            this.analyticsService.recordTransferCompletion(
+              TransferMethod.MANTLE,
+              transfer.metadata?.userId || 'anonymous',
+              TransferStatus.FAILED,
+              completionTimeMinutes
             );
           }
         } catch (error) {
