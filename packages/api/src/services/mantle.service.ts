@@ -1,6 +1,8 @@
 import { ethers } from 'ethers';
 import crypto from 'crypto';
 import { mantleConfig, MantleConfig } from '../config/mantle.config';
+import { MantleError, MantleErrorType, MantleErrorClassifier } from '../utils/mantle-error-handler';
+import { MantleRetryHandler, RetryResult } from '../utils/mantle-retry-handler';
 
 export interface MantleWallet {
   id: string;
@@ -181,48 +183,71 @@ export class MantleService {
     encryptPrivateKey?: boolean;
   }): Promise<WalletCreationResult> {
     if (!this.isEnabled()) {
-      throw new Error('Mantle service is not enabled or not properly initialized');
+      throw new MantleError(MantleErrorType.SERVICE_NOT_INITIALIZED, 'Mantle service is not enabled or not properly initialized');
     }
 
-    try {
-      let wallet: ethers.HDNodeWallet | ethers.Wallet;
-      let mnemonic: string | undefined;
+    const result = await MantleRetryHandler.executeWithRetry(
+      async () => {
+        let wallet: ethers.HDNodeWallet | ethers.Wallet;
+        let mnemonic: string | undefined;
 
-      if (options?.generateMnemonic) {
-        // Generate wallet from mnemonic for better backup/recovery
-        wallet = ethers.Wallet.createRandom();
-        if (wallet.mnemonic) {
-          mnemonic = wallet.mnemonic.phrase;
+        if (options?.generateMnemonic) {
+          // Generate wallet from mnemonic for better backup/recovery
+          wallet = ethers.Wallet.createRandom();
+          if (wallet.mnemonic) {
+            mnemonic = wallet.mnemonic.phrase;
+          }
+        } else {
+          // Generate simple random wallet
+          wallet = ethers.Wallet.createRandom();
         }
-      } else {
-        // Generate simple random wallet
-        wallet = ethers.Wallet.createRandom();
-      }
 
-      // Encrypt private key if requested (for secure storage)
-      let encryptedPrivateKey: string | undefined;
-      if (options?.encryptPrivateKey) {
-        encryptedPrivateKey = await this.encryptPrivateKey(wallet.privateKey, userId);
-      }
+        // Encrypt private key if requested (for secure storage)
+        let encryptedPrivateKey: string | undefined;
+        if (options?.encryptPrivateKey) {
+          encryptedPrivateKey = await this.encryptPrivateKey(wallet.privateKey, userId);
+        }
 
-      const mantleWallet: MantleWallet = {
-        id: `mantle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        address: wallet.address,
+        const mantleWallet: MantleWallet = {
+          id: `mantle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          address: wallet.address,
+          userId,
+          createdAt: new Date(),
+          encryptedPrivateKey
+        };
+
+        console.log(`✅ Created Mantle wallet for user ${userId}: ${wallet.address}`);
+        
+        return {
+          wallet: mantleWallet,
+          mnemonic: options?.generateMnemonic ? mnemonic : undefined
+        };
+      },
+      {
+        maxAttempts: 2,
+        baseDelay: 1000,
+        backoffMultiplier: 1,
+        maxDelay: 3000,
+        jitter: false
+      },
+      {
+        operation: 'createWallet',
         userId,
-        createdAt: new Date(),
-        encryptedPrivateKey
-      };
+        metadata: { options }
+      }
+    );
 
-      console.log(`✅ Created Mantle wallet for user ${userId}: ${wallet.address}`);
-      
-      return {
-        wallet: mantleWallet,
-        mnemonic: options?.generateMnemonic ? mnemonic : undefined
-      };
-    } catch (error) {
-      console.error('❌ Failed to create Mantle wallet:', error);
-      throw new Error(`Failed to create Mantle wallet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    if (result.success && result.result) {
+      return result.result;
     }
+
+    // Convert error to MantleError if needed
+    const mantleError = result.error || new MantleError(
+      MantleErrorType.WALLET_CREATION_FAILED,
+      'Failed to create Mantle wallet'
+    );
+
+    throw mantleError;
   }
 
   /**
@@ -401,71 +426,97 @@ export class MantleService {
    */
   public async getWalletBalance(walletAddress: string, includeUSDValues: boolean = true): Promise<WalletBalance> {
     if (!this.isEnabled() || !this.provider) {
-      throw new Error('Mantle service is not enabled or not properly initialized');
+      throw new MantleError(MantleErrorType.SERVICE_NOT_INITIALIZED, 'Mantle service is not enabled or not properly initialized');
     }
 
-    try {
-      // Get native token (MNT) balance
-      const nativeBalance = await this.provider.getBalance(walletAddress);
-      const nativeBalanceFormatted = ethers.formatEther(nativeBalance);
-
-      // Get stablecoin (USDC) balance
-      let stablecoinBalance = '0';
-      
-      if (this.config.stablecoinAddress) {
-        try {
-          // ERC20 ABI for balance checking
-          const erc20ABI = [
-            'function balanceOf(address owner) view returns (uint256)',
-            'function decimals() view returns (uint8)'
-          ];
-          
-          const tokenContract = new ethers.Contract(
-            this.config.stablecoinAddress,
-            erc20ABI,
-            this.provider
-          );
-          
-          const balance = await tokenContract.balanceOf(walletAddress);
-          const decimals = await tokenContract.decimals();
-          stablecoinBalance = ethers.formatUnits(balance, decimals);
-        } catch (tokenError) {
-          console.warn(`⚠️  Could not fetch stablecoin balance: ${tokenError}`);
-          stablecoinBalance = '0';
-        }
-      }
-
-      // Calculate USD values if requested
-      let nativeUSD: string | undefined;
-      let stablecoinUSD: string | undefined;
-      let totalUSD: string | undefined;
-
-      if (includeUSDValues) {
-        try {
-          // Get current prices (in production, use a proper price oracle)
-          const mntPriceUSD = await this.getMNTPriceUSD();
-          const usdcPriceUSD = 1.0; // USDC is pegged to USD
-          
-          nativeUSD = (parseFloat(nativeBalanceFormatted) * mntPriceUSD).toFixed(6);
-          stablecoinUSD = (parseFloat(stablecoinBalance) * usdcPriceUSD).toFixed(6);
-          totalUSD = (parseFloat(nativeUSD) + parseFloat(stablecoinUSD)).toFixed(6);
-        } catch (priceError) {
-          console.warn(`⚠️  Could not fetch USD prices: ${priceError}`);
-        }
-      }
-
-      return {
-        native: nativeBalanceFormatted,
-        stablecoin: stablecoinBalance,
-        address: walletAddress,
-        nativeUSD,
-        stablecoinUSD,
-        totalUSD
-      };
-    } catch (error) {
-      console.error('❌ Failed to get wallet balance:', error);
-      throw new Error(`Failed to get wallet balance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    if (!this.isValidAddress(walletAddress)) {
+      throw new MantleError(MantleErrorType.INVALID_ADDRESS, `Invalid wallet address: ${walletAddress}`);
     }
+
+    const result = await MantleRetryHandler.executeWithRetry(
+      async () => {
+        // Get native token (MNT) balance
+        const nativeBalance = await this.provider!.getBalance(walletAddress);
+        const nativeBalanceFormatted = ethers.formatEther(nativeBalance);
+
+        // Get stablecoin (USDC) balance
+        let stablecoinBalance = '0';
+        
+        if (this.config.stablecoinAddress) {
+          try {
+            // ERC20 ABI for balance checking
+            const erc20ABI = [
+              'function balanceOf(address owner) view returns (uint256)',
+              'function decimals() view returns (uint8)'
+            ];
+            
+            const tokenContract = new ethers.Contract(
+              this.config.stablecoinAddress,
+              erc20ABI,
+              this.provider
+            );
+            
+            const balance = await tokenContract.balanceOf(walletAddress);
+            const decimals = await tokenContract.decimals();
+            stablecoinBalance = ethers.formatUnits(balance, decimals);
+          } catch (tokenError) {
+            console.warn(`⚠️  Could not fetch stablecoin balance: ${tokenError}`);
+            stablecoinBalance = '0';
+          }
+        }
+
+        // Calculate USD values if requested
+        let nativeUSD: string | undefined;
+        let stablecoinUSD: string | undefined;
+        let totalUSD: string | undefined;
+
+        if (includeUSDValues) {
+          try {
+            // Get current prices (in production, use a proper price oracle)
+            const mntPriceUSD = await this.getMNTPriceUSD();
+            const usdcPriceUSD = 1.0; // USDC is pegged to USD
+            
+            nativeUSD = (parseFloat(nativeBalanceFormatted) * mntPriceUSD).toFixed(6);
+            stablecoinUSD = (parseFloat(stablecoinBalance) * usdcPriceUSD).toFixed(6);
+            totalUSD = (parseFloat(nativeUSD) + parseFloat(stablecoinUSD)).toFixed(6);
+          } catch (priceError) {
+            console.warn(`⚠️  Could not fetch USD prices: ${priceError}`);
+          }
+        }
+
+        return {
+          native: nativeBalanceFormatted,
+          stablecoin: stablecoinBalance,
+          address: walletAddress,
+          nativeUSD,
+          stablecoinUSD,
+          totalUSD
+        };
+      },
+      {
+        maxAttempts: 2,
+        baseDelay: 1000,
+        backoffMultiplier: 1.5,
+        maxDelay: 5000,
+        jitter: true
+      },
+      {
+        operation: 'getWalletBalance',
+        metadata: { walletAddress, includeUSDValues }
+      }
+    );
+
+    if (result.success && result.result) {
+      return result.result;
+    }
+
+    // Classify and throw the error
+    const mantleError = result.error || MantleErrorClassifier.classify(
+      new Error('Failed to get wallet balance'),
+      { walletAddress, includeUSDValues }
+    );
+
+    throw mantleError;
   }
 
   /**

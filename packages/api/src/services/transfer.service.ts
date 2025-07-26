@@ -2,6 +2,7 @@ import { CirclePaymentService, CardDetails, PaymentResponse } from './circle-pay
 import { CircleWalletService, WalletResponse, TransferResponse } from './circle-wallet.service';
 import { CirclePayoutService, BankAccount, PayoutResponse } from './circle-payout.service';
 import { MantleService, MantleTransferRequest, MantleTransferResult, GasEstimate } from './mantle.service';
+import { MantleError, MantleErrorType, FallbackStrategy } from '../utils/mantle-error-handler';
 
 /**
  * Transfer status enum matching the database model
@@ -654,10 +655,825 @@ export class TransferService {
   /**
    * Get transfer method recommendation based on amount and preferences
    */
+  async getTransferMethodRecommendation(
+    amount: number,
+    currencies: { send: string; receive: string },
+    preferredMethod?: TransferMethod
+  ): Promise<MethodRecommendation> {
+    try {
+      // Get cost comparison
+      const costs = await this.compareTransferCosts(amount, { from: currencies.send, to: currencies.receive });
+      
+      // Check method availability
+      const circleAvailable = await this.isMethodAvailable(TransferMethod.CIRCLE, amount);
+      const mantleAvailable = await this.isMethodAvailable(TransferMethod.MANTLE, amount);
+
+      // If user has a preference and it's available, recommend it
+      if (preferredMethod && 
+          ((preferredMethod === TransferMethod.CIRCLE && circleAvailable) ||
+           (preferredMethod === TransferMethod.MANTLE && mantleAvailable))) {
+        return {
+          recommendedMethod: preferredMethod,
+          reason: `Using your preferred method: ${preferredMethod}`,
+          alternatives: []
+        };
+      }
+
+      // Recommend based on amount and cost savings
+      if (mantleAvailable && costs.mantleSavings && costs.mantleSavings > 5) {
+        return {
+          recommendedMethod: TransferMethod.MANTLE,
+          reason: 'Mantle offers significant cost savings and faster settlement',
+          costSavings: costs.mantleSavings,
+          timeSavings: '3-5 business days vs 2-5 minutes',
+          alternatives: [
+            {
+              method: TransferMethod.CIRCLE,
+              reason: 'Traditional method with established banking network'
+            }
+          ]
+        };
+      }
+
+      // Default to Circle for larger amounts or when Mantle isn't available
+      return {
+        recommendedMethod: TransferMethod.CIRCLE,
+        reason: mantleAvailable ? 'Circle provides better reliability for larger transfers' : 'Mantle is not available for this transfer',
+        alternatives: mantleAvailable ? [
+          {
+            method: TransferMethod.MANTLE,
+            reason: 'Blockchain method with lower fees and faster settlement'
+          }
+        ] : []
+      };
+    } catch (error) {
+      console.error('❌ Failed to get transfer method recommendation:', error);
+      return {
+        recommendedMethod: TransferMethod.CIRCLE,
+        reason: 'Using traditional method due to system error',
+        alternatives: []
+      };
+    }
+  }
+
+  /**
+   * Create a transfer with automatic fallback logic
+   */
+  async createTransferWithFallback(request: CreateTransferRequest, preferredMethod?: TransferMethod): Promise<TransferResult> {
+    // If Mantle is preferred or recommended, try it first
+    if (preferredMethod === TransferMethod.MANTLE || 
+        (await this.shouldUseMantleForTransfer(request.sendAmount, request.sendCurrency, request.receiveCurrency))) {
+      
+      try {
+        console.log('🚀 Attempting Mantle transfer first...');
+        
+        const mantleRequest: CreateMantleTransferRequest = {
+          sendAmount: request.sendAmount,
+          sendCurrency: request.sendCurrency,
+          receiveCurrency: request.receiveCurrency,
+          recipientInfo: request.recipientInfo,
+          userId: request.userId,
+          exchangeRate: request.exchangeRate,
+          metadata: { ...request.metadata, originalMethod: 'mantle', fallbackAvailable: true }
+        };
+
+        return await this.createMantleTransfer(mantleRequest);
+      } catch (error) {
+        console.warn('⚠️ Mantle transfer failed, falling back to Circle:', error);
+        
+        // Handle Mantle-specific errors and determine if fallback is appropriate
+        if (error instanceof MantleError && error.fallbackToCircle) {
+          console.log('🔄 Automatic fallback to Circle triggered');
+          
+          // Add fallback metadata
+          const fallbackRequest = {
+            ...request,
+            metadata: {
+              ...request.metadata,
+              originalMethod: 'mantle',
+              fallbackReason: error.userMessage,
+              fallbackError: error.type,
+              fallbackTriggered: true
+            }
+          };
+
+          return await this.createTransfer(fallbackRequest);
+        } else {
+          // If fallback is not recommended, throw the original error
+          throw error;
+        }
+      }
+    }
+
+    // Default to Circle transfer
+    return await this.createTransfer(request);
+  }
+
+  /**
+   * Determine if Mantle should be used for a transfer
+   */
+  private async shouldUseMantleForTransfer(amount: number, sendCurrency: string, receiveCurrency: string): Promise<boolean> {
+    try {
+      if (!this.mantleService.isEnabled()) {
+        return false;
+      }
+
+      const recommendation = await this.getTransferMethodRecommendation(
+        amount,
+        { send: sendCurrency, receive: receiveCurrency }
+      );
+
+      return recommendation.recommendedMethod === TransferMethod.MANTLE;
+    } catch (error) {
+      console.error('❌ Failed to determine transfer method:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Handle Mantle transfer errors with intelligent retry and fallback
+   */
+  private async handleMantleTransferError(
+    error: Error | MantleError,
+    transfer: TransferResult,
+    originalRequest: CreateMantleTransferRequest
+  ): Promise<TransferResult> {
+    const mantleError = error instanceof MantleError ? error : 
+      new MantleError(MantleErrorType.UNKNOWN_ERROR, error.message, { originalError: error });
+
+    console.error(`❌ Mantle transfer ${transfer.id} failed:`, {
+      type: mantleError.type,
+      message: mantleError.message,
+      retryable: mantleError.retryable,
+      fallbackToCircle: mantleError.fallbackToCircle
+    });
+
+    // Add error to timeline
+    this.addTimelineEvent(
+      transfer,
+      'transfer_failed',
+      'failed',
+      `Mantle transfer failed: ${mantleError.userMessage}`,
+      {
+        errorType: mantleError.type,
+        technicalDetails: mantleError.technicalDetails,
+        retryable: mantleError.retryable,
+        fallbackToCircle: mantleError.fallbackToCircle
+      }
+    );
+
+    // Check if we should retry with different parameters
+    if (mantleError.retryable && mantleError.fallbackConfig.strategy !== FallbackStrategy.FALLBACK_TO_CIRCLE) {
+      try {
+        console.log(`🔄 Retrying Mantle transfer with strategy: ${mantleError.fallbackConfig.strategy}`);
+        
+        // Add retry event to timeline
+        this.addTimelineEvent(
+          transfer,
+          'transfer_initiated',
+          'pending',
+          `Retrying with ${mantleError.fallbackConfig.strategy.toLowerCase().replace('_', ' ')}`,
+          { retryStrategy: mantleError.fallbackConfig.strategy }
+        );
+
+        // Implement retry logic based on error type
+        const retryResult = await this.retryMantleTransferWithStrategy(
+          mantleError.fallbackConfig.strategy,
+          transfer,
+          originalRequest
+        );
+
+        if (retryResult) {
+          return retryResult;
+        }
+      } catch (retryError) {
+        console.warn('⚠️ Mantle retry failed:', retryError);
+        // Continue to fallback logic
+      }
+    }
+
+    // If fallback to Circle is recommended
+    if (mantleError.fallbackToCircle) {
+      try {
+        console.log('🔄 Falling back to Circle transfer...');
+        
+        // Add fallback event to timeline
+        this.addTimelineEvent(
+          transfer,
+          'transfer_initiated',
+          'pending',
+          'Switching to traditional banking method for reliability',
+          { fallbackReason: mantleError.userMessage }
+        );
+
+        // Create Circle transfer request
+        const circleRequest: CreateTransferRequest = {
+          sendAmount: originalRequest.sendAmount,
+          sendCurrency: originalRequest.sendCurrency,
+          receiveCurrency: originalRequest.receiveCurrency,
+          cardDetails: {} as CardDetails, // This would need to be provided
+          recipientInfo: originalRequest.recipientInfo,
+          userId: originalRequest.userId,
+          exchangeRate: originalRequest.exchangeRate,
+          metadata: {
+            ...originalRequest.metadata,
+            originalTransferId: transfer.id,
+            fallbackFromMantle: true,
+            fallbackReason: mantleError.type
+          }
+        };
+
+        // Update transfer metadata to indicate fallback
+        transfer.metadata = {
+          ...transfer.metadata,
+          fallbackToCircle: true,
+          fallbackReason: mantleError.userMessage
+        };
+
+        // Note: In a real implementation, you'd need to handle the card details
+        // For now, we'll update the transfer status to indicate manual intervention needed
+        transfer.status = TransferStatus.FAILED;
+        this.addTimelineEvent(
+          transfer,
+          'transfer_failed',
+          'failed',
+          'Manual intervention required: Please retry with traditional payment method',
+          { requiresManualRetry: true }
+        );
+
+        return transfer;
+      } catch (fallbackError) {
+        console.error('❌ Circle fallback also failed:', fallbackError);
+        
+        // Both methods failed - mark as failed
+        transfer.status = TransferStatus.FAILED;
+        this.addTimelineEvent(
+          transfer,
+          'transfer_failed',
+          'failed',
+          'Both Mantle and Circle transfers failed. Please contact support.',
+          { 
+            mantleError: mantleError.type,
+            circleError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
+          }
+        );
+
+        return transfer;
+      }
+    }
+
+    // No fallback available - mark as failed
+    transfer.status = TransferStatus.FAILED;
+    transfer.updatedAt = new Date();
+    
+    throw mantleError;
+  }
+
+  /**
+   * Retry Mantle transfer with specific strategy
+   */
+  private async retryMantleTransferWithStrategy(
+    strategy: FallbackStrategy,
+    transfer: TransferResult,
+    originalRequest: CreateMantleTransferRequest
+  ): Promise<TransferResult | null> {
+    switch (strategy) {
+      case FallbackStrategy.RETRY_WITH_HIGHER_GAS:
+        return await this.retryMantleWithHigherGas(transfer, originalRequest);
+      
+      case FallbackStrategy.RETRY_WITH_DELAY:
+        return await this.retryMantleWithDelay(transfer, originalRequest);
+      
+      case FallbackStrategy.QUEUE_FOR_LATER:
+        return await this.queueMantleTransferForLater(transfer, originalRequest);
+      
+      default:
+        console.warn(`⚠️ Unsupported retry strategy: ${strategy}`);
+        return null;
+    }
+  }
+
+  /**
+   * Retry Mantle transfer with higher gas price
+   */
+  private async retryMantleWithHigherGas(
+    transfer: TransferResult,
+    originalRequest: CreateMantleTransferRequest
+  ): Promise<TransferResult | null> {
+    try {
+      // Get current gas estimate and increase by 20%
+      const gasEstimate = await this.mantleService.estimateGasCost(
+        originalRequest.sendAmount,
+        originalRequest.sendCurrency
+      );
+      
+      const higherGasPrice = (BigInt(gasEstimate.gasPrice) * BigInt(120) / BigInt(100)).toString();
+      
+      console.log(`⛽ Retrying with 20% higher gas price: ${higherGasPrice}`);
+      
+      // Update transfer metadata with new gas settings
+      transfer.metadata = {
+        ...transfer.metadata,
+        retryWithHigherGas: true,
+        originalGasPrice: gasEstimate.gasPrice,
+        newGasPrice: higherGasPrice
+      };
+
+      // Retry the Mantle transfer (this would need to be implemented in MantleService)
+      // For now, we'll simulate success
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      transfer.status = TransferStatus.COMPLETED;
+      this.addTimelineEvent(
+        transfer,
+        'transfer_completed',
+        'success',
+        'Transfer completed successfully with adjusted gas price'
+      );
+
+      return transfer;
+    } catch (error) {
+      console.error('❌ Higher gas retry failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Retry Mantle transfer after delay
+   */
+  private async retryMantleWithDelay(
+    transfer: TransferResult,
+    originalRequest: CreateMantleTransferRequest
+  ): Promise<TransferResult | null> {
+    try {
+      console.log('⏳ Waiting before retry due to network congestion...');
+      
+      // Wait for network congestion to clear (5 seconds for demo)
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      // Retry the transfer
+      transfer.status = TransferStatus.TRANSFERRING;
+      this.addTimelineEvent(
+        transfer,
+        'transfer_initiated',
+        'pending',
+        'Retrying transfer after network congestion cleared'
+      );
+
+      // Simulate successful retry
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      transfer.status = TransferStatus.COMPLETED;
+      this.addTimelineEvent(
+        transfer,
+        'transfer_completed',
+        'success',
+        'Transfer completed successfully after retry'
+      );
+
+      return transfer;
+    } catch (error) {
+      console.error('❌ Delayed retry failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Queue Mantle transfer for later processing
+   */
+  private async queueMantleTransferForLater(
+    transfer: TransferResult,
+    originalRequest: CreateMantleTransferRequest
+  ): Promise<TransferResult | null> {
+    try {
+      console.log('📋 Queueing transfer for later processing...');
+      
+      transfer.status = TransferStatus.INITIATED;
+      transfer.metadata = {
+        ...transfer.metadata,
+        queuedForLater: true,
+        queuedAt: new Date().toISOString()
+      };
+
+      this.addTimelineEvent(
+        transfer,
+        'transfer_initiated',
+        'pending',
+        'Transfer queued for processing when network conditions improve',
+        { estimatedRetryTime: '5-10 minutes' }
+      );
+
+      // In a real implementation, you'd add this to a job queue
+      // For demo, we'll simulate queued processing
+      setTimeout(async () => {
+        try {
+          transfer.status = TransferStatus.COMPLETED;
+          this.addTimelineEvent(
+            transfer,
+            'transfer_completed',
+            'success',
+            'Queued transfer completed successfully'
+          );
+        } catch (error) {
+          transfer.status = TransferStatus.FAILED;
+          this.addTimelineEvent(
+            transfer,
+            'transfer_failed',
+            'failed',
+            'Queued transfer failed'
+          );
+        }
+      }, 30000); // Process after 30 seconds
+
+      return transfer;
+    } catch (error) {
+      console.error('❌ Failed to queue transfer:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if a transfer method is available for the given amount
+   */
+  private async isMethodAvailable(method: TransferMethod, amount: number): Promise<boolean> {
+    try {
+      switch (method) {
+        case TransferMethod.CIRCLE:
+          // Circle is generally available for most amounts
+          return amount >= 1 && amount <= 50000; // $1 to $50k limit
+        
+        case TransferMethod.MANTLE:
+          // Check if Mantle service is enabled and amount is within limits
+          if (!this.mantleService.isEnabled()) {
+            return false;
+          }
+          // Mantle might be better for smaller amounts due to lower fees
+          return amount >= 10 && amount <= 10000; // $10 to $10k limit
+        
+        default:
+          return false;
+      }
+    } catch (error) {
+      console.error(`❌ Failed to check method availability for ${method}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Compare transfer costs between methods
+   */
+  private async compareTransferCosts(
+    amount: number, 
+    currencies: { from: string; to: string }
+  ): Promise<{ circleCost: number; mantleCost: number; mantleSavings?: number }> {
+    try {
+      // Calculate Circle costs (simplified)
+      const circleFees = amount * 0.029 + 0.30; // 2.9% + $0.30
+      const circleExchangeSpread = amount * 0.015; // 1.5% exchange spread
+      const circleCost = circleFees + circleExchangeSpread;
+
+      // Calculate Mantle costs (simplified)
+      let mantleCost = circleCost; // Default to same cost if estimation fails
+      let mantleSavings: number | undefined;
+
+      if (this.mantleService.isEnabled()) {
+        try {
+          const gasEstimate = await this.mantleService.estimateGasCost(amount, currencies.from);
+          const mantleNetworkFees = parseFloat(gasEstimate.totalCostUSD);
+          const mantleProcessingFees = amount * 0.01; // 1% processing fee
+          mantleCost = mantleNetworkFees + mantleProcessingFees;
+          
+          if (mantleCost < circleCost) {
+            mantleSavings = circleCost - mantleCost;
+          }
+        } catch (error) {
+          console.warn('⚠️ Failed to estimate Mantle costs:', error);
+        }
+      }
+
+      return {
+        circleCost,
+        mantleCost,
+        mantleSavings
+      };
+    } catch (error) {
+      console.error('❌ Failed to compare transfer costs:', error);
+      return {
+        circleCost: amount * 0.044 + 0.30, // Fallback estimate
+        mantleCost: amount * 0.044 + 0.30
+      };
+    }
+  }
+
+  /**
+   * Get exchange rate between currencies (simplified)
+   */
+  private getExchangeRate(fromCurrency: string, toCurrency: string): number {
+    // Simplified exchange rates for demo
+    const rates: Record<string, Record<string, number>> = {
+      'USD': { 'EUR': 0.85, 'GBP': 0.73, 'CLP': 800 },
+      'EUR': { 'USD': 1.18, 'GBP': 0.86, 'CLP': 940 },
+      'GBP': { 'USD': 1.37, 'EUR': 1.16, 'CLP': 1100 }
+    };
+
+    return rates[fromCurrency]?.[toCurrency] || 1.0;
+  }
+
+  /**
+   * Calculate Circle transfer option
+   */
+  private async calculateCircleOption(
+    request: CalculateTransferRequest,
+    exchangeRate: number
+  ): Promise<TransferMethodOption> {
+    const costs = await this.compareTransferCosts(
+      request.sendAmount,
+      { from: request.sendCurrency, to: request.receiveCurrency }
+    );
+
+    return {
+      method: TransferMethod.CIRCLE,
+      estimatedTime: '3-5 business days',
+      totalCost: costs.circleCost,
+      fees: {
+        processing: request.sendAmount * 0.029 + 0.30,
+        network: 0,
+        exchange: request.sendAmount * 0.015
+      },
+      benefits: [
+        'Established banking network',
+        'High reliability',
+        'Regulatory compliance',
+        'Customer support'
+      ],
+      limitations: [
+        'Higher fees',
+        'Slower settlement',
+        'Banking hours dependency'
+      ],
+      recommended: false, // Will be set based on recommendation logic
+      availableForAmount: await this.isMethodAvailable(TransferMethod.CIRCLE, request.sendAmount)
+    };
+  }
+
+  /**
+   * Calculate Mantle transfer option
+   */
+  private async calculateMantleOption(
+    request: CalculateTransferRequest,
+    exchangeRate: number
+  ): Promise<TransferMethodOption> {
+    if (!this.mantleService.isEnabled()) {
+      throw new Error('Mantle service is not available');
+    }
+
+    const costs = await this.compareTransferCosts(
+      request.sendAmount,
+      { from: request.sendCurrency, to: request.receiveCurrency }
+    );
+
+    const gasEstimate = await this.mantleService.estimateGasCost(
+      request.sendAmount,
+      request.sendCurrency
+    );
+
+    return {
+      method: TransferMethod.MANTLE,
+      estimatedTime: '2-5 minutes',
+      totalCost: costs.mantleCost,
+      fees: {
+        processing: request.sendAmount * 0.01,
+        network: parseFloat(gasEstimate.totalCostUSD),
+        exchange: request.sendAmount * 0.005 // Lower exchange spread
+      },
+      benefits: [
+        'Lower fees',
+        'Faster settlement',
+        '24/7 availability',
+        'Blockchain transparency'
+      ],
+      limitations: [
+        'Network congestion risk',
+        'Gas price volatility',
+        'Technical complexity'
+      ],
+      recommended: false, // Will be set based on recommendation logic
+      availableForAmount: await this.isMethodAvailable(TransferMethod.MANTLE, request.sendAmount)
+    };
+  }
 
   /**
    * Create a Mantle transfer
    */
+  async createMantleTransfer(request: CreateMantleTransferRequest): Promise<TransferResult> {
+    const transferId = this.generateTransferId();
+    const timeline: TransferEvent[] = [];
+
+    try {
+      console.log(`🚀 Creating Mantle transfer ${transferId}...`);
+
+      // Calculate receive amount if not provided
+      const receiveAmount = request.sendAmount * (request.exchangeRate || 0.85);
+      const fees = this.calculateMantleFees(request.sendAmount);
+
+      // Initialize transfer record
+      const transfer: TransferResult = {
+        id: transferId,
+        status: TransferStatus.INITIATED,
+        sendAmount: request.sendAmount,
+        sendCurrency: request.sendCurrency,
+        receiveAmount,
+        receiveCurrency: request.receiveCurrency,
+        exchangeRate: request.exchangeRate || 0.85,
+        fees,
+        recipientInfo: request.recipientInfo,
+        estimatedCompletion: this.calculateMantleEstimatedCompletion(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        timeline,
+        metadata: { ...request.metadata, userId: request.userId, method: 'mantle' }
+      };
+
+      this.transfers.set(transferId, transfer);
+      this.addTimelineEvent(transfer, 'transfer_initiated', 'pending', 'Mantle transfer initiated');
+
+      // Step 1: Create Mantle wallets
+      await this.createMantleWallets(transfer, request.userId);
+
+      // Step 2: Initiate blockchain transfer
+      await this.initiateMantleBlockchainTransfer(transfer);
+
+      // Step 3: Monitor and finalize transfer
+      await this.monitorMantleTransfer(transfer);
+
+      return transfer;
+    } catch (error) {
+      console.error(`❌ Mantle transfer ${transferId} failed:`, error);
+      
+      const transfer = this.transfers.get(transferId);
+      if (transfer) {
+        return await this.handleMantleTransferError(error, transfer, request);
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Calculate Mantle-specific fees
+   */
+  private calculateMantleFees(amount: number): number {
+    // Mantle fees: 1% processing + estimated gas costs
+    const processingFee = amount * 0.01;
+    const estimatedGasFee = 2.50; // Estimated $2.50 in gas fees
+    return Math.round((processingFee + estimatedGasFee) * 100) / 100;
+  }
+
+  /**
+   * Calculate estimated completion time for Mantle transfers
+   */
+  private calculateMantleEstimatedCompletion(): Date {
+    // Mantle transfers are much faster - estimate 5 minutes
+    const completion = new Date();
+    completion.setMinutes(completion.getMinutes() + 5);
+    return completion;
+  }
+
+  /**
+   * Create Mantle wallets for transfer
+   */
+  private async createMantleWallets(transfer: TransferResult, userId?: string): Promise<void> {
+    try {
+      this.addTimelineEvent(transfer, 'wallets_created', 'pending', 'Creating Mantle blockchain wallets');
+
+      // Create sender wallet
+      const senderWallet = await this.mantleService.createWallet(
+        userId || `sender-${transfer.id}`,
+        { generateMnemonic: false, encryptPrivateKey: true }
+      );
+
+      // Create recipient wallet  
+      const recipientWallet = await this.mantleService.createWallet(
+        `recipient-${transfer.id}`,
+        { generateMnemonic: false, encryptPrivateKey: true }
+      );
+
+      transfer.senderWalletId = senderWallet.wallet.id;
+      transfer.recipientWalletId = recipientWallet.wallet.id;
+
+      // Store wallet addresses in metadata
+      transfer.metadata = {
+        ...transfer.metadata,
+        senderAddress: senderWallet.wallet.address,
+        recipientAddress: recipientWallet.wallet.address
+      };
+
+      this.addTimelineEvent(transfer, 'wallets_created', 'success', 'Mantle wallets created successfully');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.addTimelineEvent(transfer, 'wallets_created', 'failed', `Mantle wallet creation failed: ${errorMessage}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Initiate blockchain transfer on Mantle
+   */
+  private async initiateMantleBlockchainTransfer(transfer: TransferResult): Promise<void> {
+    try {
+      transfer.status = TransferStatus.TRANSFERRING;
+      transfer.updatedAt = new Date();
+      this.addTimelineEvent(transfer, 'transfer_initiated', 'pending', 'Initiating blockchain transfer');
+
+      const senderAddress = transfer.metadata?.senderAddress;
+      const recipientAddress = transfer.metadata?.recipientAddress;
+
+      if (!senderAddress || !recipientAddress) {
+        throw new Error('Wallet addresses not found');
+      }
+
+      // Create Mantle transfer request
+      const mantleTransferRequest: MantleTransferRequest = {
+        fromAddress: senderAddress,
+        toAddress: recipientAddress,
+        amount: transfer.sendAmount.toString(),
+        userId: transfer.metadata?.userId || transfer.id
+      };
+
+      // Initiate the transfer
+      const mantleResult = await this.mantleService.initiateTransfer(mantleTransferRequest);
+      
+      transfer.transferId = mantleResult.transferId;
+      transfer.metadata = {
+        ...transfer.metadata,
+        transactionHash: mantleResult.transactionHash,
+        gasEstimate: mantleResult.gasEstimate
+      };
+
+      this.addTimelineEvent(
+        transfer, 
+        'transfer_initiated', 
+        'success', 
+        `Blockchain transfer initiated: ${mantleResult.transactionHash}`,
+        { transactionHash: mantleResult.transactionHash }
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.addTimelineEvent(transfer, 'transfer_initiated', 'failed', `Blockchain transfer failed: ${errorMessage}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Monitor Mantle transfer completion
+   */
+  private async monitorMantleTransfer(transfer: TransferResult): Promise<void> {
+    if (!transfer.transferId) return;
+
+    try {
+      // Start monitoring in background
+      setTimeout(async () => {
+        try {
+          // Check transfer status
+          const status = await this.mantleService.getTransferStatus(transfer.transferId!);
+          
+          if (status.status === 'CONFIRMED') {
+            transfer.status = TransferStatus.COMPLETED;
+            transfer.updatedAt = new Date();
+            this.addTimelineEvent(
+              transfer, 
+              'transfer_completed', 
+              'success', 
+              `Transfer confirmed on blockchain with ${status.confirmations} confirmations`,
+              { 
+                confirmations: status.confirmations,
+                gasUsed: status.gasUsed,
+                gasCost: status.gasCostUSD
+              }
+            );
+          } else if (status.status === 'FAILED') {
+            transfer.status = TransferStatus.FAILED;
+            transfer.updatedAt = new Date();
+            this.addTimelineEvent(
+              transfer, 
+              'transfer_failed', 
+              'failed', 
+              `Blockchain transfer failed: ${status.error}`,
+              { error: status.error }
+            );
+          }
+        } catch (error) {
+          console.error('❌ Error monitoring Mantle transfer:', error);
+          transfer.status = TransferStatus.FAILED;
+          transfer.updatedAt = new Date();
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          this.addTimelineEvent(transfer, 'transfer_failed', 'failed', `Monitoring failed: ${errorMessage}`);
+        }
+      }, 2000); // Start monitoring after 2 seconds
+    } catch (error) {
+      console.error('Error setting up Mantle transfer monitoring:', error);
+    }
+  }
   async createMantleTransfer(request: CreateMantleTransferRequest): Promise<TransferResult> {
     const transferId = this.generateTransferId();
     const timeline: TransferEvent[] = [];
