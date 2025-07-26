@@ -8,7 +8,6 @@ import { Navigation } from "@/components/ui/navigation";
 import { VideoModal } from "@/components/ui/video-modal";
 import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star } from "lucide-react";
 import { Calculator, UserPlus, CreditCard, Rocket } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 
