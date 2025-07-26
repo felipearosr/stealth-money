@@ -13,7 +13,7 @@ exports.validateUSRoutingNumber = validateUSRoutingNumber;
 exports.validateUKSortCode = validateUKSortCode;
 exports.formatSortCode = formatSortCode;
 // Import Chilean utilities
-const chilean_utils_1 = require("./chilean-utils");
+import * as chilean_utils_1 from "./chilean-utils";
 Object.defineProperty(exports, "validateRUT", { enumerable: true, get: function () { return chilean_utils_1.validateRUT; } });
 Object.defineProperty(exports, "formatRUT", { enumerable: true, get: function () { return chilean_utils_1.formatRUT; } });
 exports.COUNTRY_BANKING_CONFIGS = {

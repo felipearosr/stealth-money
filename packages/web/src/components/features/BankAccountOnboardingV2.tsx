@@ -1,7 +1,7 @@
 // src/components/features/BankAccountOnboardingV2.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,7 @@ interface BankAccount {
   isVerified: boolean;
   isPrimary: boolean;
   isActive: boolean;
+  verificationFailures: number;
   // Currency-specific fields
   iban?: string;
   bic?: string;
@@ -102,8 +103,26 @@ export default function BankAccountOnboardingV2({
   // Get country configuration
   const countryConfig = selectedCountry ? COUNTRY_BANKING_CONFIGS[selectedCountry] : null;
 
+  // Handle country selection
+  const handleCountryChange = useCallback((countryCode: string) => {
+    setSelectedCountry(countryCode);
+    setSelectedBank(null);
+    const config = COUNTRY_BANKING_CONFIGS[countryCode];
+    
+    // Reset form data with country-specific defaults
+    setFormData({
+      accountName: '',
+      country: countryCode,
+      bankId: '',
+      accountHolderName: '',
+      accountType: config?.accountTypes[0]?.value || '',
+      isPrimary: !Array.isArray(bankAccounts) || bankAccounts.length === 0
+    });
+    setFormErrors({});
+  }, [bankAccounts]);
+
   // Fetch existing bank accounts
-  const fetchBankAccounts = async () => {
+  const fetchBankAccounts = useCallback(async () => {
     try {
       const token = await getToken();
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/users/me/bank-accounts`, {
@@ -126,36 +145,18 @@ export default function BankAccountOnboardingV2({
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     fetchBankAccounts();
-  }, []);
+  }, [fetchBankAccounts]);
 
   useEffect(() => {
     // If Chilean verification is required, default to Chile
     if (requireChileanVerification && !selectedCountry) {
       handleCountryChange('CL');
     }
-  }, [requireChileanVerification, selectedCountry]);
-
-  // Handle country selection
-  const handleCountryChange = (countryCode: string) => {
-    setSelectedCountry(countryCode);
-    setSelectedBank(null);
-    const config = COUNTRY_BANKING_CONFIGS[countryCode];
-    
-    // Reset form data with country-specific defaults
-    setFormData({
-      accountName: '',
-      country: countryCode,
-      bankId: '',
-      accountHolderName: '',
-      accountType: config?.accountTypes[0]?.value || '',
-      isPrimary: !Array.isArray(bankAccounts) || bankAccounts.length === 0
-    });
-    setFormErrors({});
-  };
+  }, [requireChileanVerification, selectedCountry, handleCountryChange]);
 
   // Handle bank selection
   const handleBankChange = (bankId: string) => {
@@ -408,7 +409,7 @@ export default function BankAccountOnboardingV2({
             
             // Apply formatting for specific fields
             if (field.field === 'rut') {
-              value = formatRUTInput(value, String(formData[field.field] || ''));
+              value = formatRUTInput(value);
             } else if (field.field === 'sortCode') {
               value = formatSortCode(value);
             }

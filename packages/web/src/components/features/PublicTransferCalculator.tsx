@@ -16,7 +16,18 @@ export interface PublicCalculatorData {
   rateId: string;
   rateValidUntil: string;
   calculatorMode: 'send' | 'receive';
-  breakdown: any;
+  breakdown: {
+    sendAmountUSD: number;
+    fees: {
+      cardProcessing: number;
+      transfer: number;
+      payout: number;
+      total: number;
+    };
+    netAmountUSD: number;
+    exchangeRate: number;
+    receiveAmount: number;
+  };
   estimatedArrival: string;
 }
 
@@ -38,7 +49,18 @@ export function PublicTransferCalculator({ className = "" }: PublicTransferCalcu
     rateId: string;
     rateValidUntil: string;
     calculatorMode: 'send' | 'receive';
-    breakdown: any;
+    breakdown: {
+      sendAmountUSD: number;
+      fees: {
+        cardProcessing: number;
+        transfer: number;
+        payout: number;
+        total: number;
+      };
+      netAmountUSD: number;
+      exchangeRate: number;
+      receiveAmount: number;
+    };
     estimatedArrival: string;
   }) => {
     setIsLoading(true);

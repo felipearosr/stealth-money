@@ -103,6 +103,19 @@ export function NotificationProvider({
   }, [isSupported]);
 
   /**
+   * Mark notification as read
+   */
+  const markAsRead = useCallback((id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id 
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
+  }, []);
+
+  /**
    * Show browser notification
    */
   const showNotification = useCallback((
@@ -140,7 +153,7 @@ export function NotificationProvider({
           markAsRead(notification.id);
           
           // Handle action based on notification data
-          if (notification.data?.url) {
+          if (notification.data?.url && typeof notification.data.url === 'string') {
             window.open(notification.data.url, '_blank');
           }
           
@@ -156,20 +169,7 @@ export function NotificationProvider({
         console.error('Error showing browser notification:', error);
       }
     }
-  }, [isSupported, permission, maxNotifications]);
-
-  /**
-   * Mark notification as read
-   */
-  const markAsRead = useCallback((id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-  }, []);
+  }, [isSupported, permission, maxNotifications, markAsRead]);
 
   /**
    * Mark all notifications as read
@@ -217,24 +217,28 @@ export function NotificationProvider({
           
           if (message.type === 'notification') {
             showNotification({
-              title: message.payload.title,
-              body: message.payload.body,
-              icon: message.payload.icon,
-              tag: message.payload.tag,
-              data: message.payload.data,
-              actions: message.payload.actions
+              title: String(message.payload.title || ''),
+              body: String(message.payload.body || ''),
+              icon: String(message.payload.icon || ''),
+              tag: String(message.payload.tag || ''),
+              data: message.payload.data as Record<string, unknown> | undefined,
+              actions: message.payload.actions as Array<{
+                action: string;
+                title: string;
+                icon?: string;
+              }> | undefined
             });
           } else if (message.type === 'status_update') {
             // Handle transfer status updates
             showNotification({
               title: 'Transfer Update',
-              body: message.payload.message || 'Your transfer status has been updated',
+              body: String(message.payload.message || 'Your transfer status has been updated'),
               icon: '/icons/transfer-update.png',
-              tag: `transfer-${message.payload.transferId}`,
+              tag: `transfer-${String(message.payload.transferId || '')}`,
               data: {
                 transferId: message.payload.transferId,
                 status: message.payload.status,
-                url: `/status/${message.payload.transferId}`
+                url: `/status/${String(message.payload.transferId || '')}`
               }
             });
           }
@@ -332,7 +336,7 @@ export function NotificationBell() {
   const handleNotificationClick = (notification: BrowserNotification) => {
     markAsRead(notification.id);
     
-    if (notification.data?.url) {
+    if (notification.data?.url && typeof notification.data.url === 'string') {
       window.open(notification.data.url, '_blank');
     }
   };

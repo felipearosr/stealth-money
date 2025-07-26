@@ -59,8 +59,8 @@ class MockNotification {
 
 // Setup mocks
 beforeAll(() => {
-  global.WebSocket = MockWebSocket as any;
-  global.Notification = MockNotification as any;
+  global.WebSocket = MockWebSocket as unknown as typeof WebSocket;
+  global.Notification = MockNotification as unknown as typeof Notification;
   Object.defineProperty(window, 'Notification', {
     value: MockNotification,
     writable: true
@@ -345,9 +345,10 @@ describe('NotificationProvider', () => {
     global.WebSocket = class extends MockWebSocket {
       constructor(url: string) {
         super(url);
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         mockWebSocket = this;
       }
-    } as any;
+    } as typeof WebSocket;
 
     render(
       <NotificationProvider>
@@ -392,9 +393,10 @@ describe('NotificationProvider', () => {
     global.WebSocket = class extends MockWebSocket {
       constructor(url: string) {
         super(url);
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         mockWebSocket = this;
       }
-    } as any;
+    } as typeof WebSocket;
 
     render(
       <NotificationProvider>

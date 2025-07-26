@@ -1,0 +1,22 @@
+{
+  "/favicon.ico/route": "/favicon.ico",
+  "/_not-found/page": "/_not-found",
+  "/auth/sign-in/[[...sign-in]]/page": "/auth/sign-in/[[...sign-in]]",
+  "/auth/sign-up/[[...sign-up]]/page": "/auth/sign-up/[[...sign-up]]",
+  "/cookathon-demo/page": "/cookathon-demo",
+  "/dashboard/page": "/dashboard",
+  "/mvp-demo/page": "/mvp-demo",
+  "/page": "/",
+  "/pay/[transactionId]/page": "/pay/[transactionId]",
+  "/pricing/page": "/pricing",
+  "/recipient/[transactionId]/page": "/recipient/[transactionId]",
+  "/status/[transactionId]/page": "/status/[transactionId]",
+  "/test-calculator/page": "/test-calculator",
+  "/test-chilean-onboarding/page": "/test-chilean-onboarding",
+  "/test-enhanced-calculator/page": "/test-enhanced-calculator",
+  "/test-flow/page": "/test-flow",
+  "/test-user-recipient/page": "/test-user-recipient",
+  "/transfer/process/page": "/transfer/process",
+  "/transfer/user/page": "/transfer/user",
+  "/user-transfer/page": "/user-transfer"
+}

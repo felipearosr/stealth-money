@@ -5,7 +5,7 @@ import { TransferCalculator } from '../TransferCalculator'
 
 // Mock the debounce hook to make tests synchronous
 jest.mock('use-debounce', () => ({
-  useDebounce: (value: any) => [value, false],
+  useDebounce: (value: unknown) => [value, false],
 }))
 
 describe('TransferCalculator', () => {

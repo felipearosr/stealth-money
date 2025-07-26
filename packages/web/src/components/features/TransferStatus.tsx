@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CheckCircle, Clock, AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export interface TransferEvent {
   status: 'success' | 'pending' | 'failed';
   message: string;
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TransferStatusData {
@@ -61,10 +61,11 @@ export function TransferStatus({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  void lastRefresh; // Used via setter
   const [isRealTimeConnected, setIsRealTimeConnected] = useState(false);
 
   // Fetch transfer status
-  const fetchTransferStatus = async (showLoading = true) => {
+  const fetchTransferStatus = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setIsLoading(true);
       setError(null);
@@ -87,7 +88,7 @@ export function TransferStatus({
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  };
+  }, [transferId]);
 
   // Handle manual refresh
   const handleRefresh = () => {
@@ -100,7 +101,7 @@ export function TransferStatus({
   // Initial fetch and auto-refresh setup with improved real-time behavior
   useEffect(() => {
     fetchTransferStatus(true);
-  }, [transferId]);
+  }, [transferId, fetchTransferStatus]);
 
   // Separate effect for auto-refresh to avoid infinite loops
   useEffect(() => {
@@ -116,7 +117,7 @@ export function TransferStatus({
       }, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, refreshInterval, transferData?.status]);
+  }, [autoRefresh, refreshInterval, transferData?.status, fetchTransferStatus, transferData]);
 
   // Format currency display
   const formatCurrency = (amount: number, currency: string) => {

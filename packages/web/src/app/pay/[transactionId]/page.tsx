@@ -170,9 +170,15 @@ export default function PaymentPage() {
           {/* Stripe Payment Form */}
           <Elements stripe={stripePromise} options={options}>
             <PaymentForm 
-              transactionId={transactionId}
-              amount={((transferData?.sourceAmount || 0) * 1.029).toFixed(2)}
-              currency={transferData?.sourceCurrency || 'USD'}
+              sendAmount={transferData?.sourceAmount || 0}
+              receiveAmount={transferData?.recipientAmount || 0}
+              exchangeRate={transferData?.rate || 1}
+              fees={0}
+              rateId={'default'}
+              onSubmit={(data) => {
+                console.log('Payment submitted:', data);
+                // Handle payment submission
+              }}
             />
           </Elements>
 

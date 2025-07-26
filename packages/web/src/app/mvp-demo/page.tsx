@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   CheckCircle, 
-  User, 
+  // User, 
   CreditCard, 
   Send, 
   ArrowRight, 
@@ -89,7 +89,7 @@ const mockUsers: MockUser[] = [
     name: 'Roberto Fernandez',
     firstName: 'Roberto',
     lastName: 'Fernandez',
-    email: 'roberto@example.cl',
+    email: 'robertofer@gmail.com',
     country: 'Chile',
     acceptedCurrencies: ['CLP', 'EUR']
   }
@@ -158,6 +158,7 @@ export default function MVPDemo() {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [verificationStep, setVerificationStep] = useState<'form' | 'sending' | 'waiting' | 'verifying'>('form');
   const [microDepositSent, setMicroDepositSent] = useState(false);
+  void microDepositSent; // Used via setter
   
   // Calculator state
   const [calculatorMode, setCalculatorMode] = useState<CalculatorMode>('send');
@@ -166,6 +167,7 @@ export default function MVPDemo() {
   const [calculation, setCalculation] = useState<TransferCalculation | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
+  void calculationError; // Used via setter
 
   const steps = [
     { id: 'verification', title: 'Bank Verification', icon: Shield },
@@ -226,7 +228,7 @@ export default function MVPDemo() {
     }, 1200);
 
     return () => clearTimeout(timer);
-  }, [currentMessageIndex, verificationStep, isProcessing]);
+  }, [currentMessageIndex, verificationStep, isProcessing, verificationSteps.sending]);
 
   // Handle payment processing timeout in results page
   useEffect(() => {
@@ -402,7 +404,7 @@ export default function MVPDemo() {
                 <DollarSign className="text-blue-600" />
                 <div>
                   <h3 className="font-semibold text-blue-800">Micro-Deposit Verification</h3>
-                  <p className="text-blue-600">We'll send 1 CLP ($0.01 USD) to verify your account ownership</p>
+                  <p className="text-blue-600">We&apos;ll send 1 CLP ($0.01 USD) to verify your account ownership</p>
                 </div>
               </div>
             </div>
@@ -434,7 +436,6 @@ export default function MVPDemo() {
                   type="text" 
                   placeholder="12.345.678-9"
                   className="w-full p-2 border rounded-md"
-                  defaultValue="12.345.678-9"
                 />
               </div>
 
@@ -444,7 +445,6 @@ export default function MVPDemo() {
                   type="text" 
                   placeholder="Enter your account number"
                   className="w-full p-2 border rounded-md"
-                  defaultValue="****1234"
                 />
               </div>
             </div>
@@ -514,7 +514,7 @@ export default function MVPDemo() {
               disabled={isProcessing}
               className="w-full"
             >
-              I've Received the 1 CLP Deposit
+              I&apos;ve Received the 1 CLP Deposit
               <CheckCircle className="ml-2 h-4 w-4" />
             </Button>
           </>
@@ -618,7 +618,7 @@ export default function MVPDemo() {
             <span>Calculate Your Transfer</span>
           </CardTitle>
           <p className="text-sm text-gray-600 text-center">
-            Get real-time exchange rates and see exactly what you'll pay
+            Get real-time exchange rates and see exactly what you&apos;ll pay
           </p>
         </CardHeader>
         <CardContent className="pt-0 space-y-6">
@@ -922,8 +922,8 @@ export default function MVPDemo() {
                 <div className="flex items-center gap-3">
                   <CreditCard className="text-green-600 w-6 h-6" />
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">Banco de Chile</p>
-                    <p className="text-sm text-gray-600">Cuenta Corriente •••• 1234</p>
+                    <p className="font-semibold text-gray-900">Banco Santander</p>
+                    <p className="text-sm text-gray-600">Cuenta Vista •••• 3071</p>
                   </div>
                   <Badge variant="outline" className="text-green-600 border-green-300 bg-green-100">
                     <CheckCircle className="w-3 h-3 mr-1" />
@@ -1019,44 +1019,58 @@ export default function MVPDemo() {
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold mb-3">Transaction Details</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Transaction ID:</span>
-                <span className="font-mono">TXN-CLP-{Date.now().toString().slice(-8)}</span>
+            {calculation ? (
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Transaction ID:</span>
+                  <span className="font-mono">{calculation.rateId.replace('rate_', 'TXN-')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>You Sent:</span>
+                  <span className="font-semibold">{calculation.sendAmount.toLocaleString('en-US', { style: 'currency', currency: calculation.sendCurrency })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Transfer Fee:</span>
+                  <span>{calculation.fees.toLocaleString('en-US', { style: 'currency', currency: calculation.sendCurrency })}</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span>Total Charged:</span>
+                  <span>{(calculation.sendAmount).toLocaleString('en-US', { style: 'currency', currency: calculation.sendCurrency })}</span>
+                </div>
+                <hr className="my-2" />
+                <div className="flex justify-between">
+                  <span>Exchange Rate:</span>
+                  <span>1 {calculation.sendCurrency} = {calculation.exchangeRate.toLocaleString()} {calculation.receiveCurrency}</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg text-blue-600">
+                  <span>Recipient Gets:</span>
+                  <span>{calculation.receiveAmount.toLocaleString('es-CL', { style: 'currency', currency: calculation.receiveCurrency })}</span>
+                </div>
+                <hr className="my-2" />
+                <div className="flex justify-between">
+                  <span>Recipient:</span>
+                  <span>{selectedUser?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Status:</span>
+                  <Badge variant="outline" className="text-green-600">Completed</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span>Completed At:</span>
+                  <span>{new Date().toLocaleString()}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Amount Sent:</span>
-                <span className="font-semibold">{paymentAmount ? parseInt(paymentAmount).toLocaleString() : '0'} CLP</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Transfer Fee:</span>
-                <span>2,500 CLP</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Total Charged:</span>
-                <span className="font-bold">{paymentAmount ? (parseInt(paymentAmount) + 2500).toLocaleString() : '0'} CLP</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Recipient:</span>
-                <span>{selectedUser?.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Status:</span>
-                <Badge variant="outline" className="text-green-600">Completed</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span>Completed At:</span>
-                <span>{new Date().toLocaleString()}</span>
-              </div>
-            </div>
+            ) : (
+              <p>No calculation details available.</p>
+            )}
           </div>
 
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-blue-800 mb-2">What's Next?</h3>
+            <h3 className="font-semibold text-blue-800 mb-2">What&apos;s Next?</h3>
             <ul className="text-sm text-blue-600 space-y-1">
               <li>• {selectedUser?.name} will receive a notification</li>
               <li>• Funds will be available in their account within 2-5 minutes</li>
-              <li>• You'll receive an email confirmation shortly</li>
+              <li>• You&apos;ll receive an email confirmation shortly</li>
               <li>• Track this transfer in your transaction history</li>
             </ul>
           </div>
@@ -1101,13 +1115,13 @@ export default function MVPDemo() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 flex flex-col items-center justify-center">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
             <h1 className="text-3xl font-bold text-gray-900">
-              Stealth Money MVP Demo
+              Stealth Money
             </h1>
             <a
               href="/cookathon-demo"

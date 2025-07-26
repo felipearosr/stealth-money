@@ -6,7 +6,7 @@ global.fetch = jest.fn();
 
 // Mock the child components to focus on flow logic
 jest.mock('../TransferCalculator', () => ({
-  TransferCalculator: ({ onContinue }: { onContinue: (data: any) => void }) => (
+  TransferCalculator: ({ onContinue }: { onContinue: (data: unknown) => void }) => (
     <div data-testid="transfer-calculator">
       <button 
         onClick={() => onContinue({
@@ -26,7 +26,7 @@ jest.mock('../TransferCalculator', () => ({
 }));
 
 jest.mock('../RecipientForm', () => ({
-  RecipientForm: ({ onContinue, onBack }: { onContinue: (data: any) => void, onBack: () => void }) => (
+  RecipientForm: ({ onContinue, onBack }: { onContinue: (data: unknown) => void, onBack: () => void }) => (
     <div data-testid="recipient-form">
       <button onClick={onBack} data-testid="recipient-back">Back</button>
       <button 
@@ -50,7 +50,7 @@ jest.mock('../RecipientForm', () => ({
 }));
 
 jest.mock('../PaymentForm', () => ({
-  PaymentForm: ({ onSubmit }: { onSubmit: (data: any) => void }) => (
+  PaymentForm: ({ onSubmit }: { onSubmit: (data: unknown) => void }) => (
     <div data-testid="payment-form">
       <button 
         onClick={() => onSubmit({

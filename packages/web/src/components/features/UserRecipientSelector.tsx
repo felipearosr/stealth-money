@@ -115,27 +115,21 @@ export function UserRecipientSelector({
   // UI state
   const [activeTab, setActiveTab] = useState<'search' | 'recent'>('recent');
 
-  // Load recent recipients on component mount
-  useEffect(() => {
-    if (currentUserId) {
-      loadRecentRecipients();
+  // Get authentication token from Clerk
+  const getAuthToken = useCallback(async (): Promise<string> => {
+    if (typeof window === 'undefined') return '';
+    
+    try {
+      // Get token from Clerk auth context
+      const token = sessionStorage.getItem('__clerk_token') || 
+                   localStorage.getItem('__clerk_token') ||
+                   'mock-token'; // Fallback for development
+      return token;
+    } catch (error) {
+      console.warn('Failed to get auth token:', error);
+      return 'mock-token';
     }
-  }, [currentUserId]);
-
-  // Debounced search effect
-  useEffect(() => {
-    if (searchQuery.trim().length >= 2) {
-      const timeoutId = setTimeout(() => {
-        performUserSearch(searchQuery.trim());
-      }, 500);
-      
-      return () => clearTimeout(timeoutId);
-    } else {
-      setSearchResults([]);
-      setHasSearched(false);
-      setSearchError(null);
-    }
-  }, [searchQuery]);
+  }, []);
 
   // Load recent recipients
   const loadRecentRecipients = useCallback(async () => {
@@ -166,7 +160,14 @@ export function UserRecipientSelector({
     } finally {
       setIsLoadingRecents(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, getAuthToken]);
+
+  // Load recent recipients on component mount
+  useEffect(() => {
+    if (currentUserId) {
+      loadRecentRecipients();
+    }
+  }, [currentUserId, loadRecentRecipients]);
 
   // Perform user search
   const performUserSearch = useCallback(async (query: string) => {
@@ -222,23 +223,22 @@ export function UserRecipientSelector({
     } finally {
       setIsSearching(false);
     }
-  }, [transferData.receiveCurrency, currentUserId]);
+  }, [transferData.receiveCurrency, currentUserId, getAuthToken]);
 
-  // Get authentication token from Clerk
-  const getAuthToken = async (): Promise<string> => {
-    if (typeof window === 'undefined') return '';
-    
-    try {
-      // Get token from Clerk auth context
-      const token = sessionStorage.getItem('__clerk_token') || 
-                   localStorage.getItem('__clerk_token') ||
-                   'mock-token'; // Fallback for development
-      return token;
-    } catch (error) {
-      console.warn('Failed to get auth token:', error);
-      return 'mock-token';
+  // Debounced search effect
+  useEffect(() => {
+    if (searchQuery.trim().length >= 2) {
+      const timeoutId = setTimeout(() => {
+        performUserSearch(searchQuery.trim());
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSearchResults([]);
+      setHasSearched(false);
+      setSearchError(null);
     }
-  };
+  }, [searchQuery, performUserSearch]);
 
   // Handle recipient selection
   const handleRecipientClick = (recipient: UserProfile) => {

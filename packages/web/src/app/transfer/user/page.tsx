@@ -159,7 +159,18 @@ export default function UserTransferPage() {
       rateId: data.rateId,
       rateValidUntil: data.rateValidUntil,
       calculatorMode: data.calculatorMode,
-      breakdown: data.breakdown,
+      breakdown: data.breakdown as {
+        sendAmountUSD: number;
+        fees: {
+          cardProcessing: number;
+          transfer: number;
+          payout: number;
+          total: number;
+        };
+        netAmountUSD: number;
+        exchangeRate: number;
+        receiveAmount: number;
+      },
       estimatedArrival: data.estimatedArrival,
     };
 

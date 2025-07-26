@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,7 @@ export function MantleCostCalculator() {
             <span className="text-green-800 font-semibold">Interactive Cost Calculator</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900">
-            See How Much You'll Save with Mantle L2
+            See How Much You&apos;ll Save with Mantle L2
           </h3>
           <p className="text-gray-600 mt-2">
             Enter any amount to compare traditional vs blockchain transfer costs

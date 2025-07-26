@@ -8,6 +8,7 @@ import { Navigation } from "@/components/ui/navigation";
 import { VideoModal } from "@/components/ui/video-modal";
 import { ArrowRight, Shield, Zap, Globe, CheckCircle, Star } from "lucide-react";
 import { Calculator, UserPlus, CreditCard, Rocket } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -89,22 +90,15 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                onClick={() => {
-                  // Scroll to calculator or navigate directly to transfer process
-                  const calculator = document.querySelector('#calculator');
-                  if (calculator) {
-                    calculator.scrollIntoView({ behavior: 'smooth' });
-                  } else {
-                    window.location.href = '/transfer/process';
-                  }
-                }}
-              >
-                Start Transfer
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
+              <Link href="/mvp-demo">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  Start Transfer
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
               <Button 
                 size="lg" 
                 variant="outline" 
@@ -138,9 +132,6 @@ export default function Home() {
               {/* Background decoration */}
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative">
-                <div className="absolute -top-3 -right-3 bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full transform rotate-12 shadow-sm">
-                  Live Rates
-                </div>
                 <PublicTransferCalculator />
               </div>
             </div>
@@ -389,13 +380,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center space-y-4 mb-16">
             <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
-              Why we're different
+              Why we&apos;re different
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
               We Actually Give a Sh*t About Your Money
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              While banks charge you $45 for a wire transfer, we're using stablecoins to move money for pennies
+              While banks charge you $45 for a wire transfer, we&apos;re using stablecoins to move money for pennies
             </p>
           </div>
 
@@ -412,7 +403,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900">Actually Instant</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Not "3-5 business days instant". Not "same day instant". Actually f*cking instant. Your money moves at internet speed.
+                  Not &quot;3-5 business days instant&quot;. Not &quot;same day instant&quot;. Actually f*cking instant. Your money moves at internet speed.
                 </p>
               </CardContent>
             </Card>
@@ -427,9 +418,9 @@ export default function Home() {
                     0 hacks
                   </span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">Circle's Infrastructure</h3>
+                <h3 className="text-xl font-semibold text-gray-900">Circle&apos;s Infrastructure</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  We don't store your money. Circle does. They're the $9B company behind USDC. Your funds are safer than in most banks.
+                  We don&apos;t store your money. Circle does. They&apos;re the $9B company behind USDC. Your funds are safer than in most banks.
                 </p>
               </CardContent>
             </Card>
@@ -446,7 +437,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900">Real Exchange Rates</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  We show you the exact rate. No hidden 3% markup. No "processing fees". What you see is literally what you get.
+                  We show you the exact rate. No hidden 3% markup. No &quot;processing fees&quot;. What you see is literally what you get.
                 </p>
               </CardContent>
             </Card>
@@ -466,7 +457,7 @@ export default function Home() {
               Your Grandma Could Do This
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-600">
-              Seriously. It's easier than ordering pizza online.
+              Seriously. It&apos;s easier than ordering pizza online.
             </p>
           </div>
 
@@ -531,7 +522,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">They Get Paid</h3>
                 <p className="text-sm text-gray-600">
-                  Money hits their account. They get a notification. You're done.
+                  Money hits their account. They get a notification. You&apos;re done.
                 </p>
                 <div className="mt-4 text-xs text-orange-600 font-semibold">
                   ~32 seconds total
@@ -586,13 +577,15 @@ export default function Home() {
                   <span className="text-xs text-gray-500">2 days ago</span>
                 </div>
                 <p className="text-gray-700 italic">
-                  "Sent $3,400 to my contractor in Mexico. Cost me $12. Bank wanted $85 + their sh*tty exchange rate. Never going back."
+                  &quot;Sent $3,400 to my contractor in Mexico. Cost me $12. Bank wanted $85 + their sh*tty exchange rate. Never going back.&quot;
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <img 
+                    <Image 
                       src="https://i.pravatar.cc/150?img=1" 
                       alt="Avatar" 
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full"
                     />
                     <div>
@@ -618,13 +611,15 @@ export default function Home() {
                   <span className="text-xs text-gray-500">1 week ago</span>
                 </div>
                 <p className="text-gray-700 italic">
-                  "I pay my dev team in India every month. Used to take 3-5 days. Now it's literally 30 seconds. This is the future."
+                  &quot;I pay my dev team in India every month. Used to take 3-5 days. Now it&apos;s literally 30 seconds. This is the future.&quot;
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <img 
+                    <Image 
                       src="https://i.pravatar.cc/150?img=5" 
                       alt="Avatar" 
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full"
                     />
                     <div>
@@ -651,13 +646,15 @@ export default function Home() {
                   <span className="text-xs text-gray-500">3 weeks ago</span>
                 </div>
                 <p className="text-gray-700 italic">
-                  "Only 4 stars because I'm mad I didn't find this sooner. Could've saved thousands on transfer fees. FML."
+                  &quot;Only 4 stars because I&apos;m mad I didn&apos;t find this sooner. Could&apos;ve saved thousands on transfer fees. FML.&quot;
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <img 
+                    <Image 
                       src="https://i.pravatar.cc/150?img=8" 
                       alt="Avatar" 
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full"
                     />
                     <div>
@@ -699,7 +696,7 @@ export default function Home() {
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Every international transfer you make the old way is money left on the table. 
             <span className="block mt-2 text-gray-400">
-              Join 47,000+ people who've already made the switch.
+              Join 47,000+ people who&apos;ve already made the switch.
             </span>
           </p>
           
