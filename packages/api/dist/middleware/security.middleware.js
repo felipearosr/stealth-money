@@ -135,6 +135,11 @@ exports.corsConfig = {
         if (process.env.NODE_ENV === 'development') {
             return callback(null, true);
         }
+        // Temporarily allow all origins for debugging (remove in production)
+        if (process.env.CORS_DEBUG === 'true') {
+            console.log('🔧 CORS DEBUG: Allowing origin:', origin);
+            return callback(null, true);
+        }
         // Check if origin is in allowed list
         if (allowedOrigins.includes(origin)) {
             return callback(null, true);

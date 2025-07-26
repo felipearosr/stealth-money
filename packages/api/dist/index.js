@@ -249,8 +249,43 @@ app.use((err, req, res, next) => {
 // Initialize database and start server
 async function startServer() {
     try {
+        console.log('🔧 Starting server initialization...');
+        console.log('🔧 PORT:', PORT);
+        console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
+        // Start the server immediately without waiting for database
+        const server = app.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
+            console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
+            console.log(`🧪 Test endpoint: http://0.0.0.0:${PORT}/test`);
+        });
+        server.on('error', (error) => {
+            console.error('❌ Server error:', error);
+            console.error('❌ Error details:', {
+                code: error.code,
+                message: error.message,
+                stack: error.stack
+            });
+        });
+        server.on('listening', () => {
+            console.log('✅ Server is listening successfully');
+        });
+        // Initialize database in the background (non-blocking)
+        initializeDatabase();
+    }
+    catch (error) {
+        console.error('❌ Failed to start server:', error);
+        console.error('❌ Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        process.exit(1);
+    }
+}
+// Background database initialization
+async function initializeDatabase() {
+    try {
         const dbService = new database_simple_service_1.SimpleDatabaseService();
-        // Test database connection and initialize tables
         console.log('🔌 Testing database connection...');
         const connected = await dbService.testConnection();
         if (connected) {
@@ -260,24 +295,15 @@ async function startServer() {
                 console.log('✅ Database ready!');
             }
             else {
-                console.log('⚠️  Database initialization failed, but continuing...');
+                console.log('⚠️  Database initialization failed, but server is running...');
             }
         }
         else {
-            console.log('⚠️  Database connection failed, but continuing...');
+            console.log('⚠️  Database connection failed, but server is running...');
         }
-        const server = app.listen(PORT, '0.0.0.0', () => {
-            console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
-            console.log(`📍 Health check: http://0.0.0.0:${PORT}/health`);
-            console.log(`🧪 Test endpoint: http://0.0.0.0:${PORT}/test`);
-        });
-        server.on('error', (error) => {
-            console.error('❌ Server error:', error);
-        });
     }
     catch (error) {
-        console.error('❌ Failed to start server:', error);
-        process.exit(1);
+        console.error('⚠️  Database initialization error:', error);
     }
 }
 startServer();

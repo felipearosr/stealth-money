@@ -253,6 +253,10 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 // Initialize database and start server
 async function startServer() {
   try {
+    console.log('🔧 Starting server initialization...');
+    console.log('🔧 PORT:', PORT);
+    console.log('🔧 NODE_ENV:', process.env.NODE_ENV);
+    
     // Start the server immediately without waiting for database
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 API server running on http://0.0.0.0:${PORT}`);
@@ -262,6 +266,15 @@ async function startServer() {
 
     server.on('error', (error) => {
       console.error('❌ Server error:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+    });
+
+    server.on('listening', () => {
+      console.log('✅ Server is listening successfully');
     });
 
     // Initialize database in the background (non-blocking)
@@ -269,6 +282,11 @@ async function startServer() {
 
   } catch (error) {
     console.error('❌ Failed to start server:', error);
+    console.error('❌ Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
 }
