@@ -809,6 +809,8 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
             setError(null);
             try {
                 const API_URL = ("TURBOPACK compile-time value", "http://localhost:4000") || 'http://localhost:4000';
+                console.log('🔧 TransferCalculator API_URL:', API_URL);
+                console.log('🔧 process.env.NEXT_PUBLIC_API_URL:', ("TURBOPACK compile-time value", "http://localhost:4000"));
                 // For "receive" mode, estimate the send amount first
                 let estimatedSendAmount = numericAmount;
                 if (mode === 'receive') {
@@ -1003,14 +1005,14 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 className: "h-5 w-5"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 407,
+                                lineNumber: 409,
                                 columnNumber: 13
                             }, this),
                             "Transfer Calculator"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 406,
+                        lineNumber: 408,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1018,13 +1020,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                         children: "Calculate how much your recipient will receive"
                     }, void 0, false, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 410,
+                        lineNumber: 412,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                lineNumber: 405,
+                lineNumber: 407,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -1045,19 +1047,19 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 427,
+                                                lineNumber: 429,
                                                 columnNumber: 17
                                             }, this),
                                             "You Send"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 426,
+                                        lineNumber: 428,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                    lineNumber: 419,
+                                    lineNumber: 421,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1070,30 +1072,30 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 439,
+                                                lineNumber: 441,
                                                 columnNumber: 17
                                             }, this),
                                             "Recipient Gets"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 438,
+                                        lineNumber: 440,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                    lineNumber: 431,
+                                    lineNumber: 433,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                            lineNumber: 418,
+                            lineNumber: 420,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 417,
+                        lineNumber: 419,
                         columnNumber: 9
                     }, this),
                     showTransferMethods && enhancedCalculation && enhancedCalculation.transferMethods.length > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1104,7 +1106,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 children: "Transfer Method"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 449,
+                                lineNumber: 451,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1123,13 +1125,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 className: "h-4 w-4 text-blue-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 464,
+                                                                lineNumber: 466,
                                                                 columnNumber: 25
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__["Shield"], {
                                                                 className: "h-4 w-4 text-green-600"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 466,
+                                                                lineNumber: 468,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1137,13 +1139,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 children: method.method === 'mantle' ? 'Mantle L2' : 'Traditional'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 468,
+                                                                lineNumber: 470,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 462,
+                                                        lineNumber: 464,
                                                         columnNumber: 21
                                                     }, this),
                                                     method.recommended && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1152,13 +1154,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                         children: "Recommended"
                                                     }, void 0, false, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 473,
+                                                        lineNumber: 475,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 461,
+                                                lineNumber: 463,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1171,20 +1173,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 className: "h-3 w-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 481,
+                                                                lineNumber: 483,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 children: method.estimatedTime
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 482,
+                                                                lineNumber: 484,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 480,
+                                                        lineNumber: 482,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1194,7 +1196,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 className: "h-3 w-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 485,
+                                                                lineNumber: 487,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1204,19 +1206,19 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 486,
+                                                                lineNumber: 488,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 484,
+                                                        lineNumber: 486,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 479,
+                                                lineNumber: 481,
                                                 columnNumber: 19
                                             }, this),
                                             method.method === 'mantle' && method.gasEstimate && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1228,18 +1230,18 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 492,
+                                                lineNumber: 494,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, method.method, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 452,
+                                        lineNumber: 454,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 450,
+                                lineNumber: 452,
                                 columnNumber: 13
                             }, this),
                             enhancedCalculation.comparison && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1252,7 +1254,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 504,
+                                                lineNumber: 506,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1260,13 +1262,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: "Cost Comparison"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 505,
+                                                lineNumber: 507,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 503,
+                                        lineNumber: 505,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1282,26 +1284,26 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 508,
+                                                lineNumber: 510,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: enhancedCalculation.comparison.timeDifference
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 512,
+                                                lineNumber: 514,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 507,
+                                        lineNumber: 509,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 502,
+                                lineNumber: 504,
                                 columnNumber: 15
                             }, this),
                             enhancedCalculation.recommendation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1314,7 +1316,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 521,
+                                                lineNumber: 523,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1322,13 +1324,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: "Recommendation"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 522,
+                                                lineNumber: 524,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 520,
+                                        lineNumber: 522,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1344,25 +1346,25 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 527,
+                                                lineNumber: 529,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 524,
+                                        lineNumber: 526,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 519,
+                                lineNumber: 521,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 448,
+                        lineNumber: 450,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1378,7 +1380,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 543,
+                                                lineNumber: 545,
                                                 columnNumber: 19
                                             }, this),
                                             "You send"
@@ -1389,7 +1391,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 548,
+                                                lineNumber: 550,
                                                 columnNumber: 19
                                             }, this),
                                             "Recipient gets"
@@ -1397,12 +1399,12 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                     }, void 0, true)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                    lineNumber: 540,
+                                    lineNumber: 542,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 539,
+                                lineNumber: 541,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1419,12 +1421,12 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                             className: `text-lg font-medium ${validationError ? 'border-red-500' : ''}`
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 557,
+                                            lineNumber: 559,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 556,
+                                        lineNumber: 558,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1437,12 +1439,12 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                     className: "h-10",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 574,
+                                                        lineNumber: 576,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 573,
+                                                    lineNumber: 575,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1455,36 +1457,36 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                         children: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SUPPORTED_CURRENCIES"][currency].flag
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 580,
+                                                                        lineNumber: 582,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: currency
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 581,
+                                                                        lineNumber: 583,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 579,
+                                                                lineNumber: 581,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, currency, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 578,
+                                                            lineNumber: 580,
                                                             columnNumber: 23
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 576,
+                                                    lineNumber: 578,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 572,
+                                            lineNumber: 574,
                                             columnNumber: 17
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
                                             value: receiveCurrency,
@@ -1494,12 +1496,12 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                     className: "h-10",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 590,
+                                                        lineNumber: 592,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 589,
+                                                    lineNumber: 591,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1512,47 +1514,47 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                         children: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SUPPORTED_CURRENCIES"][currency].flag
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 596,
+                                                                        lineNumber: 598,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: currency
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 597,
+                                                                        lineNumber: 599,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 595,
+                                                                lineNumber: 597,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, currency, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 594,
+                                                            lineNumber: 596,
                                                             columnNumber: 23
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 592,
+                                                    lineNumber: 594,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 588,
+                                            lineNumber: 590,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 570,
+                                        lineNumber: 572,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 555,
+                                lineNumber: 557,
                                 columnNumber: 11
                             }, this),
                             validationError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1562,20 +1564,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                         className: "h-3 w-3"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 609,
+                                        lineNumber: 611,
                                         columnNumber: 15
                                     }, this),
                                     validationError
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 608,
+                                lineNumber: 610,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 538,
+                        lineNumber: 540,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1586,17 +1588,17 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 className: "h-4 w-4 text-gray-600"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 618,
+                                lineNumber: 620,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                            lineNumber: 617,
+                            lineNumber: 619,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 616,
+                        lineNumber: 618,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1612,7 +1614,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 628,
+                                                lineNumber: 630,
                                                 columnNumber: 19
                                             }, this),
                                             "Recipient gets"
@@ -1623,7 +1625,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "h-4 w-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 633,
+                                                lineNumber: 635,
                                                 columnNumber: 19
                                             }, this),
                                             "You send"
@@ -1631,12 +1633,12 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                     }, void 0, true)
                                 }, void 0, false, {
                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                    lineNumber: 625,
+                                    lineNumber: 627,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 624,
+                                lineNumber: 626,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1651,17 +1653,17 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: calculatorMode === 'send' ? 'Amount recipient will receive' : 'Amount you need to send'
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 648,
+                                                lineNumber: 650,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 642,
+                                            lineNumber: 644,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 641,
+                                        lineNumber: 643,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1674,12 +1676,12 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                     className: "h-10",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 661,
+                                                        lineNumber: 663,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 660,
+                                                    lineNumber: 662,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1692,36 +1694,36 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                         children: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SUPPORTED_CURRENCIES"][currency].flag
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 667,
+                                                                        lineNumber: 669,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: currency
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 668,
+                                                                        lineNumber: 670,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 666,
+                                                                lineNumber: 668,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, currency, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 665,
+                                                            lineNumber: 667,
                                                             columnNumber: 23
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 663,
+                                                    lineNumber: 665,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 659,
+                                            lineNumber: 661,
                                             columnNumber: 17
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
                                             value: sendCurrency,
@@ -1731,12 +1733,12 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                     className: "h-10",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 677,
+                                                        lineNumber: 679,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 676,
+                                                    lineNumber: 678,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1749,53 +1751,53 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                         children: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SUPPORTED_CURRENCIES"][currency].flag
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 683,
+                                                                        lineNumber: 685,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: currency
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                        lineNumber: 684,
+                                                                        lineNumber: 686,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 682,
+                                                                lineNumber: 684,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, currency, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 681,
+                                                            lineNumber: 683,
                                                             columnNumber: 23
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 679,
+                                                    lineNumber: 681,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 675,
+                                            lineNumber: 677,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 657,
+                                        lineNumber: 659,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 640,
+                                lineNumber: 642,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 623,
+                        lineNumber: 625,
                         columnNumber: 9
                     }, this),
                     !inputAmount && !isLoading && !error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1808,7 +1810,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 699,
+                                        lineNumber: 701,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1816,13 +1818,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                         children: "Get Started"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 700,
+                                        lineNumber: 702,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 698,
+                                lineNumber: 700,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1830,7 +1832,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 children: "Enter an amount above to see how much your recipient will receive and the total cost including fees."
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 702,
+                                lineNumber: 704,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1843,20 +1845,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "w-2 h-2 bg-blue-400 rounded-full"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 707,
+                                                lineNumber: 709,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Real-time exchange rates"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 708,
+                                                lineNumber: 710,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 706,
+                                        lineNumber: 708,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1866,20 +1868,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "w-2 h-2 bg-blue-400 rounded-full"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 711,
+                                                lineNumber: 713,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Transparent fee breakdown"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 712,
+                                                lineNumber: 714,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 710,
+                                        lineNumber: 712,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1889,32 +1891,32 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 className: "w-2 h-2 bg-blue-400 rounded-full"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 715,
+                                                lineNumber: 717,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Fast international transfers"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 716,
+                                                lineNumber: 718,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 714,
+                                        lineNumber: 716,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 705,
+                                lineNumber: 707,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 697,
+                        lineNumber: 699,
                         columnNumber: 11
                     }, this),
                     isLoading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1924,7 +1926,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 className: "h-6 w-6 animate-spin text-muted-foreground"
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 725,
+                                lineNumber: 727,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1932,13 +1934,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 children: "Calculating..."
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 726,
+                                lineNumber: 728,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 724,
+                        lineNumber: 726,
                         columnNumber: 11
                     }, this),
                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1951,7 +1953,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                         className: "h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 733,
+                                        lineNumber: 735,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1959,13 +1961,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                         children: "Calculation Error"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 734,
+                                        lineNumber: 736,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 732,
+                                lineNumber: 734,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1973,13 +1975,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 children: error
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 736,
+                                lineNumber: 738,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 731,
+                        lineNumber: 733,
                         columnNumber: 11
                     }, this),
                     calculation && !isLoading && !error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1998,7 +2000,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SUPPORTED_CURRENCIES"][receiveCurrency].flag
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 746,
+                                                    lineNumber: 748,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2006,13 +2008,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                     children: "Recipient gets"
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 747,
+                                                    lineNumber: 749,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 745,
+                                            lineNumber: 747,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2022,23 +2024,23 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(calculation.receiveAmount, receiveCurrency)
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 750,
+                                                lineNumber: 752,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 749,
+                                            lineNumber: 751,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                    lineNumber: 744,
+                                    lineNumber: 746,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 743,
+                                lineNumber: 745,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2052,7 +2054,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: "Exchange rate"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 760,
+                                                lineNumber: 762,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2070,7 +2072,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 762,
+                                                        lineNumber: 764,
                                                         columnNumber: 19
                                                     }, this),
                                                     isRateExpiringSoon && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2080,26 +2082,26 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 className: "h-3 w-3"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 767,
+                                                                lineNumber: 769,
                                                                 columnNumber: 23
                                                             }, this),
                                                             "Rate expires soon"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 766,
+                                                        lineNumber: 768,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 761,
+                                                lineNumber: 763,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 759,
+                                        lineNumber: 761,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2110,7 +2112,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: "Total fees"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 775,
+                                                lineNumber: 777,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2118,13 +2120,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(calculation.fees, sendCurrency)
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 776,
+                                                lineNumber: 778,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 774,
+                                        lineNumber: 776,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2142,20 +2144,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 children: "Processing fee"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 792,
+                                                                lineNumber: 794,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(selectedMethodData.fees.processing, sendCurrency)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 793,
+                                                                lineNumber: 795,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 791,
+                                                        lineNumber: 793,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2165,20 +2167,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 children: selectedMethod === 'mantle' ? 'Network gas fee' : 'Transfer fee'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 796,
+                                                                lineNumber: 798,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(selectedMethodData.fees.network, sendCurrency)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 799,
+                                                                lineNumber: 801,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 795,
+                                                        lineNumber: 797,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2188,20 +2190,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 children: "Exchange fee"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 802,
+                                                                lineNumber: 804,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(selectedMethodData.fees.exchange, sendCurrency)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 803,
+                                                                lineNumber: 805,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 801,
+                                                        lineNumber: 803,
                                                         columnNumber: 25
                                                     }, this),
                                                     selectedMethod === 'mantle' && selectedMethodData.gasEstimate && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2211,7 +2213,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 children: "Gas details"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 807,
+                                                                lineNumber: 809,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2221,13 +2223,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                lineNumber: 808,
+                                                                lineNumber: 810,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                        lineNumber: 806,
+                                                        lineNumber: 808,
                                                         columnNumber: 27
                                                     }, this)
                                                 ]
@@ -2242,20 +2244,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: "Card processing"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 818,
+                                                            lineNumber: 820,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(calculation.breakdown.fees.cardProcessing, sendCurrency)
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 819,
+                                                            lineNumber: 821,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 817,
+                                                    lineNumber: 819,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2265,20 +2267,20 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: "Transfer fee"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 822,
+                                                            lineNumber: 824,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(calculation.breakdown.fees.transfer, sendCurrency)
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 823,
+                                                            lineNumber: 825,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 821,
+                                                    lineNumber: 823,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2288,27 +2290,27 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: "Payout fee"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 826,
+                                                            lineNumber: 828,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(calculation.breakdown.fees.payout, sendCurrency)
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 827,
+                                                            lineNumber: 829,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 825,
+                                                    lineNumber: 827,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true)
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 782,
+                                        lineNumber: 784,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2319,7 +2321,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: "Total to pay"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 834,
+                                                lineNumber: 836,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2327,13 +2329,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$lib$2f$currencies$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCurrency"])(calculation.sendAmount + calculation.fees, sendCurrency)
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 835,
+                                                lineNumber: 837,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 833,
+                                        lineNumber: 835,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2343,26 +2345,26 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                 children: "Estimated arrival"
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 841,
+                                                lineNumber: 843,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: new Date(calculation.estimatedArrival).toLocaleString()
                                             }, void 0, false, {
                                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                lineNumber: 842,
+                                                lineNumber: 844,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 840,
+                                        lineNumber: 842,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 758,
+                                lineNumber: 760,
                                 columnNumber: 13
                             }, this),
                             selectedMethod === 'mantle' && enhancedCalculation && (()=>{
@@ -2381,7 +2383,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             className: "h-4 w-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 857,
+                                                            lineNumber: 859,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2389,13 +2391,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: "Mantle L2 Benefits"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 858,
+                                                            lineNumber: 860,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 856,
+                                                    lineNumber: 858,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2407,31 +2409,31 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                                     className: "w-1 h-1 bg-blue-400 rounded-full"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                    lineNumber: 863,
+                                                                    lineNumber: 865,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     children: benefit
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                                    lineNumber: 864,
+                                                                    lineNumber: 866,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, index, true, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 862,
+                                                            lineNumber: 864,
                                                             columnNumber: 27
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 860,
+                                                    lineNumber: 862,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 855,
+                                            lineNumber: 857,
                                             columnNumber: 21
                                         }, this),
                                         mantleMethod.networkStatus && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2444,7 +2446,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             className: `w-2 h-2 rounded-full ${mantleMethod.networkStatus.connected ? 'bg-green-400' : 'bg-red-400'}`
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 874,
+                                                            lineNumber: 876,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2452,13 +2454,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: "Network Status"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 877,
+                                                            lineNumber: 879,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 873,
+                                                    lineNumber: 875,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2471,7 +2473,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 880,
+                                                            lineNumber: 882,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2482,7 +2484,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 881,
+                                                            lineNumber: 883,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2493,7 +2495,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 882,
+                                                            lineNumber: 884,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2501,19 +2503,19 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: mantleMethod.networkStatus.connected ? 'Connected' : 'Disconnected'
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 883,
+                                                            lineNumber: 885,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 879,
+                                                    lineNumber: 881,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 872,
+                                            lineNumber: 874,
                                             columnNumber: 23
                                         }, this),
                                         enhancedCalculation.comparison && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2526,7 +2528,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             className: "h-4 w-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 896,
+                                                            lineNumber: 898,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2534,13 +2536,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: "Cost Savings with Mantle"
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 897,
+                                                            lineNumber: 899,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 895,
+                                                    lineNumber: 897,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2557,7 +2559,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 900,
+                                                            lineNumber: 902,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2565,25 +2567,25 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                                             children: enhancedCalculation.comparison.timeDifference
                                                         }, void 0, false, {
                                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                            lineNumber: 904,
+                                                            lineNumber: 906,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                                    lineNumber: 899,
+                                                    lineNumber: 901,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 894,
+                                            lineNumber: 896,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                    lineNumber: 853,
+                                    lineNumber: 855,
                                     columnNumber: 19
                                 }, this);
                             })(),
@@ -2597,13 +2599,13 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                         children: "• Powered by Mantle L2"
                                     }, void 0, false, {
                                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                        lineNumber: 920,
+                                        lineNumber: 922,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 917,
+                                lineNumber: 919,
                                 columnNumber: 15
                             }, this),
                             onContinue && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$web$2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2617,7 +2619,7 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                             className: "h-4 w-4 animate-spin mr-2"
                                         }, void 0, false, {
                                             fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                            lineNumber: 935,
+                                            lineNumber: 937,
                                             columnNumber: 21
                                         }, this),
                                         "Processing..."
@@ -2625,25 +2627,25 @@ function TransferCalculator({ onContinue, isNavigating = false, showTitle = true
                                 }, void 0, true) : 'Continue with this rate'
                             }, void 0, false, {
                                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                                lineNumber: 927,
+                                lineNumber: 929,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                        lineNumber: 741,
+                        lineNumber: 743,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-                lineNumber: 415,
+                lineNumber: 417,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/packages/web/src/components/features/TransferCalculator.tsx",
-        lineNumber: 403,
+        lineNumber: 405,
         columnNumber: 5
     }, this);
 }

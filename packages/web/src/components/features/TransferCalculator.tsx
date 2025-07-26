@@ -220,6 +220,8 @@ export function TransferCalculator({
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      console.log('🔧 TransferCalculator API_URL:', API_URL);
+      console.log('🔧 process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
 
       // For "receive" mode, estimate the send amount first
       let estimatedSendAmount = numericAmount;
