@@ -25,35 +25,6 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/favicon.ico": {
-      "initialHeaders": {
-        "cache-control": "public, max-age=0, must-revalidate",
-        "content-type": "image/x-icon",
-        "x-next-cache-tags": "_N_T_/layout,_N_T_/favicon.ico/layout,_N_T_/favicon.ico/route,_N_T_/favicon.ico"
-      },
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/favicon.ico",
-      "dataRoute": null,
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/test-flow": {
       "experimentalBypassFor": [
         {
@@ -102,7 +73,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/transfer/user": {
+    "/test-user-recipient": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -115,8 +86,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/transfer/user",
-      "dataRoute": "/transfer/user.rsc",
+      "srcRoute": "/test-user-recipient",
+      "dataRoute": "/test-user-recipient.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -126,7 +97,12 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/transfer/process": {
+    "/favicon.ico": {
+      "initialHeaders": {
+        "cache-control": "public, max-age=0, must-revalidate",
+        "content-type": "image/x-icon",
+        "x-next-cache-tags": "_N_T_/layout,_N_T_/favicon.ico/layout,_N_T_/favicon.ico/route,_N_T_/favicon.ico"
+      },
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -139,8 +115,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/transfer/process",
-      "dataRoute": "/transfer/process.rsc",
+      "srcRoute": "/favicon.ico",
+      "dataRoute": null,
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -174,7 +150,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/dashboard": {
+    "/transfer/user": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -187,8 +163,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/dashboard",
-      "dataRoute": "/dashboard.rsc",
+      "srcRoute": "/transfer/user",
+      "dataRoute": "/transfer/user.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -222,7 +198,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/cookathon-demo": {
+    "/mvp-demo": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -235,32 +211,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/cookathon-demo",
-      "dataRoute": "/cookathon-demo.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
-    "/test-user-recipient": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/test-user-recipient",
-      "dataRoute": "/test-user-recipient.rsc",
+      "srcRoute": "/mvp-demo",
+      "dataRoute": "/mvp-demo.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -294,7 +246,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/mvp-demo": {
+    "/cookathon-demo": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -307,8 +259,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/mvp-demo",
-      "dataRoute": "/mvp-demo.rsc",
+      "srcRoute": "/cookathon-demo",
+      "dataRoute": "/cookathon-demo.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -341,13 +293,61 @@
         "x-next-revalidated-tags",
         "x-next-revalidate-tag-token"
       ]
+    },
+    "/dashboard": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/dashboard",
+      "dataRoute": "/dashboard.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/transfer/process": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/transfer/process",
+      "dataRoute": "/transfer/process.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
     }
   },
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "f7c852c40945dab438e25502e8550cab",
-    "previewModeSigningKey": "369a8376a9fa61efee5c5395de6ce0de55c3ac4c6893e207bf7b6acb3701f8a2",
-    "previewModeEncryptionKey": "648b6f2eec168fd9c22accae31407502350789bd650e14d81ef17cce85487bea"
+    "previewModeId": "9e21f1c923be5a1c66c903adf9f204e2",
+    "previewModeSigningKey": "2ca011434377b829951c290105aae32cfd7d2ff0b0076b2687c4ec0347adfcaa",
+    "previewModeEncryptionKey": "29af1d46170e8d00217caf00255741daeb5c5358ebc9778e2c1c59c016a6a9fb"
   }
 }

@@ -22,7 +22,8 @@ interface Transaction {
   updatedAt: string;
 }
 
-export default function DashboardPage() {
+// Component that uses Clerk hooks
+function DashboardContent() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -269,4 +270,31 @@ export default function DashboardPage() {
       </div>
     </div>
   );
-} 
+}
+
+// Main component that handles Clerk configuration
+export default function DashboardPage() {
+  // Check if Clerk is properly configured
+  const isClerkConfigured = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
+    !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder');
+
+  if (!isClerkConfigured) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-semibold mb-4">Configuration Required</h2>
+            <p className="text-gray-600 mb-6">
+              Authentication is not properly configured. Please set up Clerk authentication to access the dashboard.
+            </p>
+            <Link href="/">
+              <Button>Go Home</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return <DashboardContent />;
+}
