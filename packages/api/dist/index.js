@@ -274,11 +274,13 @@ async function startServer() {
     }
     catch (error) {
         console.error('❌ Failed to start server:', error);
-        console.error('❌ Error details:', {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-        });
+        if (error instanceof Error) {
+            console.error('❌ Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+        }
         process.exit(1);
     }
 }
