@@ -219,7 +219,8 @@ stealth-money/
 - Complete transfer flow UI with calculator, recipient selection, and status tracking
 
 **🚧 In Development (P2P Payment System):**
-- Payment request generation with QR codes and shareable links
+- ✅ PaymentRequest database model with QR codes and shareable links support
+- Payment request generation API endpoints and services
 - Geographic-based payment processor selection (Plaid, Stripe, etc.)
 - Unregistered user onboarding flow through payment requests
 - Enhanced notification system for real-time payment updates
@@ -270,7 +271,8 @@ stealth-money/
 ### Implementation Roadmap
 
 **Phase 1: Core P2P Features (Current)**
-- [ ] PaymentRequest database model and API endpoints
+- [x] PaymentRequest database model and migration
+- [ ] Payment request API endpoints and services
 - [ ] QR code generation and shareable link creation
 - [ ] Payment processor selection service
 - [ ] Enhanced notification system
