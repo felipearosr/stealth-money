@@ -177,7 +177,7 @@ node src/services/notification.service.example.js
 
 ## 🧪 Testing
 
-The project includes comprehensive testing for all core services:
+The project includes comprehensive testing for all core services with complete unit test coverage:
 
 ### Service Testing Coverage
 - **PaymentRequestService**: Complete unit test suite with mocked Prisma, QRCode, and JWT dependencies
@@ -190,6 +190,7 @@ The project includes comprehensive testing for all core services:
 - **Error Handling**: Tests cover both success and failure scenarios
 - **Edge Cases**: Comprehensive coverage of edge cases and boundary conditions
 - **Integration Scenarios**: Tests simulate real-world usage patterns and workflows
+- **Service Examples**: Working example implementations for all core services
 
 ### Running Tests
 ```bash
@@ -208,6 +209,12 @@ npm test -- --coverage
 
 # Run tests in watch mode
 npm test -- --watch
+
+# Run service examples
+npm run dev:examples  # Run all service examples
+node src/services/transfer.service.example.js
+node src/services/notification.service.example.js
+node src/services/payment-request.example.js
 ```
 
 ## 🌐 API Endpoints
@@ -433,23 +440,29 @@ CIRCLE_API_KEY=your_api_key
 ## 📋 Todo List
 
 ### 🔥 High Priority
+- [ ] **API Route Implementation**
+  - [ ] Implement REST API endpoints for payment request system
+  - [ ] Add API routes for payment processor selection
+  - [ ] Create notification management endpoints
+  - [ ] Build transfer service API routes with unregistered user support
+
+- [ ] **Frontend UI Components**
+  - [ ] Build React components for payment request creation and management
+  - [ ] Implement QR code display and shareable link generation UI
+  - [ ] Create payment processor selection interface
+  - [ ] Add user onboarding flow for unregistered users
+
 - [ ] **User Authentication & Authorization**
   - [ ] JWT-based authentication system
   - [ ] User registration and login
   - [ ] Protected routes and API endpoints
   - [ ] Password reset functionality
 
-- [ ] **Enhanced Security**
-  - [ ] Rate limiting for API endpoints
-  - [ ] Input validation and sanitization
-  - [ ] CORS configuration
-  - [ ] API key rotation system
-
-- [ ] **Real Blockchain Integration**
-  - [ ] Deploy TransferManager smart contract to testnet
-  - [ ] Integrate real contract ABI
-  - [ ] Add contract interaction tests
-  - [ ] Gas fee estimation and optimization
+- [ ] **Enhanced Security & Compliance**
+  - [ ] Rate limiting for API endpoints and payment request generation
+  - [ ] Enhanced KYC/AML compliance checks for cross-border transfers
+  - [ ] Fraud detection for payment requests and unusual patterns
+  - [ ] Audit trails for payment request and fulfillment activities
 
 ### 🚀 Medium Priority
 - [ ] **Advanced Features**
