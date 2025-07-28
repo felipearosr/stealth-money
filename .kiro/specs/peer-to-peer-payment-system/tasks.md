@@ -70,7 +70,7 @@
   - Write integration tests for enhanced payment processing APIs
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 8. Create user interface components for payment requests
+- [x] 8. Create user interface components for payment requests
   - Build React components for payment request creation and management
   - Implement QR code display component using react-qr-code or similar library
   - Create shareable link generation and copying functionality

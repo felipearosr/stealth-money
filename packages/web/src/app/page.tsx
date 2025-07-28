@@ -26,8 +26,11 @@ export default function Home() {
               <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 How It Works
               </a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Pricing
+              <a href="/payment-requests" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                Payment Requests
+              </a>
+              <a href="/pay/demo-request" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                Pay Demo
               </a>
               <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                 Get Started
