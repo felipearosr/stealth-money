@@ -7,6 +7,7 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import transferRoutes from './routes/transfers.controller';
+import paymentRequestRoutes from './routes/payment-requests.controller';
 import { SimpleDatabaseService } from './services/database-simple.service';
 
 const app = express();
@@ -68,6 +69,9 @@ app.get('/test-rate', async (req: Request, res: Response) => {
 
 // Wire up the transfer routes with /api prefix
 app.use('/api', transferRoutes);
+
+// Wire up the payment request routes with /api prefix
+app.use('/api/payment-requests', paymentRequestRoutes);
 
 // Add error handling middleware
 app.use((err: any, req: Request, res: Response, next: any) => {

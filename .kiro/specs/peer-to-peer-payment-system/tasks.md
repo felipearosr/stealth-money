@@ -52,7 +52,7 @@
   - Write unit tests for notification delivery
   - _Requirements: 5.2, 5.3, 6.2_
 
-- [ ] 6. Build API endpoints for payment request flow
+- [x] 6. Build API endpoints for payment request flow
   - Create REST API endpoints for payment request creation and management
   - Implement QR code generation endpoint that returns base64 encoded QR codes
   - Add shareable link generation endpoint with secure token validation

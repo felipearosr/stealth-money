@@ -114,18 +114,28 @@ stealth-money/
 │   │   └── .env.example
 │   ├── api/                 # Express.js backend
 │   │   ├── src/
-│   │   │   ├── services/    # Business logic
-│   │   │   │   ├── payment-request.service.ts  # Payment request management
-│   │   │   │   ├── payment-processor.service.ts # Payment processor selection
-│   │   │   │   └── __tests__/                  # Service unit tests
-│   │   │   ├── routes/      # API endpoints
+│   │   │   ├── services/    # Business logic services
+│   │   │   │   ├── payment-request.service.ts    # Payment request management
+│   │   │   │   ├── payment-processor.service.ts  # Payment processor selection
+│   │   │   │   ├── transfer.service.ts           # Enhanced transfer service
+│   │   │   │   ├── notification.service.ts       # Multi-channel notifications
+│   │   │   │   ├── *.service.example.ts          # Service usage examples
+│   │   │   │   └── __tests__/                    # Comprehensive unit tests
+│   │   │   │       ├── payment-request.service.test.ts
+│   │   │   │       ├── payment-processor.service.test.ts
+│   │   │   │       ├── transfer.service.test.ts
+│   │   │   │       └── notification.service.test.ts
+│   │   │   ├── routes/      # API endpoints (to be implemented)
 │   │   │   └── config/      # Configuration
 │   │   ├── prisma/          # Database schema
-│   │   │   └── schema.prisma # Includes PaymentRequest model
+│   │   │   └── schema.prisma # Complete schema with PaymentRequest model
 │   │   └── .env.example
 │   └── contracts/           # Smart contracts
 │       ├── contracts/       # Solidity files
 │       └── scripts/         # Deployment scripts
+├── .kiro/                   # Kiro IDE configuration
+│   └── specs/               # Project specifications
+│       └── peer-to-peer-payment-system/
 ├── README.md
 └── package.json
 ```
@@ -218,8 +228,8 @@ npm test -- --watch
 - `GET /api/blockchain/health` - Check blockchain connection and wallet balance
 - `GET /api/blockchain/contract-balance` - Get smart contract token balance
 
-### Payment Request Endpoints (Service Layer Complete)
-The following endpoints have complete service layer implementation and are ready for API integration:
+### Payment Request Endpoints (In Development)
+The following endpoints have complete service layer implementation and API integration is currently in progress:
 - `POST /api/payment-requests` - Create a new payment request
 - `GET /api/payment-requests/:id` - Get payment request details
 - `GET /api/payment-requests/:id/qr-code` - Generate QR code for payment request
