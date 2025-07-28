@@ -2,6 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import * as QRCode from 'qrcode';
 import * as jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { ComplianceService } from './compliance.service';
+import { FraudDetectionService } from './fraud-detection.service';
+import { AuditService } from './audit.service';
 
 export interface PaymentRequestData {
   requesterId: string;
@@ -39,21 +42,82 @@ export class PaymentRequestService {
   private prisma: PrismaClient;
   private jwtSecret: string;
   private baseUrl: string;
+  private complianceService: ComplianceService;
+  private fraudDetectionService: FraudDetectionService;
+  private auditService: AuditService;
 
   constructor() {
     this.prisma = new PrismaClient();
     this.jwtSecret = process.env.JWT_SECRET || 'default-secret-change-in-production';
     this.baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    this.complianceService = new ComplianceService();
+    this.fraudDetectionService = new FraudDetectionService();
+    this.auditService = new AuditService();
     
     // Start cleanup interval for expired requests
     this.startCleanupInterval();
   }
 
   /**
-   * Creates a new payment request
+   * Creates a new payment request with compliance and fraud checks
    */
-  async createPaymentRequest(requestData: PaymentRequestData): Promise<any> {
+  async createPaymentRequest(requestData: PaymentRequestData, req?: any): Promise<any> {
     try {
+      console.log(`🔍 Creating payment request for user ${requestData.requesterId}`);
+
+      // Get user information for compliance checks
+      const user = await this.prisma.user.findUnique({
+        where: { id: requestData.requesterId },
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Perform fraud detection check
+      const fraudCheck = await this.fraudDetectionService.detectFraud({
+        userId: requestData.requesterId,
+        transactionType: 'payment_request',
+        amount: requestData.amount,
+        currency: requestData.currency,
+        ipAddress: req?.ip,
+        userAgent: req?.headers?.['user-agent'],
+        deviceFingerprint: req?.headers?.['x-device-fingerprint'],
+        metadata: requestData.metadata,
+      });
+
+      // Log fraud detection result
+      await this.auditService.logFraudDetection(
+        requestData.requesterId,
+        fraudCheck.riskScore,
+        fraudCheck.riskLevel,
+        fraudCheck.fraudulent,
+        fraudCheck.flags,
+        undefined,
+        req
+      );
+
+      // Block if fraudulent
+      if (fraudCheck.fraudulent) {
+        throw new Error('Payment request blocked due to fraud detection');
+      }
+
+      // Perform compliance check
+      const complianceCheck = await this.complianceService.performComplianceCheck({
+        userId: requestData.requesterId,
+        transactionAmount: requestData.amount,
+        currency: requestData.currency,
+        recipientCountry: user.country,
+        senderCountry: user.country,
+        transactionType: 'payment_request',
+        metadata: requestData.metadata,
+      });
+
+      // Block if compliance check fails
+      if (!complianceCheck.approved) {
+        throw new Error(`Payment request blocked: ${complianceCheck.requirements.join(', ')}`);
+      }
+
       // Set default expiration to 24 hours if not provided
       const expiresAt = requestData.expiresAt || new Date(Date.now() + 24 * 60 * 60 * 1000);
       
@@ -69,7 +133,19 @@ export class PaymentRequestService {
           description: requestData.description,
           expiresAt,
           shareableLink,
-          metadata: requestData.metadata || {},
+          metadata: {
+            ...requestData.metadata,
+            complianceCheck: {
+              riskScore: complianceCheck.riskScore,
+              riskLevel: complianceCheck.riskLevel,
+              approved: complianceCheck.approved,
+            },
+            fraudCheck: {
+              riskScore: fraudCheck.riskScore,
+              riskLevel: fraudCheck.riskLevel,
+              flags: fraudCheck.flags,
+            },
+          },
         },
         include: {
           requester: {
@@ -83,10 +159,37 @@ export class PaymentRequestService {
         },
       });
 
+      // Log payment request creation
+      await this.auditService.logPaymentRequestCreation(
+        requestData.requesterId,
+        paymentRequest.id,
+        requestData.amount,
+        requestData.currency,
+        req
+      );
+
+      console.log(`✅ Payment request created successfully: ${paymentRequest.id}`);
       return paymentRequest;
     } catch (error) {
       console.error('Error creating payment request:', error);
-      throw new Error('Failed to create payment request');
+      
+      // Log the error for audit purposes
+      if (requestData.requesterId) {
+        await this.auditService.logSecurityEvent(
+          'PAYMENT_REQUEST_CREATION_FAILED',
+          'MEDIUM',
+          {
+            userId: requestData.requesterId,
+            amount: requestData.amount,
+            currency: requestData.currency,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          requestData.requesterId,
+          req
+        );
+      }
+
+      throw error;
     }
   }
 
@@ -200,12 +303,17 @@ export class PaymentRequestService {
   }
 
   /**
-   * Processes a payment request (to be called when payment is made)
+   * Processes a payment request with compliance and fraud checks
    */
-  async processPaymentRequest(requestId: string, paymentData: any): Promise<PaymentResult> {
+  async processPaymentRequest(requestId: string, paymentData: any, req?: any): Promise<PaymentResult> {
     try {
+      console.log(`🔍 Processing payment request ${requestId} from user ${paymentData.senderId}`);
+
       const paymentRequest = await this.prisma.paymentRequest.findUnique({
         where: { id: requestId },
+        include: {
+          requester: true,
+        },
       });
 
       if (!paymentRequest) {
@@ -220,7 +328,80 @@ export class PaymentRequestService {
         return { success: false, error: 'Payment request has expired' };
       }
 
-      // Create payment record (this would integrate with actual payment processing)
+      // Get sender information
+      const sender = await this.prisma.user.findUnique({
+        where: { id: paymentData.senderId },
+      });
+
+      if (!sender) {
+        return { success: false, error: 'Sender not found' };
+      }
+
+      // Check if sender is blocked by fraud detection
+      if (this.fraudDetectionService.isUserBlocked(paymentData.senderId)) {
+        await this.auditService.logSecurityEvent(
+          'BLOCKED_USER_PAYMENT_ATTEMPT',
+          'HIGH',
+          {
+            senderId: paymentData.senderId,
+            paymentRequestId: requestId,
+            amount: paymentRequest.amount,
+          },
+          paymentData.senderId,
+          req
+        );
+        return { success: false, error: 'User is temporarily blocked from making payments' };
+      }
+
+      // Perform fraud detection check for payment fulfillment
+      const fraudCheck = await this.fraudDetectionService.detectFraud({
+        userId: paymentData.senderId,
+        transactionType: 'payment_request',
+        amount: paymentRequest.amount,
+        currency: paymentRequest.currency,
+        recipientId: paymentRequest.requesterId,
+        ipAddress: req?.ip,
+        userAgent: req?.headers?.['user-agent'],
+        deviceFingerprint: req?.headers?.['x-device-fingerprint'],
+        metadata: paymentData.metadata,
+      });
+
+      // Log fraud detection result
+      await this.auditService.logFraudDetection(
+        paymentData.senderId,
+        fraudCheck.riskScore,
+        fraudCheck.riskLevel,
+        fraudCheck.fraudulent,
+        fraudCheck.flags,
+        undefined,
+        req
+      );
+
+      // Block if fraudulent
+      if (fraudCheck.fraudulent) {
+        return { success: false, error: 'Payment blocked due to fraud detection' };
+      }
+
+      // Perform compliance check for cross-border transfer
+      const complianceCheck = await this.complianceService.performComplianceCheck({
+        userId: paymentData.senderId,
+        transactionAmount: paymentRequest.amount,
+        currency: paymentRequest.currency,
+        recipientCountry: paymentRequest.requester.country,
+        senderCountry: sender.country,
+        transactionType: 'payment_request',
+        metadata: paymentData.metadata,
+      });
+
+      // Block if compliance check fails
+      if (!complianceCheck.approved) {
+        return { 
+          success: false, 
+          error: `Payment blocked: ${complianceCheck.requirements.join(', ')}` 
+        };
+      }
+
+      // Create payment record with compliance and fraud metadata
       const payment = await this.prisma.payment.create({
         data: {
           senderId: paymentData.senderId,
@@ -230,7 +411,21 @@ export class PaymentRequestService {
           processorId: paymentData.processorId || 'default',
           settlementMethod: paymentData.settlementMethod || 'circle',
           status: 'PROCESSING',
-          metadata: paymentData.metadata || {},
+          metadata: {
+            ...paymentData.metadata,
+            complianceCheck: {
+              riskScore: complianceCheck.riskScore,
+              riskLevel: complianceCheck.riskLevel,
+              approved: complianceCheck.approved,
+              flags: complianceCheck.flags,
+            },
+            fraudCheck: {
+              riskScore: fraudCheck.riskScore,
+              riskLevel: fraudCheck.riskLevel,
+              flags: fraudCheck.flags,
+            },
+            paymentRequestId: requestId,
+          },
         },
       });
 
@@ -244,9 +439,36 @@ export class PaymentRequestService {
         },
       });
 
+      // Log payment request fulfillment
+      await this.auditService.logPaymentRequestFulfillment(
+        paymentData.senderId,
+        paymentRequest.requesterId,
+        requestId,
+        payment.id,
+        paymentRequest.amount,
+        paymentRequest.currency,
+        paymentData.processorId || 'default',
+        req
+      );
+
+      console.log(`✅ Payment request processed successfully: ${payment.id}`);
       return { success: true, paymentId: payment.id };
     } catch (error) {
       console.error('Error processing payment request:', error);
+      
+      // Log the error for audit purposes
+      await this.auditService.logSecurityEvent(
+        'PAYMENT_REQUEST_PROCESSING_FAILED',
+        'HIGH',
+        {
+          paymentRequestId: requestId,
+          senderId: paymentData.senderId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        paymentData.senderId,
+        req
+      );
+
       return { success: false, error: 'Failed to process payment request' };
     }
   }

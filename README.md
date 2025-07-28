@@ -356,7 +356,7 @@ Templates support dynamic content with variables like:
 
 ## 🌍 Payment Processor Selection System
 
-The platform features an intelligent payment processor selection system that automatically chooses the optimal payment processor based on geographic location, user preferences, and transaction requirements:
+The platform features an intelligent payment processor selection system that automatically chooses the optimal payment processor based on geographic location, user preferences, and transaction requirements. The UI components are currently being integrated into the main transfer flow:
 
 ### Supported Payment Processors
 
@@ -409,6 +409,38 @@ Users and the system can prioritize different factors:
 - **Availability Checking**: Real-time processor availability validation
 - **Fallback Processing**: Automatic retry with alternative processors
 - **Comprehensive Testing**: Full unit test coverage for all processors and selection logic
+
+### UI Components (In Progress)
+
+The payment processor selection system includes comprehensive React components that are currently being integrated:
+
+#### ProcessorSelection Component
+- **Location Detection**: Automatically detects user location and displays available processors
+- **Intelligent Recommendations**: Shows optimal processor based on geographic location and user criteria
+- **Interactive Selection**: Click-to-select interface with processor details and fee calculations
+- **Fallback Handling**: Graceful handling of processor unavailability with alternative options
+- **Real-time Updates**: Dynamic fee calculations based on transfer amount
+
+#### ProcessorSpecificForms Component
+- **Stripe Integration**: Complete card payment form with validation and security features
+- **Plaid Bank Transfer**: Bank account connection flow with Plaid Link integration
+- **Circle Payments**: Support for both USDC wallet and traditional card payments
+- **Form Validation**: Real-time validation with user-friendly error messages
+- **Security Indicators**: Visual security badges and encryption information
+
+#### EnhancedTransferCalculator Component
+- **Integrated Flow**: Seamless integration of processor selection with transfer calculation
+- **Bidirectional Calculation**: Support for both send and receive amount calculations
+- **Fee Transparency**: Clear display of processor-specific fees and total costs
+- **Processing Time**: Shows estimated processing times for selected processors
+- **Terminal Simulation**: Enhanced demo mode with processor-specific transaction flows
+
+#### Testing Coverage
+- **Unit Tests**: Comprehensive test suites for all processor selection components
+- **Mock Integration**: Proper mocking of API calls and external dependencies
+- **User Interactions**: Tests for user selection flows and form validations
+- **Error Scenarios**: Coverage of API failures and processor unavailability
+- **Accessibility**: Tests for keyboard navigation and screen reader compatibility
 
 ### Configuration
 

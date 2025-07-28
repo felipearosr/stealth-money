@@ -518,9 +518,14 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
 {
 // src/lib/api.ts
+// Types for payment processor functionality
 __turbopack_context__.s({
+    "createTransferWithProcessor": (()=>createTransferWithProcessor),
+    "getAvailableProcessors": (()=>getAvailableProcessors),
     "getExchangeRate": (()=>getExchangeRate),
-    "getQuote": (()=>getQuote)
+    "getProcessorCapabilities": (()=>getProcessorCapabilities),
+    "getQuote": (()=>getQuote),
+    "selectOptimalProcessor": (()=>selectOptimalProcessor)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
 async function getQuote(source, dest, amount) {
@@ -544,10 +549,73 @@ async function getQuote(source, dest, amount) {
     return res.json();
 }
 async function getExchangeRate(from, to) {
+    console.log('🔧 All env vars:', Object.keys(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env).filter((key)=>key.startsWith('NEXT_PUBLIC')));
+    console.log('🔧 Raw env var:', ("TURBOPACK compile-time value", "http://localhost:4000"));
     const API_URL = ("TURBOPACK compile-time value", "http://localhost:4000") || 'http://localhost:4000';
+    console.log('🔧 Final API_URL:', API_URL);
+    console.log('🔧 API_URL type:', typeof API_URL);
+    console.log('🔧 Making request to:', `${API_URL}/api/exchange-rate/${from}/${to}`);
     const res = await fetch(`${API_URL}/api/exchange-rate/${from}/${to}`);
+    console.log('🔧 Response status:', res.status);
+    console.log('🔧 Response ok:', res.ok);
     if (!res.ok) {
         throw new Error('Failed to fetch exchange rate');
+    }
+    const data = await res.json();
+    console.log('🔧 Response data:', data);
+    return data;
+}
+async function getAvailableProcessors(userId) {
+    const API_URL = ("TURBOPACK compile-time value", "http://localhost:4000") || 'http://localhost:4000';
+    const res = await fetch(`${API_URL}/api/transfers/processors/available/${userId}`);
+    if (!res.ok) {
+        throw new Error('Failed to fetch available processors');
+    }
+    const response = await res.json();
+    return response.data;
+}
+async function selectOptimalProcessor(userId, criteria) {
+    const API_URL = ("TURBOPACK compile-time value", "http://localhost:4000") || 'http://localhost:4000';
+    const res = await fetch(`${API_URL}/api/transfers/processors/select`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            userId,
+            ...criteria
+        })
+    });
+    if (!res.ok) {
+        throw new Error('Failed to select optimal processor');
+    }
+    const response = await res.json();
+    return response.data;
+}
+async function getProcessorCapabilities(country, currency) {
+    const API_URL = ("TURBOPACK compile-time value", "http://localhost:4000") || 'http://localhost:4000';
+    const params = new URLSearchParams();
+    if (country) params.append('country', country);
+    if (currency) params.append('currency', currency);
+    const url = `${API_URL}/api/transfers/processors/capabilities${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error('Failed to fetch processor capabilities');
+    }
+    const response = await res.json();
+    return response.data;
+}
+async function createTransferWithProcessor(transferData) {
+    const API_URL = ("TURBOPACK compile-time value", "http://localhost:4000") || 'http://localhost:4000';
+    const res = await fetch(`${API_URL}/api/transfers`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(transferData)
+    });
+    if (!res.ok) {
+        throw new Error('Failed to create transfer');
     }
     return res.json();
 }
