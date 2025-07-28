@@ -43,6 +43,9 @@ model User {
   // Recipients saved by this user
   savedRecipients       SavedRecipient[]
   
+  // Payment requests created by this user
+  paymentRequests       PaymentRequest[]
+  
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   
@@ -159,6 +162,7 @@ model Transaction {
   sender                User?    @relation("SentTransactions", fields: [userId], references: [id])
   recipient             User?    @relation("ReceivedTransactions", fields: [recipientUserId], references: [id])
   mantleTransfer        MantleTransfer? // Relation to Mantle-specific data
+  paymentRequest        PaymentRequest? // Relation to payment request that created this transaction
   
   // Transfer amounts and currency
   amount                Float    // Send amount
@@ -253,4 +257,43 @@ model MantleTransfer {
   @@index([transactionHash])
   @@index([status])
   @@index([createdAt])
+}
+
+model PaymentRequest {
+  id                    String   @id @default(cuid())
+  requesterId           String   // User who created the payment request
+  requester             User     @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  
+  // Payment request details
+  amount                Float    // Requested amount
+  currency              String   // ISO currency code (USD, EUR, CLP, MXN, GBP)
+  description           String?  // Optional description for the payment request
+  
+  // Request status and lifecycle
+  status                String   @default("pending") // pending, paid, expired, cancelled
+  
+  // QR code and shareable link
+  qrCode                String?  // Base64 encoded QR code or QR code identifier
+  shareableLink         String?  @unique // Unique shareable link for the payment request
+  
+  // Expiration and completion tracking
+  expiresAt             DateTime // When the payment request expires
+  paidAt                DateTime? // When the payment was completed
+  paymentId             String?  @unique // Reference to the Transaction that fulfilled this request
+  payment               Transaction? @relation(fields: [paymentId], references: [id])
+  
+  // Additional metadata
+  metadata              Json?    // Store additional request-specific data
+  
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Indexes for efficient querying
+  @@index([requesterId]) // Query requests by requester
+  @@index([status]) // Query by status
+  @@index([expiresAt]) // Query by expiration for cleanup
+  @@index([requesterId, status]) // Composite index for user's requests by status
+  @@index([shareableLink]) // Fast lookup by shareable link
+  @@index([createdAt]) // Query by creation date
 }

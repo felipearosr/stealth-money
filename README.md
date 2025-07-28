@@ -1,8 +1,8 @@
-# Stealth Money - Seamless Global Money Transfers
+# Stealth Money - Peer-to-Peer Global Payment Platform
 
 **Mantle Hackathon Submission**
 
-A revolutionary money transfer platform that makes blockchain-powered international transfers as simple as sending a text message. Built for the Mantle Network hackathon, Stealth Money eliminates the complexity of blockchain interactions while leveraging its security and efficiency.
+A revolutionary peer-to-peer payment platform that makes blockchain-powered international transfers as simple as sending a text message. Built for the Mantle Network hackathon, Stealth Money eliminates the complexity of blockchain interactions while leveraging intelligent payment processor selection and cost-optimized settlement routing.
 
 ## The Problem We Solve
 
@@ -15,6 +15,13 @@ Traditional international money transfers are expensive, slow, and complex. Exis
 **Stealth Money changes this.** Non-technical users can send money globally without ever knowing they're using blockchain technology.
 
 ## Key Features
+
+**Peer-to-Peer Payment System:**
+- Request money from anyone via QR codes or shareable links
+- Support for both registered and unregistered users
+- Intelligent payment processor selection based on geographic location
+- Smart settlement routing for cost optimization
+- Real-time payment status tracking and notifications
 
 **For End Users:**
 - Send money internationally with just an email and phone number
@@ -29,14 +36,23 @@ Traditional international money transfers are expensive, slow, and complex. Exis
 - Hybrid payment processing (traditional + blockchain)
 - Automated currency conversion and routing
 - Circle API integration for seamless fiat-to-crypto conversion
+- Geographic-based payment processor optimization (Plaid, Stripe, etc.)
 
 ## How It Works
 
+### Traditional Transfer Flow
 1. **User Experience**: Users enter recipient details and transfer amount through a familiar web interface
 2. **Payment Processing**: Traditional payment methods (cards, bank transfers) collect funds
 3. **Smart Contract Escrow**: Funds are held securely in Mantle Network smart contracts
 4. **Automated Settlement**: Upon payment confirmation, smart contracts automatically release funds
 5. **Recipient Notification**: Recipients receive funds in their preferred method without blockchain complexity
+
+### Peer-to-Peer Payment Request Flow
+1. **Payment Request Creation**: Registered users generate payment requests with QR codes or shareable links
+2. **Unregistered User Access**: Recipients access requests via QR/link and are guided through app onboarding
+3. **Intelligent Processor Selection**: System analyzes sender's location and selects optimal payment processor (Plaid, Stripe, etc.)
+4. **Smart Settlement Routing**: Funds are routed through the most cost-effective settlement service (Mantle vs Circle)
+5. **Real-time Notifications**: Both parties receive status updates throughout the payment lifecycle
 
 ## Mantle Network Integration
 
@@ -190,6 +206,89 @@ stealth-money/
 └── package.json
 ```
 
+## 📋 Peer-to-Peer Payment System Specification
+
+### Current Implementation Status
+
+**✅ Already Built (Existing Infrastructure):**
+- Core data models (User, BankAccount, Transaction, MantleTransfer)
+- User-to-user transfer functionality with recipient selection
+- Settlement routing between Circle and Mantle with cost analysis
+- Multi-currency support (USD, EUR, CLP, MXN, GBP) with Chilean-specific features
+- Payment processing with Circle and Mantle service integrations
+- Complete transfer flow UI with calculator, recipient selection, and status tracking
+
+**🚧 In Development (P2P Payment System):**
+- Payment request generation with QR codes and shareable links
+- Geographic-based payment processor selection (Plaid, Stripe, etc.)
+- Unregistered user onboarding flow through payment requests
+- Enhanced notification system for real-time payment updates
+- Payment request management dashboard and analytics
+
+### Key Requirements Implementation
+
+**Requirement 1: User Account Management** ✅ Complete
+- Account creation and bank account linking implemented
+- Multi-currency account support with primary account designation
+- User authentication through Clerk integration
+
+**Requirement 2: Payment Request Generation** 🚧 In Progress
+- QR code and shareable link generation (planned)
+- Support for registered and unregistered users (planned)
+- Payment request lifecycle management (planned)
+
+**Requirement 3: Intelligent Payment Processor Selection** 🚧 In Progress
+- Geographic location analysis for optimal processor selection (planned)
+- Processor evaluation logic for different countries (planned)
+- Fallback mechanisms for processor unavailability (planned)
+
+**Requirement 4: Smart Settlement Routing** ✅ Complete
+- Cost analysis between Mantle and Circle settlement services
+- Automatic routing through cheapest available option
+- Failover mechanisms for settlement service failures
+
+**Requirement 5: Payment Processing and Confirmation** ✅ Complete
+- Secure payment processing through selected processors
+- Real-time status updates and confirmation system
+- Error handling and retry mechanisms
+
+**Requirement 6: Fund Settlement and Delivery** ✅ Complete
+- Direct deposit to user's designated currency accounts
+- Transaction status tracking and completion notifications
+- Settlement retry mechanisms for failed transactions
+
+**Requirement 7: Cross-Border Compliance and Security** ✅ Partial
+- Basic security measures and encryption implemented
+- Enhanced KYC/AML compliance features (planned)
+- Fraud detection and prevention (planned)
+
+**Requirement 8: Multi-Currency Support** ✅ Complete
+- Support for major currencies with automatic conversion
+- Real-time exchange rates and fee calculation
+- Currency-specific account routing
+
+### Implementation Roadmap
+
+**Phase 1: Core P2P Features (Current)**
+- [ ] PaymentRequest database model and API endpoints
+- [ ] QR code generation and shareable link creation
+- [ ] Payment processor selection service
+- [ ] Enhanced notification system
+
+**Phase 2: Advanced Features**
+- [ ] Unregistered user onboarding flow
+- [ ] Geographic processor optimization
+- [ ] Payment request management dashboard
+- [ ] Enhanced security and compliance features
+
+**Phase 3: Production Readiness**
+- [ ] Comprehensive testing and monitoring
+- [ ] Performance optimization
+- [ ] Security audits and compliance validation
+- [ ] Documentation and user guides
+
+For detailed implementation tasks, see [P2P Payment System Tasks](.kiro/specs/peer-to-peer-payment-system/tasks.md).
+
 ## 🔧 Available Scripts
 
 ```bash
@@ -214,11 +313,19 @@ npx prisma db push     # Push schema changes
 
 ## 🌐 API Endpoints
 
+### Current Endpoints
 - `GET /health` - Health check
 - `GET /api/exchange-rate/:from/:to` - Get exchange rate
 - `POST /api/transfers` - Create transfer
 - `GET /api/transfers/:id` - Get transfer details
 - `POST /api/stripe/webhook` - Stripe webhook handler
+
+### Planned P2P Payment Endpoints
+- `POST /api/payment-requests` - Create payment request with QR/link
+- `GET /api/payment-requests/:id` - Get payment request details
+- `POST /api/payment-requests/:id/fulfill` - Process payment for request
+- `GET /api/payment-processors/optimal` - Get optimal processor for location
+- `POST /api/notifications/send` - Send payment notifications
 
 ## 🔒 Security Features
 
