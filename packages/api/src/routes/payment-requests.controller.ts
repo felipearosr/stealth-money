@@ -2,9 +2,11 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { PaymentRequestService } from '../services/payment-request.service';
+import { PaymentProcessorService, SelectionCriteria } from '../services/payment-processor.service';
 
 const router = Router();
 const paymentRequestService = new PaymentRequestService();
+const paymentProcessorService = new PaymentProcessorService();
 
 // Validation schemas
 const createPaymentRequestSchema = z.object({
@@ -195,29 +197,161 @@ router.get('/:id/shareable-link', async (req: Request, res: Response) => {
 
 /**
  * POST /api/payment-requests/:id/pay
- * Process payment for a payment request
+ * Process payment for a payment request with intelligent processor selection
  */
 router.post('/:id/pay', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const validatedData = processPaymentSchema.parse(req.body);
     
-    const result = await paymentRequestService.processPaymentRequest(id, validatedData);
-    
-    if (!result.success) {
-      return res.status(400).json({
+    // Get payment request details first
+    const paymentRequest = await paymentRequestService.getRequestStatus(id);
+    if (!paymentRequest) {
+      return res.status(404).json({
         success: false,
-        message: result.error || 'Payment processing failed',
+        message: 'Payment request not found',
       });
     }
 
-    res.json({
-      success: true,
-      data: {
-        paymentId: result.paymentId,
-      },
-      message: 'Payment processed successfully',
-    });
+    let processorResult;
+    let selectedProcessor = validatedData.processorId || 'stripe';
+
+    try {
+      if (!validatedData.processorId) {
+        // Use intelligent processor selection based on sender's location
+        console.log('Using intelligent processor selection for payment request:', id);
+        
+        const location = await paymentProcessorService.analyzeUserLocation(validatedData.senderId);
+        const criteria: SelectionCriteria = {
+          prioritizeCost: false,
+          prioritizeSpeed: true, // Payment requests often need faster processing
+          prioritizeReliability: true
+        };
+
+        const paymentData = {
+          amount: paymentRequest.amount,
+          currency: paymentRequest.currency,
+          description: paymentRequest.description || `Payment for request ${id}`,
+          metadata: { 
+            paymentRequestId: id,
+            senderId: validatedData.senderId,
+            requesterId: paymentRequest.requesterId
+          }
+        };
+
+        processorResult = await paymentProcessorService.processPaymentWithFallback(
+          location,
+          paymentData,
+          criteria
+        );
+
+        selectedProcessor = processorResult.processorResponse?.actualProcessor || 
+                           processorResult.processorResponse?.processorId || 
+                           'stripe';
+
+      } else {
+        // Use specified processor
+        console.log('Using specified processor for payment request:', validatedData.processorId);
+        
+        const paymentData = {
+          amount: paymentRequest.amount,
+          currency: paymentRequest.currency,
+          description: paymentRequest.description || `Payment for request ${id}`,
+          metadata: { 
+            paymentRequestId: id,
+            senderId: validatedData.senderId,
+            requesterId: paymentRequest.requesterId
+          }
+        };
+
+        processorResult = await paymentProcessorService.processPayment(
+          validatedData.processorId,
+          paymentData
+        );
+        selectedProcessor = validatedData.processorId;
+      }
+
+      if (!processorResult.success) {
+        throw new Error(processorResult.error || 'Payment processing failed');
+      }
+
+      // Now process the payment request with the enhanced data
+      const enhancedPaymentData = {
+        ...validatedData,
+        processorId: selectedProcessor,
+        processorResult,
+        metadata: {
+          ...validatedData.metadata,
+          processorInfo: {
+            selectedProcessor,
+            fallbackUsed: processorResult.processorResponse?.fallbackUsed || false,
+            originalProcessor: processorResult.processorResponse?.originalProcessor,
+            actualProcessor: processorResult.processorResponse?.actualProcessor
+          }
+        }
+      };
+
+      const result = await paymentRequestService.processPaymentRequest(id, enhancedPaymentData);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: result.error || 'Payment processing failed',
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          paymentId: result.paymentId,
+          processorId: selectedProcessor,
+          clientSecret: processorResult.clientSecret,
+          transactionId: processorResult.transactionId,
+          fallbackUsed: processorResult.processorResponse?.fallbackUsed || false,
+          processorInfo: processorResult.processorResponse ? {
+            originalProcessor: processorResult.processorResponse.originalProcessor,
+            actualProcessor: processorResult.processorResponse.actualProcessor
+          } : undefined
+        },
+        message: 'Payment processed successfully',
+      });
+
+    } catch (processorError) {
+      console.error('Processor selection/payment failed for payment request:', processorError);
+      
+      // Fallback to the original payment request service without processor selection
+      try {
+        const result = await paymentRequestService.processPaymentRequest(id, validatedData);
+        
+        if (!result.success) {
+          return res.status(400).json({
+            success: false,
+            message: result.error || 'Payment processing failed',
+          });
+        }
+
+        res.json({
+          success: true,
+          data: {
+            paymentId: result.paymentId,
+            processorId: 'stripe', // Default fallback
+            fallbackUsed: true,
+            fallbackReason: 'Processor selection failed'
+          },
+          message: 'Payment processed successfully with fallback',
+        });
+
+      } catch (fallbackError) {
+        console.error('Final fallback also failed for payment request:', fallbackError);
+        
+        return res.status(500).json({
+          success: false,
+          message: 'All payment processors failed',
+          error: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',
+        });
+      }
+    }
+
   } catch (error) {
     console.error('Process payment error:', error);
     

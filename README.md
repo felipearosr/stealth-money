@@ -223,21 +223,27 @@ npm test -- --watch
 ### Payment Processing Endpoints
 - `GET /api/stripe/config` - Get Stripe publishable key for frontend
 - `GET /api/payments/:paymentIntentId` - Get payment intent status
+- `POST /api/payments/process` - Process payment with intelligent processor selection
+- `GET /api/payments/processors/available` - Get available payment processors for user location
+- `POST /api/payments/processors/select` - Select optimal processor based on criteria
+- `GET /api/payments/processors/capabilities` - Get processor capabilities and fees
 
 ### Blockchain Integration Endpoints
 - `GET /api/blockchain/health` - Check blockchain connection and wallet balance
 - `GET /api/blockchain/contract-balance` - Get smart contract token balance
 
-### Payment Request Endpoints (In Development)
-The following endpoints have complete service layer implementation and API integration is currently in progress:
-- `POST /api/payment-requests` - Create a new payment request
-- `GET /api/payment-requests/:id` - Get payment request details
+### Payment Request Endpoints
+The following endpoints have complete service layer implementation with API integration:
+- `POST /api/payment-requests` - Create a new payment request with QR code and shareable link generation
+- `GET /api/payment-requests/:id` - Get payment request details and status
 - `GET /api/payment-requests/:id/qr-code` - Generate QR code for payment request
-- `GET /api/payment-requests/:id/shareable-link` - Generate secure shareable link
-- `POST /api/payment-requests/:id/process` - Process payment for a request
+- `GET /api/payment-requests/:id/shareable-link` - Generate secure shareable link with JWT token
+- `POST /api/payment-requests/:id/pay` - Process payment for a request with intelligent processor selection
 - `PUT /api/payment-requests/:id/cancel` - Cancel a payment request
-- `GET /api/users/:userId/payment-requests` - Get user's payment requests
-- `POST /api/payment-requests/validate-token` - Validate shareable link token
+- `GET /api/payment-requests/user/:userId` - Get user's payment requests with optional status filtering
+- `GET /api/payment-requests/validate-token/:token` - Validate shareable link token
+- `POST /api/payment-requests/onboard-user` - Onboard new users accessing payment requests
+- `GET /api/payment-requests/:id/history` - Get payment request history and timeline
 
 ### Transfer Service Endpoints (Service Layer Complete)
 Enhanced transfer endpoints with unregistered user support:

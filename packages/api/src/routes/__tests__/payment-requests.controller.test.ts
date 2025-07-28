@@ -17,8 +17,18 @@ vi.mock('../../services/payment-request.service', () => ({
   })),
 }));
 
+// Mock the PaymentProcessorService
+vi.mock('../../services/payment-processor.service', () => ({
+  PaymentProcessorService: vi.fn().mockImplementation(() => ({
+    analyzeUserLocation: vi.fn(),
+    processPaymentWithFallback: vi.fn(),
+    processPayment: vi.fn(),
+  })),
+}));
+
 import paymentRequestRoutes from '../payment-requests.controller';
 import { PaymentRequestService } from '../../services/payment-request.service';
+import { PaymentProcessorService } from '../../services/payment-processor.service';
 
 const app = express();
 app.use(express.json());
@@ -26,11 +36,13 @@ app.use('/api/payment-requests', paymentRequestRoutes);
 
 describe('Payment Request Controller', () => {
   let mockService: any;
+  let mockProcessorService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Get the mocked service instance
+    // Get the mocked service instances
     mockService = new PaymentRequestService();
+    mockProcessorService = new PaymentProcessorService();
   });
 
   describe('POST /api/payment-requests', () => {
@@ -212,7 +224,22 @@ describe('Payment Request Controller', () => {
   });
 
   describe('POST /api/payment-requests/:id/pay', () => {
-    it('should process payment successfully', async () => {
+    const mockPaymentRequest = {
+      id: 'req_123',
+      requesterId: 'user_123',
+      amount: 100,
+      currency: 'USD',
+      status: 'PENDING',
+      description: 'Test payment',
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    };
+
+    beforeEach(() => {
+      mockService.getRequestStatus.mockResolvedValue(mockPaymentRequest);
+    });
+
+    it('should process payment successfully with legacy flow', async () => {
       const mockPaymentResult = {
         success: true,
         paymentId: 'pay_123',
@@ -234,6 +261,245 @@ describe('Payment Request Controller', () => {
       expect(response.body.message).toBe('Payment processed successfully');
     });
 
+    it('should process payment with intelligent processor selection', async () => {
+      const mockLocation = {
+        country: 'US',
+        region: 'North America',
+        currency: 'USD',
+        timezone: 'America/New_York'
+      };
+
+      const mockProcessorResult = {
+        success: true,
+        transactionId: 'txn_123',
+        clientSecret: 'pi_test_client_secret',
+        paymentIntentId: 'pi_test_123',
+        processorResponse: {
+          processorId: 'stripe',
+          actualProcessor: 'stripe',
+          fallbackUsed: false
+        }
+      };
+
+      const mockPaymentResult = {
+        success: true,
+        paymentId: 'pay_123'
+      };
+
+      mockProcessorService.analyzeUserLocation.mockResolvedValue(mockLocation);
+      mockProcessorService.processPaymentWithFallback.mockResolvedValue(mockProcessorResult);
+      mockService.processPaymentRequest.mockResolvedValue(mockPaymentResult);
+
+      const response = await request(app)
+        .post('/api/payment-requests/req_123/pay')
+        .send({
+          senderId: 'user_456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.paymentId).toBe('pay_123');
+      expect(response.body.data.processorId).toBe('stripe');
+      expect(response.body.data.clientSecret).toBe('pi_test_client_secret');
+      expect(response.body.data.fallbackUsed).toBe(false);
+
+      expect(mockProcessorService.analyzeUserLocation).toHaveBeenCalledWith('user_456');
+      expect(mockProcessorService.processPaymentWithFallback).toHaveBeenCalledWith(
+        mockLocation,
+        expect.objectContaining({
+          amount: 100,
+          currency: 'USD',
+          description: 'Test payment',
+          metadata: expect.objectContaining({
+            paymentRequestId: 'req_123',
+            senderId: 'user_456',
+            requesterId: 'user_123'
+          })
+        }),
+        expect.objectContaining({
+          prioritizeCost: false,
+          prioritizeSpeed: true,
+          prioritizeReliability: true
+        })
+      );
+    });
+
+    it('should process payment with specified processor', async () => {
+      const mockProcessorResult = {
+        success: true,
+        transactionId: 'txn_123',
+        clientSecret: 'pi_test_client_secret',
+        paymentIntentId: 'pi_test_123'
+      };
+
+      const mockPaymentResult = {
+        success: true,
+        paymentId: 'pay_123'
+      };
+
+      mockProcessorService.processPayment.mockResolvedValue(mockProcessorResult);
+      mockService.processPaymentRequest.mockResolvedValue(mockPaymentResult);
+
+      const response = await request(app)
+        .post('/api/payment-requests/req_123/pay')
+        .send({
+          senderId: 'user_456',
+          processorId: 'stripe'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.paymentId).toBe('pay_123');
+      expect(response.body.data.processorId).toBe('stripe');
+
+      expect(mockProcessorService.processPayment).toHaveBeenCalledWith(
+        'stripe',
+        expect.objectContaining({
+          amount: 100,
+          currency: 'USD',
+          description: 'Test payment'
+        })
+      );
+    });
+
+    it('should handle processor selection failure with fallback', async () => {
+      const mockLocation = {
+        country: 'US',
+        currency: 'USD'
+      };
+
+      const mockFallbackResult = {
+        success: true,
+        paymentId: 'pay_123'
+      };
+
+      mockProcessorService.analyzeUserLocation.mockResolvedValue(mockLocation);
+      mockProcessorService.processPaymentWithFallback.mockRejectedValue(
+        new Error('All processors failed')
+      );
+      mockService.processPaymentRequest.mockResolvedValue(mockFallbackResult);
+
+      const response = await request(app)
+        .post('/api/payment-requests/req_123/pay')
+        .send({
+          senderId: 'user_456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.paymentId).toBe('pay_123');
+      expect(response.body.data.processorId).toBe('stripe');
+      expect(response.body.data.fallbackUsed).toBe(true);
+      expect(response.body.data.fallbackReason).toBe('Processor selection failed');
+    });
+
+    it('should handle complete payment failure', async () => {
+      const mockLocation = {
+        country: 'US',
+        currency: 'USD'
+      };
+
+      mockProcessorService.analyzeUserLocation.mockResolvedValue(mockLocation);
+      mockProcessorService.processPaymentWithFallback.mockRejectedValue(
+        new Error('All processors failed')
+      );
+      mockService.processPaymentRequest.mockRejectedValue(
+        new Error('Payment service also failed')
+      );
+
+      const response = await request(app)
+        .post('/api/payment-requests/req_123/pay')
+        .send({
+          senderId: 'user_456'
+        });
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('All payment processors failed');
+    });
+
+    it('should handle payment request not found', async () => {
+      mockService.getRequestStatus.mockResolvedValue(null);
+
+      const response = await request(app)
+        .post('/api/payment-requests/non_existent/pay')
+        .send({
+          senderId: 'user_456'
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Payment request not found');
+    });
+
+    it('should handle processor result failure', async () => {
+      const mockLocation = {
+        country: 'US',
+        currency: 'USD'
+      };
+
+      const mockProcessorResult = {
+        success: false,
+        error: 'Insufficient funds'
+      };
+
+      mockProcessorService.analyzeUserLocation.mockResolvedValue(mockLocation);
+      mockProcessorService.processPaymentWithFallback.mockResolvedValue(mockProcessorResult);
+
+      const response = await request(app)
+        .post('/api/payment-requests/req_123/pay')
+        .send({
+          senderId: 'user_456'
+        });
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('All payment processors failed');
+    });
+
+    it('should handle processor selection with fallback used', async () => {
+      const mockLocation = {
+        country: 'US',
+        currency: 'USD'
+      };
+
+      const mockProcessorResult = {
+        success: true,
+        transactionId: 'txn_123',
+        clientSecret: 'pi_test_client_secret',
+        paymentIntentId: 'pi_test_123',
+        processorResponse: {
+          processorId: 'circle',
+          actualProcessor: 'stripe',
+          originalProcessor: 'circle',
+          fallbackUsed: true
+        }
+      };
+
+      const mockPaymentResult = {
+        success: true,
+        paymentId: 'pay_123'
+      };
+
+      mockProcessorService.analyzeUserLocation.mockResolvedValue(mockLocation);
+      mockProcessorService.processPaymentWithFallback.mockResolvedValue(mockProcessorResult);
+      mockService.processPaymentRequest.mockResolvedValue(mockPaymentResult);
+
+      const response = await request(app)
+        .post('/api/payment-requests/req_123/pay')
+        .send({
+          senderId: 'user_456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.fallbackUsed).toBe(true);
+      expect(response.body.data.processorInfo).toEqual({
+        originalProcessor: 'circle',
+        actualProcessor: 'stripe'
+      });
+    });
+
     it('should return 400 for payment processing failure', async () => {
       const mockPaymentResult = {
         success: false,
@@ -246,6 +512,7 @@ describe('Payment Request Controller', () => {
         .post('/api/payment-requests/req_123/pay')
         .send({
           senderId: 'user_456',
+          processorId: 'stripe'
         });
 
       expect(response.status).toBe(400);
