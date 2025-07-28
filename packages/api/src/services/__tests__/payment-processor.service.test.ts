@@ -1,5 +1,5 @@
 // src/services/__tests__/payment-processor.service.test.ts
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   PaymentProcessorService,
   StripeAdapter,
@@ -10,7 +10,6 @@ import {
   PaymentData,
   ProcessorOption
 } from '../payment-processor.service';
-import { PaymentService } from '../payment.service';
 
 // Mock the PaymentService
 vi.mock('../payment.service');

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { PaymentRequestService, PaymentRequestData } from './payment-request.service';
-import { PaymentProcessorService, LocationData, SelectionCriteria, PaymentData } from './payment-processor.service';
+import { PaymentRequestService } from './payment-request.service';
+import { PaymentProcessorService } from './payment-processor.service';
+import { NotificationService, PaymentStatus, PaymentResult } from './notification.service';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface UnregisteredUserData {
@@ -50,12 +51,14 @@ export class TransferService {
   private prisma: PrismaClient;
   private paymentRequestService: PaymentRequestService;
   private paymentProcessorService: PaymentProcessorService;
+  private notificationService: NotificationService;
   private onboardingTokens: Map<string, OnboardingFlowData>;
 
   constructor() {
     this.prisma = new PrismaClient();
     this.paymentRequestService = new PaymentRequestService();
     this.paymentProcessorService = new PaymentProcessorService();
+    this.notificationService = new NotificationService();
     this.onboardingTokens = new Map();
     
     // Start cleanup interval for expired onboarding tokens
@@ -219,6 +222,14 @@ export class TransferService {
         },
       });
 
+      // Send onboarding welcome notification
+      try {
+        await this.notificationService.sendOnboardingWelcome(newUser.id);
+      } catch (error) {
+        console.error('Error sending onboarding welcome notification:', error);
+        // Don't fail the entire process if notification fails
+      }
+
       // Clean up onboarding token
       this.onboardingTokens.delete(onboardingToken);
 
@@ -324,6 +335,14 @@ export class TransferService {
           },
         });
         senderId = newUser.id;
+
+        // Send onboarding welcome notification for new users
+        try {
+          await this.notificationService.sendOnboardingWelcome(newUser.id);
+        } catch (error) {
+          console.error('Error sending onboarding welcome notification:', error);
+          // Don't fail the entire process if notification fails
+        }
       }
 
       // Get location for processor selection
@@ -510,10 +529,188 @@ export class TransferService {
   }
 
   /**
+   * Update payment status and send notifications
+   */
+  async updatePaymentStatus(
+    paymentId: string, 
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled',
+    metadata?: {
+      failureReason?: string;
+      estimatedCompletion?: Date;
+      completedAt?: Date;
+      processorId?: string;
+      settlementMethod?: string;
+    }
+  ): Promise<void> {
+    try {
+      // Update payment in database
+      const payment = await this.prisma.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: status.toUpperCase(),
+          estimatedCompletion: metadata?.estimatedCompletion,
+          completedAt: metadata?.completedAt,
+          updatedAt: new Date(),
+        },
+        include: {
+          sender: true,
+          recipient: true,
+        },
+      });
+
+      // Create payment status object for notifications
+      const paymentStatus: PaymentStatus = {
+        paymentId: payment.id,
+        status,
+        amount: payment.amount,
+        currency: payment.currency,
+        senderId: payment.senderId,
+        recipientId: payment.recipientId,
+        processorId: metadata?.processorId || payment.processorId,
+        settlementMethod: metadata?.settlementMethod || payment.settlementMethod,
+        estimatedCompletion: metadata?.estimatedCompletion,
+        completedAt: metadata?.completedAt,
+        failureReason: metadata?.failureReason,
+        metadata: payment.metadata as Record<string, any>,
+      };
+
+      // Send status update notifications to both sender and recipient
+      try {
+        await Promise.all([
+          this.notificationService.sendPaymentStatusUpdate(payment.senderId, paymentStatus),
+          this.notificationService.sendPaymentStatusUpdate(payment.recipientId, paymentStatus),
+        ]);
+      } catch (error) {
+        console.error('Error sending payment status notifications:', error);
+        // Don't fail the entire process if notifications fail
+      }
+
+      // If payment is completed, send payment confirmation
+      if (status === 'completed' && metadata?.completedAt) {
+        try {
+          const paymentResult: PaymentResult = {
+            paymentId: payment.id,
+            senderId: payment.senderId,
+            recipientId: payment.recipientId,
+            amount: payment.amount,
+            currency: payment.currency,
+            status: payment.status,
+            processorId: payment.processorId,
+            settlementMethod: payment.settlementMethod,
+            fees: payment.fees,
+            completedAt: metadata.completedAt,
+            metadata: payment.metadata as Record<string, any>,
+          };
+
+          await this.notificationService.sendPaymentConfirmation(
+            payment.senderId,
+            payment.recipientId,
+            paymentResult
+          );
+        } catch (error) {
+          console.error('Error sending payment confirmation:', error);
+          // Don't fail the entire process if notifications fail
+        }
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Simulate payment processing with status updates
+   * This method demonstrates how the notification system works with real-time updates
+   */
+  async simulatePaymentProcessing(paymentId: string): Promise<void> {
+    try {
+      console.log(`🔄 Starting payment processing simulation for payment ${paymentId}`);
+
+      // Step 1: Payment is being processed
+      await this.updatePaymentStatus(paymentId, 'processing', {
+        estimatedCompletion: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
+      });
+
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Step 2: Payment completed successfully
+      await this.updatePaymentStatus(paymentId, 'completed', {
+        completedAt: new Date(),
+      });
+
+      console.log(`✅ Payment processing simulation completed for payment ${paymentId}`);
+    } catch (error) {
+      console.error('Error in payment processing simulation:', error);
+      
+      // If something goes wrong, mark payment as failed
+      try {
+        await this.updatePaymentStatus(paymentId, 'failed', {
+          failureReason: error instanceof Error ? error.message : 'Processing failed',
+        });
+      } catch (updateError) {
+        console.error('Error updating payment to failed status:', updateError);
+      }
+    }
+  }
+
+  /**
+   * Get notification delivery statistics
+   */
+  async getNotificationStats(): Promise<{
+    total: number;
+    pending: number;
+    delivered: number;
+    failed: number;
+    byChannel: Record<string, number>;
+  }> {
+    return this.notificationService.getDeliveryStats();
+  }
+
+  /**
+   * Update user notification preferences
+   */
+  async updateUserNotificationPreferences(
+    userId: string, 
+    preferences: {
+      paymentRequests?: boolean;
+      paymentConfirmations?: boolean;
+      statusUpdates?: boolean;
+      securityAlerts?: boolean;
+      marketing?: boolean;
+      channels?: Array<{
+        type: 'email' | 'sms' | 'push';
+        enabled: boolean;
+        address?: string;
+      }>;
+    }
+  ): Promise<void> {
+    try {
+      await this.notificationService.updateNotificationPreferences(userId, preferences as any);
+    } catch (error) {
+      console.error('Error updating user notification preferences:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user notification preferences
+   */
+  async getUserNotificationPreferences(userId: string): Promise<any> {
+    try {
+      return await this.notificationService.getNotificationPreferences(userId);
+    } catch (error) {
+      console.error('Error getting user notification preferences:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Cleanup resources
    */
   async disconnect(): Promise<void> {
     await this.prisma.$disconnect();
     await this.paymentRequestService.disconnect();
+    await this.notificationService.disconnect();
   }
 }

@@ -1,18 +1,19 @@
 # Stealth Money - Global Money Transfer Platform
 
-A modern, secure money transfer platform with blockchain integration, real-time exchange rates, and Stripe payments.
+A modern, secure money transfer platform with blockchain integration, real-time exchange rates, and comprehensive payment processing capabilities.
 
-## 🚀 Features
+## Features
 
 - **Real-time Exchange Rates** - Live currency conversion using ExchangeRate API
 - **Blockchain Integration** - Smart contract-based fund releases (with mock mode for testing)
 - **Multi-Processor Payment System** - Intelligent payment processor selection (Stripe, Plaid, Circle)
 - **Geographic Payment Optimization** - Automatic processor selection based on user location and preferences
-- **Payment Requests** - Generate QR codes and shareable links for requesting payments
-- **Multi-User Support** - Handle payments between registered and unregistered users
+- **Payment Request System** - Generate QR codes and shareable links for requesting payments from any user
+- **Unregistered User Support** - Handle payments from users without accounts through onboarding flows
+- **Multi-Channel Notifications** - Email, SMS, and push notifications with delivery tracking and retry mechanisms
 - **Fallback Processing** - Automatic failover between payment processors for reliability
 - **Modern UI** - Built with Next.js, React, and Tailwind CSS
-- **Database Integration** - PostgreSQL with Prisma ORM
+- **Database Integration** - PostgreSQL with Prisma ORM including PaymentRequest model
 - **Terminal Demo** - Interactive blockchain simulation for presentations
 
 ## 🏗️ Architecture
@@ -149,6 +150,54 @@ cd packages/api
 npx prisma studio      # Database GUI
 npx prisma generate    # Generate Prisma client
 npx prisma db push     # Push schema changes
+
+# Run specific service tests
+cd packages/api
+npm test payment-request.service.test.ts
+npm test payment-processor.service.test.ts
+npm test transfer.service.test.ts
+npm test notification.service.test.ts
+
+# Run service examples
+cd packages/api
+npm run dev:examples  # Run all service examples
+node src/services/transfer.service.example.js
+node src/services/notification.service.example.js
+```
+
+## 🧪 Testing
+
+The project includes comprehensive testing for all core services:
+
+### Service Testing Coverage
+- **PaymentRequestService**: Complete unit test suite with mocked Prisma, QRCode, and JWT dependencies
+- **PaymentProcessorService**: Full test coverage for processor selection, geographic optimization, and fallback logic
+- **TransferService**: Comprehensive testing for user-to-user transfers, unregistered user flows, and onboarding
+- **NotificationService**: Complete test suite for multi-channel notifications, template rendering, and delivery tracking
+
+### Test Features
+- **Mocked Dependencies**: All external dependencies (Prisma, APIs, libraries) are properly mocked
+- **Error Handling**: Tests cover both success and failure scenarios
+- **Edge Cases**: Comprehensive coverage of edge cases and boundary conditions
+- **Integration Scenarios**: Tests simulate real-world usage patterns and workflows
+
+### Running Tests
+```bash
+# Run all tests
+cd packages/api
+npm test
+
+# Run specific test files
+npm test payment-request.service.test.ts
+npm test payment-processor.service.test.ts
+npm test transfer.service.test.ts
+npm test notification.service.test.ts
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Run tests in watch mode
+npm test -- --watch
 ```
 
 ## 🌐 API Endpoints
@@ -158,9 +207,19 @@ npx prisma db push     # Push schema changes
 - `GET /api/exchange-rate/:from/:to` - Get exchange rate
 - `POST /api/transfers` - Create transfer
 - `GET /api/transfers/:id` - Get transfer details
-- `POST /api/stripe/webhook` - Stripe webhook handler
+- `GET /api/transfers` - Get all transfers
+- `POST /api/webhooks/stripe` - Stripe webhook handler
 
-### Payment Request Endpoints
+### Payment Processing Endpoints
+- `GET /api/stripe/config` - Get Stripe publishable key for frontend
+- `GET /api/payments/:paymentIntentId` - Get payment intent status
+
+### Blockchain Integration Endpoints
+- `GET /api/blockchain/health` - Check blockchain connection and wallet balance
+- `GET /api/blockchain/contract-balance` - Get smart contract token balance
+
+### Payment Request Endpoints (Service Layer Complete)
+The following endpoints have complete service layer implementation and are ready for API integration:
 - `POST /api/payment-requests` - Create a new payment request
 - `GET /api/payment-requests/:id` - Get payment request details
 - `GET /api/payment-requests/:id/qr-code` - Generate QR code for payment request
@@ -170,26 +229,107 @@ npx prisma db push     # Push schema changes
 - `GET /api/users/:userId/payment-requests` - Get user's payment requests
 - `POST /api/payment-requests/validate-token` - Validate shareable link token
 
+### Transfer Service Endpoints (Service Layer Complete)
+Enhanced transfer endpoints with unregistered user support:
+- `POST /api/transfers/user-to-user` - Create standard user-to-user transfer
+- `POST /api/transfers/unregistered-access` - Handle unregistered user payment request access
+- `POST /api/transfers/complete-onboarding` - Complete user onboarding and process payment
+- `POST /api/transfers/fulfill-request` - Direct payment request fulfillment
+- `GET /api/transfers/validate-request/:id` - Validate payment request access
+- `GET /api/transfers/history/:userId` - Get comprehensive transfer history
+- `PUT /api/transfers/payment-status/:id` - Update payment status with notifications
+
+### Notification Service Endpoints (Service Layer Complete)
+Multi-channel notification management:
+- `GET /api/notifications/preferences/:userId` - Get user notification preferences
+- `PUT /api/notifications/preferences/:userId` - Update user notification preferences
+- `GET /api/notifications/stats` - Get notification delivery statistics
+- `POST /api/notifications/test` - Test notification delivery (development only)
+
 ## 💳 Payment Request System
 
 The platform includes a comprehensive payment request system that allows users to request payments from both registered and unregistered users:
 
 ### Key Features
-- **QR Code Generation**: Automatically generate QR codes for payment requests
-- **Shareable Links**: Create secure, time-limited shareable links with JWT tokens
+- **QR Code Generation**: Automatically generate QR codes for payment requests using the qrcode library
+- **Shareable Links**: Create secure, time-limited shareable links with JWT tokens and UUID-based access
 - **Multi-User Support**: Handle payments from both registered and unregistered users
 - **Request Lifecycle Management**: Track payment requests from creation to completion or expiration
-- **Automatic Cleanup**: Expired payment requests are automatically marked and cleaned up
+- **Automatic Cleanup**: Expired payment requests are automatically marked and cleaned up every 5 minutes
 
 ### Database Models
-- **PaymentRequest**: Stores payment request details, status, and metadata
-- **Payment**: Links completed payments to their originating requests
-- **User**: Extended to support payment request relationships
+- **PaymentRequest**: Stores payment request details, status, metadata, QR codes, and shareable links
+- **Payment**: Links completed payments to their originating requests with full transaction details
+- **User**: Extended to support payment request relationships with proper foreign key constraints
 
 ### Service Architecture
-- **PaymentRequestService**: Core service handling request creation, QR generation, and lifecycle management
-- **Comprehensive Testing**: Full unit test coverage with mocked dependencies
+- **PaymentRequestService**: Core service handling request creation, QR generation, JWT token validation, and lifecycle management
+- **Comprehensive Testing**: Full unit test coverage with mocked dependencies for Prisma, QRCode, and JWT
 - **Error Handling**: Robust error handling with specific error types and fallback strategies
+- **Security**: JWT-based secure links with expiration validation and request status checking
+
+## 🔄 Transfer Service with Unregistered User Support
+
+The enhanced TransferService provides comprehensive support for both registered and unregistered users accessing payment requests:
+
+### Core Capabilities
+- **User-to-User Transfers**: Standard transfers between registered users with processor selection
+- **Unregistered User Onboarding**: Automatic user account creation when unregistered users access payment links
+- **Payment Request Fulfillment**: Process payments from payment requests with automatic user creation
+- **Onboarding Token Management**: Secure token-based onboarding flow with expiration handling
+- **Transfer History**: Combined view of sent and received payments with detailed metadata
+
+### Unregistered User Flow
+1. **Access Payment Request**: Unregistered user clicks payment link or scans QR code
+2. **Onboarding Token Creation**: System generates secure token for onboarding process
+3. **User Account Creation**: Complete registration and create user account
+4. **Payment Processing**: Process payment request with optimal processor selection
+5. **Notification Delivery**: Send welcome and confirmation notifications
+
+### Key Methods
+- `handleUnregisteredUserAccess()`: Manages payment request access for unregistered users
+- `completeOnboardingAndProcessPayment()`: Finalizes user creation and processes payment
+- `fulfillPaymentRequest()`: Direct payment request processing with user creation
+- `validatePaymentRequestAccess()`: Validates payment request availability and status
+- `getUserTransferHistory()`: Retrieves comprehensive transfer history
+
+## 📧 Multi-Channel Notification System
+
+The NotificationService provides comprehensive multi-channel notification capabilities with delivery tracking and retry mechanisms:
+
+### Notification Channels
+- **Email**: Rich HTML templates with subject lines and detailed content
+- **SMS**: Concise text messages optimized for mobile delivery
+- **Push Notifications**: Real-time app notifications with titles and action buttons
+
+### Notification Types
+- **Payment Requests**: Notify recipients of incoming payment requests with QR codes and links
+- **Payment Confirmations**: Confirm successful payments to both sender and recipient
+- **Status Updates**: Real-time updates on payment processing status changes
+- **Onboarding Welcome**: Welcome new users with account setup information
+- **Security Alerts**: Important security-related notifications
+
+### Advanced Features
+- **Template System**: Customizable templates with variable substitution for personalized messages
+- **User Preferences**: Granular control over notification types and channels per user
+- **Delivery Tracking**: Monitor delivery status with success/failure tracking and retry attempts
+- **Retry Mechanism**: Automatic retry with exponential backoff for failed deliveries
+- **Delivery Statistics**: Comprehensive analytics on notification delivery performance
+- **Graceful Degradation**: Continue operation even when specific channels fail
+
+### Template Variables
+Templates support dynamic content with variables like:
+- `{senderName}`, `{recipientName}` - User names
+- `{amount}`, `{currency}` - Payment amounts and currencies
+- `{paymentLink}`, `{expirationDate}` - Payment request details
+- `{status}`, `{statusMessage}` - Payment status information
+- `{completedAt}`, `{estimatedCompletion}` - Timing information
+
+### Integration with Transfer Service
+- **Real-time Status Updates**: Automatic notifications when payment status changes
+- **Onboarding Integration**: Welcome notifications for new users created through payment requests
+- **Preference Management**: User notification preferences accessible through transfer service
+- **Delivery Statistics**: Monitor notification performance through transfer service interface
 
 ## 🌍 Payment Processor Selection System
 

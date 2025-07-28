@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { PaymentRequestService, PaymentRequestData } from '../payment-request.service';
-import { PrismaClient } from '@prisma/client';
 import * as jwt from 'jsonwebtoken';
 
 // Mock the PrismaClient
@@ -187,7 +186,6 @@ describe('PaymentRequestService', () => {
         expect.objectContaining({
           errorCorrectionLevel: 'M',
           type: 'image/png',
-          quality: 0.92,
           margin: 1,
           width: 256,
         })

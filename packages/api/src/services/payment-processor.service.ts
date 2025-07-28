@@ -76,7 +76,7 @@ export class StripeAdapter extends PaymentProcessorAdapter {
 
   async processPayment(paymentData: PaymentData): Promise<PaymentResult> {
     try {
-      const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       const amountInCents = Math.round(paymentData.amount * 100);
       
       const result = await this.paymentService.createPaymentIntent(
@@ -155,7 +155,7 @@ export class PlaidAdapter extends PaymentProcessorAdapter {
   async processPayment(paymentData: PaymentData): Promise<PaymentResult> {
     // Mock implementation - in real scenario, this would integrate with Plaid API
     try {
-      const transactionId = `plaid_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const transactionId = `plaid_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       
       // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -206,7 +206,7 @@ export class CircleAdapter extends PaymentProcessorAdapter {
   async processPayment(paymentData: PaymentData): Promise<PaymentResult> {
     // Mock implementation - in real scenario, this would integrate with Circle API
     try {
-      const transactionId = `circle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const transactionId = `circle_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       
       // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 150));
@@ -259,8 +259,8 @@ export class CircleAdapter extends PaymentProcessorAdapter {
 // Main Payment Processor Selection Service
 export class PaymentProcessorService {
   private adapters: Map<string, PaymentProcessorAdapter>;
-  private countryToCurrency: Map<string, string>;
-  private regionPreferences: Map<string, string[]>;
+  private countryToCurrency: Map<string, string> = new Map();
+  private regionPreferences: Map<string, string[]> = new Map();
 
   constructor() {
     this.adapters = new Map();
