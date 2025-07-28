@@ -1,0 +1,29 @@
+{
+  "enabled": true,
+  "name": "Source to Docs Sync",
+  "description": "Monitors TypeScript, Solidity, JavaScript, and configuration files for changes and automatically updates project documentation in README and docs folder",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "packages/api/src/**/*.ts",
+      "packages/web/src/**/*.tsx",
+      "packages/web/src/**/*.ts",
+      "packages/contracts/contracts/*.sol",
+      "packages/contracts/scripts/*.ts",
+      "packages/contracts/test/*.ts",
+      "*.js",
+      "*.ts",
+      "*.json",
+      "*.md",
+      "package.json",
+      "tsconfig.json",
+      "hardhat.config.ts",
+      "next.config.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Source files have been modified. Please review the changes and update the project documentation accordingly. Update the main README.md file and any relevant documentation in the /docs folder if it exists. Focus on:\n\n1. API changes and new endpoints\n2. New features or components\n3. Configuration updates\n4. Smart contract modifications\n5. Architecture changes\n6. Setup or deployment process changes\n\nEnsure the documentation is clear, accurate, and reflects the current state of the codebase. Do not use emojis in the documentation."
+  }
+}
