@@ -35,7 +35,7 @@
   - Write unit tests for processor selection logic
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 4. Enhance existing Transfer Service with unregistered user support
+- [x] 4. Enhance existing Transfer Service with unregistered user support
   - Extend existing TransferService to handle payment requests from unregistered users
   - Add logic to trigger user onboarding flow when unregistered users access payment links
   - Implement payment request fulfillment that creates user accounts and processes payments
