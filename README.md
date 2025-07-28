@@ -6,7 +6,11 @@ A modern, secure money transfer platform with blockchain integration, real-time 
 
 - **Real-time Exchange Rates** - Live currency conversion using ExchangeRate API
 - **Blockchain Integration** - Smart contract-based fund releases (with mock mode for testing)
-- **Stripe Payments** - Secure payment processing
+- **Multi-Processor Payment System** - Intelligent payment processor selection (Stripe, Plaid, Circle)
+- **Geographic Payment Optimization** - Automatic processor selection based on user location and preferences
+- **Payment Requests** - Generate QR codes and shareable links for requesting payments
+- **Multi-User Support** - Handle payments between registered and unregistered users
+- **Fallback Processing** - Automatic failover between payment processors for reliability
 - **Modern UI** - Built with Next.js, React, and Tailwind CSS
 - **Database Integration** - PostgreSQL with Prisma ORM
 - **Terminal Demo** - Interactive blockchain simulation for presentations
@@ -110,9 +114,13 @@ stealth-money/
 │   ├── api/                 # Express.js backend
 │   │   ├── src/
 │   │   │   ├── services/    # Business logic
+│   │   │   │   ├── payment-request.service.ts  # Payment request management
+│   │   │   │   ├── payment-processor.service.ts # Payment processor selection
+│   │   │   │   └── __tests__/                  # Service unit tests
 │   │   │   ├── routes/      # API endpoints
 │   │   │   └── config/      # Configuration
 │   │   ├── prisma/          # Database schema
+│   │   │   └── schema.prisma # Includes PaymentRequest model
 │   │   └── .env.example
 │   └── contracts/           # Smart contracts
 │       ├── contracts/       # Solidity files
@@ -145,11 +153,116 @@ npx prisma db push     # Push schema changes
 
 ## 🌐 API Endpoints
 
+### Core Endpoints
 - `GET /health` - Health check
 - `GET /api/exchange-rate/:from/:to` - Get exchange rate
 - `POST /api/transfers` - Create transfer
 - `GET /api/transfers/:id` - Get transfer details
 - `POST /api/stripe/webhook` - Stripe webhook handler
+
+### Payment Request Endpoints
+- `POST /api/payment-requests` - Create a new payment request
+- `GET /api/payment-requests/:id` - Get payment request details
+- `GET /api/payment-requests/:id/qr-code` - Generate QR code for payment request
+- `GET /api/payment-requests/:id/shareable-link` - Generate secure shareable link
+- `POST /api/payment-requests/:id/process` - Process payment for a request
+- `PUT /api/payment-requests/:id/cancel` - Cancel a payment request
+- `GET /api/users/:userId/payment-requests` - Get user's payment requests
+- `POST /api/payment-requests/validate-token` - Validate shareable link token
+
+## 💳 Payment Request System
+
+The platform includes a comprehensive payment request system that allows users to request payments from both registered and unregistered users:
+
+### Key Features
+- **QR Code Generation**: Automatically generate QR codes for payment requests
+- **Shareable Links**: Create secure, time-limited shareable links with JWT tokens
+- **Multi-User Support**: Handle payments from both registered and unregistered users
+- **Request Lifecycle Management**: Track payment requests from creation to completion or expiration
+- **Automatic Cleanup**: Expired payment requests are automatically marked and cleaned up
+
+### Database Models
+- **PaymentRequest**: Stores payment request details, status, and metadata
+- **Payment**: Links completed payments to their originating requests
+- **User**: Extended to support payment request relationships
+
+### Service Architecture
+- **PaymentRequestService**: Core service handling request creation, QR generation, and lifecycle management
+- **Comprehensive Testing**: Full unit test coverage with mocked dependencies
+- **Error Handling**: Robust error handling with specific error types and fallback strategies
+
+## 🌍 Payment Processor Selection System
+
+The platform features an intelligent payment processor selection system that automatically chooses the optimal payment processor based on geographic location, user preferences, and transaction requirements:
+
+### Supported Payment Processors
+
+#### Stripe
+- **Coverage**: Global (45+ countries)
+- **Currencies**: 30+ including USD, EUR, GBP, CAD, AUD, JPY, and more
+- **Fees**: 2.9% + $0.30 per transaction
+- **Processing Time**: 1-3 business days
+- **Best For**: Global coverage, excellent user experience
+
+#### Plaid (In Development)
+- **Coverage**: US, CA, GB, FR, ES, IE, NL
+- **Currencies**: USD, CAD, GBP, EUR
+- **Fees**: 1.5% + $0.25 per transaction
+- **Processing Time**: 1-2 business days
+- **Best For**: Lower fees, bank-to-bank transfers
+
+#### Circle (In Development)
+- **Coverage**: US, Asia-Pacific, Middle East, Africa
+- **Currencies**: USD, EUR, GBP, USDC, USDT
+- **Fees**: 1.0% + $0.10 per transaction
+- **Processing Time**: 10-30 minutes
+- **Best For**: Cryptocurrency integration, fast processing
+
+### Geographic Optimization
+
+The system automatically selects processors based on regional preferences:
+
+- **United States & Canada**: Plaid → Stripe → Circle
+- **Europe**: Stripe → Circle → Plaid
+- **Asia-Pacific**: Circle → Stripe
+- **Latin America**: Stripe → Circle
+- **Africa & Middle East**: Circle → Stripe
+- **Default**: Stripe → Circle → Plaid
+
+### Selection Criteria
+
+Users and the system can prioritize different factors:
+
+- **Cost Optimization**: Selects processor with lowest fees
+- **Speed Priority**: Chooses fastest processing times
+- **Reliability Focus**: Prioritizes highest uptime processors
+- **Geographic Preference**: Uses regional optimization
+- **Fallback Support**: Automatic failover if primary processor fails
+
+### Service Architecture
+
+- **PaymentProcessorService**: Core service for processor selection and management
+- **Adapter Pattern**: Consistent interface across different payment processors
+- **Availability Checking**: Real-time processor availability validation
+- **Fallback Processing**: Automatic retry with alternative processors
+- **Comprehensive Testing**: Full unit test coverage for all processors and selection logic
+
+### Configuration
+
+Payment processors can be configured via environment variables:
+
+```bash
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+# Plaid Configuration (Optional)
+PLAID_CLIENT_ID=your_client_id
+PLAID_SECRET=your_secret
+
+# Circle Configuration (Optional)
+CIRCLE_API_KEY=your_api_key
+```
 
 ## 🔒 Security Features
 
@@ -158,6 +271,8 @@ npx prisma db push     # Push schema changes
 - Stripe webhook signature verification
 - Database connection encryption
 - Private key protection (when using real blockchain)
+- JWT-based secure shareable links for payment requests
+- Request expiration and automatic cleanup mechanisms
 
 ## 📋 Todo List
 

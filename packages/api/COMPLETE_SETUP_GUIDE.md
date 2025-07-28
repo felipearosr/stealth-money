@@ -114,11 +114,16 @@ EXCHANGERATE_API_KEY=your_api_key_here
 
 # Database (from Supabase)
 DATABASE_URL="postgresql://postgres.abc123:YOUR_PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres.abc123:YOUR_PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
 
 # Stripe (test keys)
 STRIPE_SECRET_KEY=sk_test_51ABC123...
 STRIPE_PUBLISHABLE_KEY=pk_test_51ABC123...
 STRIPE_WEBHOOK_SECRET=whsec_ABC123...
+
+# Payment Request System
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+BASE_URL=http://localhost:3000
 
 # Blockchain (testnet only!)
 SERVER_WALLET_PRIVATE_KEY=0xa102eb786264342a5223767a74665fefd419c19ed481144c2c7b0434cb36757f
@@ -189,8 +194,24 @@ If you get stuck on any step:
 Once everything is set up, you can:
 - Create transfers with real exchange rates
 - Process payments with test cards (4242424242424242)
+- Generate payment requests with QR codes and shareable links
+- Test payment request flows for registered and unregistered users
 - Track transactions in your database
 - Monitor blockchain interactions
 - Test the complete money transfer flow
+
+### Payment Request System Testing
+```bash
+# Test payment request creation
+curl -X POST http://localhost:4000/api/payment-requests \
+  -H "Content-Type: application/json" \
+  -d '{"requesterId":"user-123","amount":100,"currency":"USD","description":"Test payment"}'
+
+# Test QR code generation
+curl http://localhost:4000/api/payment-requests/REQUEST_ID/qr-code
+
+# Test shareable link generation
+curl http://localhost:4000/api/payment-requests/REQUEST_ID/shareable-link
+```
 
 All safely in test mode with no real money involved! 🚀
